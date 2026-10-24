@@ -10,9 +10,9 @@
 <meta name="author" content="行者无疆社会实践团">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230c1a15'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%23c9a961' stroke-width='2'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='serif' font-size='34' fill='%23c9a961'%3E行%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/fonts/fonts.css">
-<link rel="stylesheet" href="assets/css/site.css">
-<link rel="stylesheet" href="assets/css/field-design.css?v=20261024">
-<link rel="stylesheet" href="assets/css/field-interiors.css?v=20261024">
+<link rel="stylesheet" href="assets/css/site.css?v=20261024-r2">
+<link rel="stylesheet" href="assets/css/field-design.css?v=20261024-r2">
+<link rel="stylesheet" href="assets/css/field-interiors.css?v=20261024-r2">
 </head>
 <body data-page="gallery" data-base="">
 <a class="skip-link" href="#main-content">跳到主要内容</a>
@@ -20,7 +20,7 @@
 <header class="nav nav--solid" data-nav>
   <div class="nav__inner wrap">
     <a class="brand" href="index.html" aria-label="行者无疆 首页">
-      <span class="brand__seal"><svg viewBox="0 0 40 40" width="30" height="30" aria-hidden="true"><rect x="1.5" y="1.5" width="37" height="37" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><text x="20" y="26" text-anchor="middle" font-family="serif" font-size="17" fill="currentColor">行</text></svg></span>
+      <span class="brand__seal brand__seal--image"><img src="assets/img/team-logo.png" width="1417" height="1417" alt="" decoding="async"></span>
       <span class="brand__text">
         <span class="brand__name">行者无疆</span>
         <span class="brand__en">WALKERS WITHOUT BORDERS</span>
@@ -44,7 +44,7 @@
 
 <div class="drawer" data-drawer aria-hidden="true">
   <div class="drawer__top">
-    <span class="brand__name">行者无疆</span>
+    <a class="drawer__brand" href="index.html" aria-label="行者无疆 首页"><img src="assets/img/team-logo.png" width="1417" height="1417" alt="" decoding="async"><span>行者无疆</span></a>
     <button class="drawer__close" type="button" data-drawer-close aria-label="关闭菜单"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <nav class="drawer__links" aria-label="移动端导航"><a href="index.html">首页<small>Home</small></a>
@@ -72,11 +72,11 @@
   </div>
 </section>
 
+<div class="gallery-filters" role="group" aria-label="影像筛选">
 <div class="filterbar" data-filterbar="series">
   <div class="filterbar__inner">
     <p class="filterbar__label">按期次筛选</p>
     <div class="chips" data-chips><button class="chip is-active" type="button" data-filter="all" aria-pressed="true"><i>ALL</i><span>全部</span><small>101</small></button><button class="chip" type="button" data-filter="qilu-2017" aria-pressed="false" title="第 01 期 · 2017 寒假"><i>1</i><span>文溯齐鲁</span><small>0</small></button><button class="chip" type="button" data-filter="zhongyuan-2017" aria-pressed="false" title="第 02 期 · 2017 暑假"><i>2</i><span>知遇中原</span><small>0</small></button><button class="chip" type="button" data-filter="wuyue-2018" aria-pressed="false" title="第 03 期 · 2018 寒假"><i>3</i><span>致旅吴越</span><small>1</small></button><button class="chip" type="button" data-filter="wanhui-2018" aria-pressed="false" title="第 04 期 · 2018 暑假"><i>4</i><span>拾遗皖徽</span><small>4</small></button><button class="chip" type="button" data-filter="changan-2019" aria-pressed="false" title="第 05 期 · 2019 寒假"><i>5</i><span>韶忆长安</span><small>6</small></button><button class="chip" type="button" data-filter="yuzhou-2019" aria-pressed="false" title="第 06 期 · 2019 暑假"><i>6</i><span>源洄渝州</span><small>6</small></button><button class="chip" type="button" data-filter="xiaoxiang-2020" aria-pressed="false" title="第 07 期 · 2020 寒假"><i>7</i><span>言念潇湘</span><small>6</small></button><button class="chip" type="button" data-filter="dunhuang-2021" aria-pressed="false" title="第 08 期 · 2021 寒假"><i>8</i><span>聆谂丝韵</span><small>6</small></button><button class="chip" type="button" data-filter="huaiyang-2021" aria-pressed="false" title="第 09 期 · 2021 暑假"><i>9</i><span>寓绻淮扬</span><small>6</small></button><button class="chip" type="button" data-filter="gengxu-2022" aria-pressed="false" title="第 10 期 · 2022 寒假"><i>10</i><span>赓续前行</span><small>6</small></button><button class="chip" type="button" data-filter="suhang-2022" aria-pressed="false" title="第 11 期 · 2022 暑假"><i>11</i><span>流眄苏杭</span><small>6</small></button><button class="chip" type="button" data-filter="dongao-2023" aria-pressed="false" title="第 12 期 · 2023 寒假"><i>12</i><span>踏冰逐梦</span><small>6</small></button><button class="chip" type="button" data-filter="zhiyi-2023" aria-pressed="false" title="第 13 期 · 2023 暑假"><i>13</i><span>纸绎齊缘</span><small>6</small></button><button class="chip" type="button" data-filter="yulv-2024" aria-pressed="false" title="第 14 期 · 2024 暑假"><i>14</i><span>豫旅拾遗</span><small>6</small></button><button class="chip" type="button" data-filter="qinyu-2025" aria-pressed="false" title="第 15 期 · 2025 寒假"><i>15</i><span>秦育遗韵</span><small>6</small></button><button class="chip" type="button" data-filter="jincai-2025" aria-pressed="false" title="第 16 期 · 2025 暑假"><i>16</i><span>津彩化韵</span><small>7</small></button><button class="chip" type="button" data-filter="yujian-2026" aria-pressed="false" title="第 17 期 · 2026 寒假"><i>17</i><span>渝见非遗</span><small>8</small></button><button class="chip" type="button" data-filter="wenyun-2026" aria-pressed="false" title="第 18 期 · 2026 暑假"><i>18</i><span>文韵皖南</span><small>15</small></button></div>
-    <div class="filterbar__tools"><label class="searchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" data-filter-search placeholder="关键词筛选影像" aria-label="筛选"></label><p class="filter-count">共 <b data-filter-count>101</b> 张</p></div>
   </div>
 </div>
 
@@ -84,8 +84,12 @@
   <div class="filterbar__inner">
     <p class="filterbar__label">按题材筛选</p>
     <div class="chips" data-chips><button class="chip is-active" type="button" data-filter="all" aria-pressed="true"><i>ALL</i><span>全部</span><small>101</small></button><button class="chip" type="button" data-filter="heritage" aria-pressed="false" title="剪纸、风筝、宣纸、徽笔、年画、唐三彩、漆器与花丝……手上的技艺。"><i></i><span>非遗手作</span><small>95</small></button><button class="chip" type="button" data-filter="architecture" aria-pressed="false" title="园林、祠堂、城墙与民居，看中国人如何安放生活。"><i></i><span>古建园林</span><small>31</small></button><button class="chip" type="button" data-filter="relics" aria-pressed="false" title="博物馆、石窟、碑刻与遗址，与更久远的时间对话。"><i></i><span>文物古迹</span><small>49</small></button><button class="chip" type="button" data-filter="folk" aria-pressed="false" title="早茶、灯会、方言与街市，日常里的文化现场。"><i></i><span>民俗生活</span><small>82</small></button><button class="chip" type="button" data-filter="red" aria-pressed="false" title="红岩、纪念馆与口述史，另一条不能略过的线索。"><i></i><span>红色记忆</span><small>6</small></button><button class="chip" type="button" data-filter="silkroad" aria-pressed="false" title="莫高窟、驼铃与黄沙，河西走廊上的文明交汇。"><i></i><span>丝路敦煌</span><small>6</small></button><button class="chip" type="button" data-filter="winter" aria-pressed="false" title="冬奥志愿服务与冰雪里的辽宁，一次特殊的实践。"><i></i><span>冰雪冬奥</span><small>6</small></button></div>
-    <div class="filterbar__tools"><p class="filter-count">共 <b data-filter-count>101</b> 张</p></div>
   </div>
+</div>
+<div class="gallery-filters__tools wrap">
+  <label class="searchbox"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input type="search" data-filter-search placeholder="关键词筛选影像" aria-label="关键词筛选影像"></label>
+  <p class="filter-count" aria-live="polite" aria-atomic="true">共 <b data-filter-count>101</b> 张</p>
+</div>
 </div>
 
 <section class="section section--tight">
@@ -154,7 +158,7 @@
   <button class="lb__nav lb__next" type="button" data-lb-next aria-label="下一张">›</button>
   <div class="lb__cap lb__cap--idx" data-lb-idx></div>
 </div>
-<script src="assets/js/site.js?v=20261024" defer></script>
-<script src="assets/js/field-design.js?v=20261024" defer></script>
+<script src="assets/js/site.js?v=20261024-r2" defer></script>
+<script src="assets/js/field-design.js?v=20261024-r2" defer></script>
 </body>
 </html>

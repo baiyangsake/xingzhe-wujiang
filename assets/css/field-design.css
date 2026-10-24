@@ -289,3 +289,49 @@ body[data-page="chronicle"] .field-title-accent {color:var(--acid)}
 @media(prefers-reduced-motion:reduce){
  html{scroll-behavior:auto}.field-main *,.field-main *::before,.field-main *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.field-cover__photo,.field-cover__inset,.field-frame{transform:none!important}
 }
+
+/* The supplied calligraphic mark keeps its original transparent pixels. */
+.nav .brand {gap:12px;min-height:60px}
+.brand__seal.brand__seal--image {width:56px;height:60px;background:none;border:0;flex:none}
+.brand__seal--image img {display:block;width:100%;height:100%;object-fit:contain}
+.drawer__brand {display:flex;align-items:center;gap:14px;font-family:var(--font-serif);font-size:24px;letter-spacing:.13em}
+.drawer__brand img {height:59px;width:56px;object-fit:contain;filter:invert(1)}
+.nav__burger,.icon-btn {min-width:44px;min-height:44px}
+.field-cover__photo,.field-cover__inset {outline:1px solid #181c190a;outline-offset:-1px}
+.field-people-invite {display:grid;grid-template-columns:1fr 1.7fr auto;gap:5vw;align-items:center;border-block:1px solid var(--line);margin-top:70px;padding-block:30px;color:var(--ink)}
+.field-people-invite__index {font-size:12px;line-height:1.8;letter-spacing:.12em}
+.field-people-invite__index small {font:8px/1.8 var(--font-sans);letter-spacing:.11em;color:var(--muted)}
+.field-people-invite__title {font:500 clamp(22px,2.5vw,38px)/1.4 var(--font-serif);letter-spacing:-.02em}
+.field-people-invite__title br {display:none}
+.field-people-invite__action {font-size:11px;display:flex;gap:28px;align-items:center;white-space:nowrap}
+.field-people-invite__action i {font:normal 32px/1 var(--font-sans);transition:transform .35s var(--ease)}
+.field-people-invite:hover .field-people-invite__title {color:var(--gold)}
+.field-people-invite:hover i {transform:translate(4px,-4px)}
+.field-rail {position:fixed;z-index:90;right:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:6px;padding:8px 3px;background:#f3f0e8ed;border:1px solid var(--line);border-radius:30px;box-shadow:0 5px 18px #181c1908}
+.field-rail a {width:30px;height:34px;display:grid;place-items:center;position:relative;color:var(--muted);font:9px/1 var(--font-sans);font-variant-numeric:tabular-nums;border-radius:50%}
+.field-rail a[aria-current] {background:var(--ink);color:var(--paper)}
+.field-rail a:hover {color:var(--gold)}
+.field-rail b {position:absolute;right:43px;top:50%;transform:translate(4px,-50%);font:400 11px/1.5 var(--font-sans);white-space:nowrap;background:var(--paper);color:var(--ink);padding:7px 12px;border:1px solid var(--line);pointer-events:none;opacity:0;transition:opacity .2s,transform .2s}
+.field-rail a:hover b,.field-rail a:focus-visible b {opacity:1;transform:translate(0,-50%)}
+.exp-detail {position:relative}
+.exp-detail__image img {transition:opacity .35s var(--ease),transform .7s var(--ease)}
+.exp-detail.is-loading .exp-detail__image img {opacity:.25}
+.exp-detail.has-image-error .exp-detail__image img {opacity:0}
+.exp-detail__image::after {content:"";position:absolute;height:2px;left:0;right:0;bottom:0;background:var(--acid);transform:scaleX(0);transform-origin:left;transition:transform .45s}
+.exp-detail.is-loading .exp-detail__image::after {transform:scaleX(.72)}
+.exp-detail__archive {display:inline-flex;align-items:center;gap:14px;color:var(--acid);font-size:10px;border-bottom:1px solid #dceab344;margin-block:10px 0;padding-bottom:3px}
+.exp-detail__archive:hover {color:var(--paper)}
+.exp-detail__copy [data-exp-lead] {margin-top:14px}
+.exp-detail__status {font-size:11px;color:var(--acid);padding:8px 0}
+.field-frame a:focus-visible img {transform:scale(1.025)}
+.prow[id] {scroll-margin-top:20px}
+@media(max-width:1279px){.field-rail{display:none}}
+@media(max-width:930px){
+ .field-people-invite{grid-template-columns:1fr 2fr;gap:22px}.field-people-invite__action{grid-column:2;gap:22px}.field-people-invite__index{align-self:start;padding-top:3px}
+}
+@media(max-width:600px){
+ .nav .brand{gap:7px;min-height:52px}.brand__seal.brand__seal--image{width:45px;height:52px}.nav .brand__name{font-size:15px}.nav__inner{gap:8px}.nav__tools{gap:0}.nav__burger,.icon-btn{width:44px;height:44px}.nav__burger{margin-right:-5px}
+ .field-people-invite{margin-top:45px;padding-block:24px;grid-template-columns:80px 1fr;gap:16px}.field-people-invite__index{font-size:10px}.field-people-invite__index small{font-size:6px}.field-people-invite__title{font-size:25px}.field-people-invite__title br{display:block}.field-people-invite__action{font-size:10px;justify-content:space-between}.field-people-invite__action i{font-size:27px}
+ .exp-detail__archive{font-size:10px;margin-top:8px}
+}
+@media(prefers-reduced-motion:reduce){.field-people-invite i,.exp-detail__image img{transition:none}}

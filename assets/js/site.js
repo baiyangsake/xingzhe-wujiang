@@ -380,16 +380,42 @@
       }
     });
 
-    // collect article images
-    var proseImgs = $$(".prose img").filter(function (im) {
-      return im.getAttribute("src");
+    // Decorative icons and separators remain ordinary article content.
+    var proseImgs = [];
+    var articleImages = $$(".prose img").map(function (im) {
+      return { el: im, active: false, original: {
+        role: im.getAttribute("role"),
+        tabindex: im.getAttribute("tabindex"),
+        "aria-label": im.getAttribute("aria-label")
+      } };
     });
-    proseImgs.forEach(function (im) {
-      im.classList.add("js-lightbox");
-      im.setAttribute("tabindex", "0");
-      im.setAttribute("role", "button");
-      im.setAttribute("aria-label", "放大图片：" + (im.alt || "文章图片"));
+    function refreshArticleImages() {
+      proseImgs = articleImages.filter(function (record) {
+        var im = record.el;
+        var rect = im.getBoundingClientRect();
+        var eligible = !!(im.currentSrc || im.getAttribute("src")) &&
+          rect.width >= 44 && rect.height >= 44 && !im.closest('[aria-hidden="true"]') &&
+          window.getComputedStyle(im).visibility !== "hidden";
+        im.classList.toggle("js-lightbox", eligible);
+        if (eligible && !record.active) {
+          im.setAttribute("tabindex", "0");
+          im.setAttribute("role", "button");
+          im.setAttribute("aria-label", "放大图片：" + (im.alt || "文章图片"));
+        } else if (!eligible && record.active) {
+          Object.keys(record.original).forEach(function (key) {
+            if (record.original[key] === null) im.removeAttribute(key);
+            else im.setAttribute(key, record.original[key]);
+          });
+        }
+        record.active = eligible;
+        return eligible;
+      }).map(function (record) { return record.el; });
+    }
+    articleImages.forEach(function (record) {
+      on(record.el, "load", refreshArticleImages);
     });
+    refreshArticleImages();
+    on(window, "resize", throttle(refreshArticleImages, 180));
     $$("[data-gallery] figure").forEach(function (figure) {
       var img = $("img", figure);
       figure.setAttribute("tabindex", "0");
@@ -412,12 +438,14 @@
         });
         return open(items, figures.indexOf(figure), figure);
       }
-      if (t.classList.contains("js-lightbox") || (t.tagName === "IMG" && t.parentNode && t.parentNode.closest && t.parentNode.closest(".prose"))) {
-        if (!t.classList.contains("js-lightbox") && t.tagName === "IMG") t.classList.add("js-lightbox");
-        var items2 = proseImgs.map(function (im) {
-          return { full: im.getAttribute("src"), cap: im.alt || "" };
+      if (t.tagName === "IMG" && t.classList.contains("js-lightbox")) {
+        refreshArticleImages();
+        if (!t.classList.contains("js-lightbox")) return false;
+        var candidates = proseImgs.filter(function (im) { return im.classList.contains("js-lightbox"); });
+        var items2 = candidates.map(function (im) {
+          return { full: im.currentSrc || im.getAttribute("src"), cap: im.alt || "" };
         });
-        return open(items2, proseImgs.indexOf(t), t);
+        return open(items2, candidates.indexOf(t), t);
       }
       return false;
     }
@@ -601,11 +629,13 @@
     var openers = $$("[data-search-open]");
     var data = null;
     var loading = false;
+    var pendingLoad = null;
     var cur = -1;
     overlays.register(modal, "站内搜索");
 
     function load(cb) {
       if (data) return cb();
+      pendingLoad = cb;
       if (loading) return;
       loading = true;
       fetch(BASE + "assets/data/search.json")
@@ -625,10 +655,13 @@
             };
           });
           loading = false;
-          cb();
+          var ready = pendingLoad;
+          pendingLoad = null;
+          if (ready) ready();
         })
         .catch(function () {
           loading = false;
+          pendingLoad = null;
           if (results) results.innerHTML = '<div class="search-modal__empty">索引加载失败，请稍后重试。</div>';
         });
     }
@@ -684,11 +717,12 @@
       );
     }
 
+    function renderCurrent() {
+      if (overlays.isOpen(modal)) render((input.value || "").trim().toLowerCase());
+    }
     function openModal(trigger) {
       if (!overlays.open(modal, trigger, input)) return;
-      load(function () {
-        if (overlays.isOpen(modal)) render((input.value || "").trim().toLowerCase());
-      });
+      load(renderCurrent);
     }
     function closeModal() {
       overlays.close(modal);
@@ -696,7 +730,7 @@
     function move(dir) {
       var rows = $$(".sresult", results);
       if (!rows.length) return;
-      cur = (cur + dir + rows.length) % rows.length;
+      cur = cur < 0 ? (dir > 0 ? 0 : rows.length - 1) : (cur + dir + rows.length) % rows.length;
       rows.forEach(function (r, i) {
         r.classList.toggle("is-cur", i === cur);
       });
@@ -717,12 +751,11 @@
     on(input, "input", function () {
       clearTimeout(timer);
       timer = setTimeout(function () {
-        load(function () {
-          render((input.value || "").trim().toLowerCase());
-        });
+        load(renderCurrent);
       }, 130);
     });
     on(input, "keydown", function (e) {
+      if (e.isComposing || e.keyCode === 229) return;
       if (e.key === "ArrowDown") {
         e.preventDefault();
         move(1);
@@ -757,13 +790,16 @@
       var target = doc.getElementById(id.slice(1));
       if (!target) return;
       on(a, "click", function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
-        var top = target.getBoundingClientRect().top + window.scrollY - 90;
+        var nav = $("[data-nav]");
+        var offset = (nav ? nav.getBoundingClientRect().height : 0) + 20;
+        var top = target.getBoundingClientRect().top + window.scrollY - offset;
         window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
         if (a.classList.contains("skip-link")) {
           target.setAttribute("tabindex", "-1");
           target.focus({ preventScroll: true });
-        }
+        } else history.replaceState(history.state, "", "#" + encodeURIComponent(target.id));
       });
     });
   }
@@ -771,353 +807,184 @@
   function initYearPills() {
     $$("[data-year-link]").forEach(function (a) {
       on(a, "click", function (e) {
+        if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
         var y = a.getAttribute("data-year-link");
         var el = doc.getElementById("y" + y);
         if (!el) return;
         e.preventDefault();
         if (resetFilters) resetFilters();
-        var top = el.getBoundingClientRect().top + window.scrollY - 80;
+        var nav = $("[data-nav]");
+        var offset = (nav ? nav.getBoundingClientRect().height : 0) + 20;
+        var top = el.getBoundingClientRect().top + window.scrollY - offset;
         window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
+        history.replaceState(history.state, "", "#" + encodeURIComponent(el.id));
       });
     });
   }
 
   /* ------------------------------------------------------- name cloud */
-  // Lays every walker out as a loose, hand-set constellation instead of a
-  // rigid grid. Names drift very slowly, reveal staggered on scroll, and the
-  // legend line doubles as a readout when a name is hovered.
   function initNameCloud() {
     var box = $("[data-namecloud]");
     if (!box) return;
     var stack = $("[data-name-stack]", box);
     var read = $("[data-name-read]", box);
+    var source = $("[data-name-source]", box);
+    var hint = $("[data-name-hint]", box);
     if (!stack) return;
     var items = $$(".nw", stack);
     if (!items.length) return;
-    var defaultRead = read ? read.textContent : "";
-    var fontsDone = false;
-
-    var keepClear = (function () {
-      var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
-      if (rule.length < 2) return null;
-      var subject = (rule[0] || "").trim();
-      var guards = (rule[1] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-      return subject && guards.length ? { subject: subject, guards: guards } : null;
-    })();
+    var touch = window.matchMedia("(hover: none), (pointer: coarse)");
+    var selected = null;
+    var frame = 0;
+    var signature = "";
+    var lastWidth = 0;
+    var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
+    var subject = (rule[0] || "").trim();
+    var guards = (rule[1] || "").split(",").map(function (name) { return name.trim(); }).filter(Boolean);
+    var keepGap = Math.max(0, parseFloat(stack.getAttribute("data-keep-gap")) || 120);
 
     function walkerName(el) {
       return (el.textContent || "").replace(/\s+/g, "");
     }
-
-    function findWalker(name) {
-      for (var k = 0; k < items.length; k++) {
-        if (walkerName(items[k]) === name) return items[k];
-      }
-      return null;
+    function protectedPair(a, b) {
+      return (a === subject && guards.indexOf(b) >= 0) ||
+        (b === subject && guards.indexOf(a) >= 0);
     }
-
-    // Walkers that share a tier and a (期数,篇数) pair are interchangeable for
-    // display: only their place in the line may change.
-    function periodKey(el) {
-      var m = (el.getAttribute("data-meta") || "").match(/(\d+)\s*期\s*·\s*(\d+)\s*篇/);
-      return m ? m[1] + "|" + m[2] : "";
-    }
-
     function edgeGap(a, b) {
       var dx = Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w));
       var dy = Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h));
       return Math.sqrt(dx * dx + dy * dy);
     }
 
-    // Pure layout maths: given a sequence, return the cell of every walker.
-    // Measuring is done once in layout(); this never touches the DOM.
-    function place(seq, w, narrow) {
-      var gapMin = narrow ? 12 : 20;
-      var gapMax = narrow ? 30 : 62;
-      var drift = narrow ? 6 : 12;
-      var rowGap = narrow ? 18 : 22;
-      var x = 0, y = 0, rowH = 0, n = 0, row = 0;
+    // Link boxes include their touch area and the text's small motion envelope.
+    // Follow DOM order: keyboard traversal and the visual reading order agree.
+    function place(measured, width) {
+      var narrow = width < 640;
+      var rowGap = narrow ? 9 : 17;
+      var target = narrow ? Math.min(keepGap, 56) : keepGap;
+      var gaps = narrow ? [10, 16, 8, 13] : [25, 42, 20, 34];
+      var indents = narrow ? [0, 8, 2, 12] : [0, 32, 10, 44];
       var cells = [];
-      seq.forEach(function (el, i) {
-        var iw = el.__w;
-        var ih = el.__h;
-        var pad = 6;
-        if (iw && x > 0 && x + iw > w - pad) {
-          x = 0;
-          y += Math.round(rowH * 0.95) + rowGap;
-          rowH = 0;
-          n = 0;
-          row++;
-        }
-        // deterministic pseudo-random jitter: no two neighbours share a baseline
-        var jy = (((i * 61) % 100) / 100 - 0.5) * 2 * drift;
-        var jx = ((i * 43) % 100) / 100 * 10;
-        if (n === 0 && y > 0) {
-          x = ((i * 29) % (narrow ? 22 : 58));
-        }
-        cells.push({
-          el: el,
-          i: i,
-          row: row,
-          n: n,
-          w: iw,
-          h: ih,
-          x: Math.max(0, Math.min(Math.round(x + jx), Math.max(0, w - iw - pad))),
-          y: Math.max(0, Math.round(y + jy))
+      var x = 0, y = 4, bottom = 4, row = 0;
+
+      function nextRow(item) {
+        row++;
+        y = bottom + rowGap;
+        x = Math.min(indents[row % indents.length], Math.max(0, width - item.w));
+      }
+      measured.forEach(function (item, i) {
+        if (x + item.w > width) nextRow(item);
+        var cell = { el: item.el, name: item.name, w: item.w, h: item.h,
+          x: x, y: y + (narrow ? 0 : (i * 3) % 7) };
+        // Keep the authored separation rule without moving a name to the foot
+        // of the whole cloud, changing metadata, or searching permutations.
+        var blocked = cells.filter(function (other) {
+          return protectedPair(cell.name, other.name) && edgeGap(cell, other) < target;
         });
-        var gap = gapMin + (((i * 37) % 100) / 100) * (gapMax - gapMin);
-        x += iw + gap;
-        rowH = Math.max(rowH, ih);
-        n++;
+        while (blocked.length) {
+          var right = cell.x;
+          var floor = cell.y;
+          blocked.forEach(function (other) {
+            var dy = Math.max(0, cell.y - other.y - other.h);
+            right = Math.max(right, other.x + other.w + Math.sqrt(Math.max(0, target * target - dy * dy)));
+            floor = Math.max(floor, other.y + other.h + target);
+          });
+          if (right + cell.w <= width) cell.x = Math.ceil(right);
+          else {
+            nextRow(item);
+            cell.x = x;
+            cell.y = y = Math.max(y, Math.ceil(floor));
+          }
+          blocked = cells.filter(function (other) {
+            return protectedPair(cell.name, other.name) && edgeGap(cell, other) + 0.01 < target;
+          });
+        }
+        cells.push(cell);
+        bottom = Math.max(bottom, cell.y + cell.h);
+        x = cell.x + cell.w + gaps[i % gaps.length];
       });
-      return {
-        cells: cells,
-        height: Math.round(y + rowH + drift + 26)
-      };
+      return { cells: cells, height: Math.ceil(bottom + 12) };
     }
 
-    // On a narrow phone the flow folds into a tight grid and a guard can end up
-    // in the cell right under the subject. Shifting whole rows leaves a blank
-    // line behind, so instead every interchange inside the subject's
-    // interchangeable peer group is scored and the airiest arrangement wins.
-    function chooseOrder(w) {
-      if (!keepClear) return items;
-      var me = findWalker(keepClear.subject);
-      var guards = [];
-      keepClear.guards.forEach(function (name) {
-        var g = findWalker(name);
-        if (g) guards.push(g);
-      });
-      if (!me || !guards.length) return items;
-      var key = periodKey(me);
-      var pool = [];
-      if (key) {
-        items.forEach(function (el) { if (periodKey(el) === key) pool.push(el); });
-      }
-      if (pool.length < 2 || pool.length > 6) return items;
-      var slots = [];
-      items.forEach(function (el, i) { if (pool.indexOf(el) >= 0) slots.push(i); });
-      var target = 56;
-      var best = null;
-      var used = [];
-      var perm = [];
-      var depth = 0;
-      var total = pool.length;
-
-      function inspect(seq) {
-        var res = place(seq, w, true);
-        var map = {};
-        res.cells.forEach(function (c) { map[walkerName(c.el)] = c; });
-        var mine = map[keepClear.subject];
-        if (!mine) return null;
-        var worst = Infinity;
-        var deficit = 0;
-        var clash = false;
-        guards.forEach(function (g) {
-          var cell = map[walkerName(g)];
-          if (!cell) return;
-          var dist = edgeGap(mine, cell);
-          if (dist < worst) worst = dist;
-          if (cell.row > mine.row) {
-            if (dist < target) deficit = Math.max(deficit, target - dist);
-          } else if (dist < target) {
-            // same row or above: nudging rows below cannot separate them
-            clash = true;
-          }
-        });
-        return { seq: seq, worst: worst, deficit: deficit, clash: clash, shuffle: 0 };
-      }
-
-      function better(a, b) {
-        if (!a) return false;
-        if (!b) return true;
-        if (a.clash !== b.clash) return !a.clash;
-        if (a.deficit !== b.deficit) return a.deficit < b.deficit;
-        if (a.worst !== b.worst) return a.worst > b.worst;
-        return a.shuffle < b.shuffle;
-      }
-
-      function search() {
-        if (depth === total) {
-          var seq = items.slice();
-          var k;
-          for (k = 0; k < total; k++) seq[slots[k]] = perm[k];
-          var res = inspect(seq);
-          if (res) {
-            for (k = 0; k < total; k++) res.shuffle += Math.abs(pool.indexOf(perm[k]) - k);
-            if (better(res, best)) best = res;
-          }
-          return;
-        }
-        for (var p = 0; p < total; p++) {
-          if (used[p]) continue;
-          used[p] = true;
-          perm[depth] = pool[p];
-          depth++;
-          search();
-          depth--;
-          used[p] = false;
-        }
-      }
-
-      search();
-      return best ? best.seq : items;
-    }
-
-    function layout(attempt) {
-      var w = stack.clientWidth;
-      if (!w) return false;
+    function layout() {
+      frame = 0;
+      var width = stack.clientWidth;
+      if (!width) return;
       stack.classList.add("is-cloud");
-      var remeasured = false;
-      items.forEach(function (el) {
-        el.style.left = "0px";
-        el.style.top = "0px";
-        var iw = el.offsetWidth;
-        var ih = el.offsetHeight;
-        if (iw !== el.__w || ih !== el.__h) remeasured = true;
-        el.__w = iw;
-        el.__h = ih;
+      // Batch all reads, then all writes. Font changes alter this fingerprint;
+      // positioning and hover never do, so observer callbacks cannot loop.
+      var measured = items.map(function (el) {
+        return { el: el, name: walkerName(el), w: el.offsetWidth, h: el.offsetHeight };
       });
-      var narrow = w < 640;
-      var seq = narrow ? chooseOrder(w) : items;
-      var res = place(seq, w, narrow);
-      res.cells.forEach(function (cell) {
-        var el = cell.el;
-        el.style.left = cell.x + "px";
-        el.style.top = cell.y + "px";
-        el.__row = cell.row;
-        el.style.setProperty("--d", Math.min(760, cell.n * 24) + "ms");
-        el.style.setProperty("--fy", (3 + (cell.i % 5)) + "px");
-        el.style.setProperty("--fd", (5 + (cell.i % 6)) + "s");
-        el.style.setProperty("--fdel", "-" + (((cell.i * 7) % 13) * 0.7).toFixed(1) + "s");
-      });
-      stack.style.height = res.height + "px";
-      settle();
-      if (remeasured && (attempt || 0) < 3) {
-        layout((attempt || 0) + 1);
-      }
-      return true;
-    }
-
-    // Optional clearance rule: the stack may declare
-    // data-keep-clear="<subject>|<guard>,<guard>". chooseOrder() keeps them
-    // apart on phones by re-ordering the interchangeable peer group; this
-    // routine is the safety net for any remaining collision.
-    function settle() {
-      if (!keepClear) return;
-      var narrow = stack.clientWidth < 640;
-      var minGap = parseFloat(stack.getAttribute("data-keep-gap")) || 120;
-      var target = narrow ? Math.min(minGap, 56) : minGap;
-      var me = findWalker(keepClear.subject);
-      if (!me) return;
-      function box(el) {
-        return {
-          x: parseFloat(el.style.left) || 0,
-          y: parseFloat(el.style.top) || 0,
-          w: el.offsetWidth,
-          h: el.offsetHeight
-        };
-      }
-      var mine = box(me);
-      var below = [];
-      var sameRow = false;
-      keepClear.guards.forEach(function (name) {
-        var g = findWalker(name);
-        if (!g) return;
-        var dist = edgeGap(mine, box(g));
-        if (dist >= target) return;
-        if (g.__row > me.__row) below.push(dist);
-        else sameRow = true;
-      });
-      if (below.length) {
-        var deficit = 0;
-        below.forEach(function (d) { deficit = Math.max(deficit, target - d); });
-        var delta = Math.ceil(deficit) + 4;
-        items.forEach(function (el) {
-          if (el.__row > me.__row) {
-            el.style.top = Math.round((parseFloat(el.style.top) || 0) + delta) + "px";
-          }
-        });
-        stack.style.height = Math.round((parseFloat(stack.style.height) || 0) + delta) + "px";
+      if (measured.some(function (item) { return !item.w || !item.h; })) {
+        stack.classList.remove("is-cloud");
+        stack.style.height = "";
         return;
       }
-      if (!sameRow) return;
-      // Last resort: park the subject in the open space under the constellation.
-      var floor = 0;
-      items.forEach(function (el) {
-        if (el === me) return;
-        var r = box(el);
-        floor = Math.max(floor, r.y + r.h);
+      var nextSignature = width + "|" + measured.map(function (item) { return item.w + "x" + item.h; }).join("|");
+      if (nextSignature === signature) return;
+      signature = nextSignature;
+      lastWidth = width;
+      var result = place(measured, width);
+      result.cells.forEach(function (cell) {
+        cell.el.style.left = cell.x + "px";
+        cell.el.style.top = cell.y + "px";
       });
-      var drift = narrow ? 6 : 12;
-      var top = Math.round(floor + drift + 30);
-      me.style.left = Math.max(0, Math.round((stack.clientWidth - mine.w) / 2)) + "px";
-      me.style.top = top + "px";
-      var height = parseFloat(stack.style.height) || 0;
-      var total = top + mine.h + 26;
-      if (height < total) stack.style.height = Math.round(total) + "px";
+      stack.style.height = result.height + "px";
     }
-
-    function reveal() {
-      if (reduceMotion) {
-        items.forEach(function (el) { el.classList.add("is-in"); });
-        return;
-      }
-      items.forEach(function (el) { el.classList.add("is-in"); });
+    function schedule() {
+      if (!frame) frame = raf(layout);
     }
-
-    function relayout() {
-      layout();
-    }
-
-    layout();
-    raf(function () { if (!stack.style.height) layout(); });
-    if (doc.fonts && doc.fonts.ready) {
-      doc.fonts.ready.then(function () { fontsDone = true; relayout(); });
-    }
-    on(window, "resize", throttle(relayout, 200));
-    on(window, "load", relayout);
-    // Fonts may swap after the first pass; keep re-measuring until the boxes
-    // settle, and watch the name boxes themselves for late font loads.
-    setTimeout(function () { relayout(); }, 450);
-    setTimeout(function () { relayout(); }, 1600);
-    if (window.ResizeObserver) {
-      var ro = new ResizeObserver(function () { relayout(); });
-      items.forEach(function (el) { ro.observe(el); });
-    }
-
-    if ("IntersectionObserver" in window && !reduceMotion) {
-      var io = new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) {
-            reveal();
-            io.disconnect();
-          }
-        });
-      }, { threshold: 0.06 });
-      io.observe(stack);
-    } else {
-      reveal();
-    }
-
-    items.forEach(function (el) {
-      var meta = el.getAttribute("data-meta") || "";
-      var name = (el.textContent || "").trim();
-      function live() {
-        if (!read) return;
-        read.textContent = name + " · " + meta;
+    function show(el) {
+      if (selected) selected.classList.remove("is-current");
+      selected = el;
+      el.classList.add("is-current");
+      var name = walkerName(el);
+      if (read) {
+        read.textContent = name + " · " + (el.getAttribute("data-meta") || "");
         read.classList.add("is-live");
       }
-      function idle() {
-        if (!read) return;
-        read.textContent = defaultRead;
-        read.classList.remove("is-live");
+      if (source) {
+        source.href = el.getAttribute("href");
+        source.setAttribute("aria-label", "阅读" + name + "的相关推文");
+        source.hidden = false;
       }
-      on(el, "mouseenter", live);
-      on(el, "focus", live);
-      on(el, "mouseleave", idle);
-      on(el, "blur", idle);
+    }
+    function instructions() {
+      if (hint) hint.textContent = touch.matches ?
+        "点名字查看参与记录，再点「阅读相关推文」。" :
+        "移入或聚焦名字，查看参与记录；点击名字阅读推文。";
+    }
+
+    box.classList.add("is-interactive");
+    items.forEach(function (el, i) {
+      el.classList.add("is-in");
+      el.style.setProperty("--nc-duration", (6 + i % 5) + "s");
+      el.style.setProperty("--nc-phase", "-" + (i % 9) + "s");
+      on(el, "mouseenter", function () { if (!touch.matches) show(el); });
+      on(el, "focus", function () { show(el); });
+      on(el, "click", function (e) {
+        // Preserve normal keyboard activation and modified/open-in-new-tab clicks.
+        if (touch.matches && e.detail > 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+          e.preventDefault();
+          show(el);
+        }
+      });
     });
+    instructions();
+    if (touch.addEventListener) on(touch, "change", instructions);
+    else if (touch.addListener) touch.addListener(instructions);
+    layout();
+    on(window, "resize", schedule);
+    if (window.ResizeObserver) {
+      new ResizeObserver(function (entries) {
+        if (Math.abs(entries[0].contentRect.width - lastWidth) > 0.5) schedule();
+      }).observe(stack);
+    }
+    if (doc.fonts) {
+      doc.fonts.ready.then(schedule);
+      on(doc.fonts, "loadingdone", schedule);
+    }
   }
 
   function boot() {

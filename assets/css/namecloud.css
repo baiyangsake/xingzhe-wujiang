@@ -1,0 +1,96 @@
+/* The walkers: generous type, stable hit areas, and a quiet live record. */
+body[data-page="team"] .namecloud { margin-top: 12px; isolation: isolate; }
+body[data-page="team"] #namewall { scroll-margin-top: 0; }
+body[data-page="team"] .namecloud::before { opacity: .4; }
+body[data-page="team"] .namecloud__legend { gap: 10px 24px; color: var(--muted); letter-spacing: .08em; }
+body[data-page="team"] .namecloud .ncl--1 { background: var(--muted-2); }
+body[data-page="team"] .namecloud__hint { margin: 14px 0 0; color: var(--muted); font-size: 11px; line-height: 1.8; letter-spacing: .04em; }
+body[data-page="team"] .namecloud__record { display: none; }
+body[data-page="team"] .namecloud.is-interactive .namecloud__record {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px 24px;
+  min-height: 66px; margin-top: 10px; padding: 10px 0;
+  border-bottom: 1px solid var(--line-soft); background: var(--paper);
+}
+body[data-page="team"] .namecloud .namecloud__read {
+  display: block; margin: 0; color: var(--muted); font-size: 12px;
+  line-height: 1.8; letter-spacing: .04em; min-width: 0; overflow-wrap: anywhere;
+}
+body[data-page="team"] .namecloud .namecloud__read.is-live { color: var(--ink); }
+body[data-page="team"] .namecloud__record-link {
+  flex: none; display: inline-flex; align-items: center; gap: 12px; min-height: 44px;
+  color: var(--gold); font-size: 12px; text-decoration: underline;
+  text-underline-offset: 5px; text-decoration-thickness: 1px;
+}
+body[data-page="team"] .namecloud__record-link[hidden] { display: none; }
+body[data-page="team"] .namecloud .namecloud__stack {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 17px 25px;
+  position: relative; margin-top: 24px; min-height: 200px;
+}
+body[data-page="team"] .namecloud .namecloud__stack::before { opacity: .22; }
+body[data-page="team"] .namecloud .namecloud__stack .nw,
+body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  box-sizing: border-box; width: max-content; max-width: 100%; min-width: 44px; min-height: 44px;
+  padding: 6px 7px; margin: 0; line-height: 1.15; white-space: nowrap;
+  opacity: 1; filter: none; transform: none; transition: none; will-change: auto;
+  scroll-margin-top: calc(var(--nav-h) + 120px); text-decoration: none;
+}
+body[data-page="team"] .namecloud .namecloud__stack.is-cloud { display: block; }
+body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw { position: absolute; }
+body[data-page="team"] .namecloud .namecloud__stack .nw .nw__t {
+  display: inline-block; font-family: var(--font-serif); font-weight: 500; letter-spacing: .045em;
+  animation: none; transform: none; text-shadow: none;
+  transition: color .2s ease; border-bottom: 1px solid transparent;
+}
+body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="3"] .nw__t { font-size: 33px; color: var(--ink); }
+body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="2"] .nw__t { font-size: 23px; color: var(--ink-2); }
+body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="1"] .nw__t { font-size: 16px; color: var(--muted); }
+body[data-page="team"] .namecloud .namecloud__stack .nw:is(:hover, :focus-visible, .is-current) .nw__t {
+  color: var(--gold); border-bottom-color: currentColor; letter-spacing: .045em;
+}
+body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
+  outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px;
+}
+@keyframes walkerBreath { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+@media (min-width: 901px) {
+  body[data-page="team"] #namewall .sec-head { margin-bottom: 28px; }
+  body[data-page="team"] #namewall .sec-head__main {
+    display: grid; grid-template-columns: 1fr .8fr; align-items: end; gap: 20px 70px;
+  }
+  body[data-page="team"] #namewall .sec-head__main .eyebrow { grid-column: 1 / -1; margin: 0; }
+  body[data-page="team"] #namewall .sec-head__main .sec-title { margin: 0; }
+  body[data-page="team"] #namewall .sec-head__main .sec-desc { margin: 0; max-width: 36em; padding-bottom: 5px; }
+  body[data-page="team"] .namecloud__hint { position: absolute; top: 0; right: 0; margin: 0; font-size: 10px; line-height: 18px; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw__t {
+    animation: walkerBreath var(--nc-duration, 8s) ease-in-out infinite alternate;
+    animation-delay: var(--nc-phase, 0s);
+  }
+  body[data-page="team"] .namecloud:is(:hover, :focus-within) .namecloud__stack.is-cloud .nw__t { animation-play-state: paused; }
+}
+@media (max-width: 900px) {
+  body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="3"] .nw__t { font-size: 27px; }
+  body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="2"] .nw__t { font-size: 20px; }
+  body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="1"] .nw__t { font-size: 15px; }
+}
+@media (max-width: 640px) {
+  body[data-page="team"] .namecloud__legend { gap: 9px 16px; font-size: 10px; }
+  body[data-page="team"] .namecloud.is-interactive .namecloud__record {
+    position: sticky; top: calc(var(--nav-h) + 8px); z-index: 5;
+    gap: 4px 14px; min-height: 80px; padding: 10px 0; margin-top: 8px;
+  }
+  body[data-page="team"] .namecloud .namecloud__read { font-size: 11px; }
+  body[data-page="team"] .namecloud__record-link { gap: 6px; font-size: 11px; }
+  body[data-page="team"] .namecloud .namecloud__stack { margin-top: 18px; gap: 9px 10px; }
+}
+@media (max-width: 360px) {
+  body[data-page="team"] .namecloud.is-interactive .namecloud__record { flex-wrap: wrap; gap: 0; }
+  body[data-page="team"] .namecloud .namecloud__read { flex-basis: 100%; }
+  body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="3"] .nw__t { font-size: 25px; }
+  body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="2"] .nw__t { font-size: 19px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="team"] .namecloud .namecloud__stack .nw,
+  body[data-page="team"] .namecloud .namecloud__stack .nw .nw__t { animation: none; transition: none; transform: none; }
+}
