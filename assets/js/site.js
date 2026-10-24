@@ -797,28 +797,56 @@
     var defaultRead = read ? read.textContent : "";
     var fontsDone = false;
 
-    function layout() {
-      var w = stack.clientWidth;
-      if (!w) return false;
-      stack.classList.add("is-cloud");
-      items.forEach(function (el) {
-        el.style.left = "0px";
-        el.style.top = "0px";
-      });
-      var narrow = w < 640;
+    var keepClear = (function () {
+      var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
+      if (rule.length < 2) return null;
+      var subject = (rule[0] || "").trim();
+      var guards = (rule[1] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      return subject && guards.length ? { subject: subject, guards: guards } : null;
+    })();
+
+    function walkerName(el) {
+      return (el.textContent || "").replace(/\s+/g, "");
+    }
+
+    function findWalker(name) {
+      for (var k = 0; k < items.length; k++) {
+        if (walkerName(items[k]) === name) return items[k];
+      }
+      return null;
+    }
+
+    // Walkers that share a tier and a (期数,篇数) pair are interchangeable for
+    // display: only their place in the line may change.
+    function periodKey(el) {
+      var m = (el.getAttribute("data-meta") || "").match(/(\d+)\s*期\s*·\s*(\d+)\s*篇/);
+      return m ? m[1] + "|" + m[2] : "";
+    }
+
+    function edgeGap(a, b) {
+      var dx = Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w));
+      var dy = Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h));
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Pure layout maths: given a sequence, return the cell of every walker.
+    // Measuring is done once in layout(); this never touches the DOM.
+    function place(seq, w, narrow) {
       var gapMin = narrow ? 12 : 20;
       var gapMax = narrow ? 30 : 62;
       var drift = narrow ? 6 : 12;
       var rowGap = narrow ? 18 : 22;
       var x = 0, y = 0, rowH = 0, n = 0, row = 0;
-      items.forEach(function (el, i) {
-        var iw = el.offsetWidth;
-        var ih = el.offsetHeight;
+      var cells = [];
+      seq.forEach(function (el, i) {
+        var iw = el.__w;
+        var ih = el.__h;
         var pad = 6;
         if (iw && x > 0 && x + iw > w - pad) {
           x = 0;
           y += Math.round(rowH * 0.95) + rowGap;
           rowH = 0;
+          n = 0;
           row++;
         }
         // deterministic pseudo-random jitter: no two neighbours share a baseline
@@ -827,47 +855,160 @@
         if (n === 0 && y > 0) {
           x = ((i * 29) % (narrow ? 22 : 58));
         }
-        el.style.left = Math.max(0, Math.round(x + jx)) + "px";
-        el.style.top = Math.max(0, Math.round(y + jy)) + "px";
-        el.__row = row;
-        el.style.setProperty("--d", Math.min(760, n * 24) + "ms");
-        el.style.setProperty("--fy", (3 + (i % 5)) + "px");
-        el.style.setProperty("--fd", (5 + (i % 6)) + "s");
-        el.style.setProperty("--fdel", "-" + (((i * 7) % 13) * 0.7).toFixed(1) + "s");
+        cells.push({
+          el: el,
+          i: i,
+          row: row,
+          n: n,
+          w: iw,
+          h: ih,
+          x: Math.max(0, Math.min(Math.round(x + jx), Math.max(0, w - iw - pad))),
+          y: Math.max(0, Math.round(y + jy))
+        });
         var gap = gapMin + (((i * 37) % 100) / 100) * (gapMax - gapMin);
         x += iw + gap;
         rowH = Math.max(rowH, ih);
         n++;
       });
-      stack.style.height = Math.round(y + rowH + drift + 26) + "px";
+      return {
+        cells: cells,
+        height: Math.round(y + rowH + drift + 26)
+      };
+    }
+
+    // On a narrow phone the flow folds into a tight grid and a guard can end up
+    // in the cell right under the subject. Shifting whole rows leaves a blank
+    // line behind, so instead every interchange inside the subject's
+    // interchangeable peer group is scored and the airiest arrangement wins.
+    function chooseOrder(w) {
+      if (!keepClear) return items;
+      var me = findWalker(keepClear.subject);
+      var guards = [];
+      keepClear.guards.forEach(function (name) {
+        var g = findWalker(name);
+        if (g) guards.push(g);
+      });
+      if (!me || !guards.length) return items;
+      var key = periodKey(me);
+      var pool = [];
+      if (key) {
+        items.forEach(function (el) { if (periodKey(el) === key) pool.push(el); });
+      }
+      if (pool.length < 2 || pool.length > 6) return items;
+      var slots = [];
+      items.forEach(function (el, i) { if (pool.indexOf(el) >= 0) slots.push(i); });
+      var target = 56;
+      var best = null;
+      var used = [];
+      var perm = [];
+      var depth = 0;
+      var total = pool.length;
+
+      function inspect(seq) {
+        var res = place(seq, w, true);
+        var map = {};
+        res.cells.forEach(function (c) { map[walkerName(c.el)] = c; });
+        var mine = map[keepClear.subject];
+        if (!mine) return null;
+        var worst = Infinity;
+        var deficit = 0;
+        var clash = false;
+        guards.forEach(function (g) {
+          var cell = map[walkerName(g)];
+          if (!cell) return;
+          var dist = edgeGap(mine, cell);
+          if (dist < worst) worst = dist;
+          if (cell.row > mine.row) {
+            if (dist < target) deficit = Math.max(deficit, target - dist);
+          } else if (dist < target) {
+            // same row or above: nudging rows below cannot separate them
+            clash = true;
+          }
+        });
+        return { seq: seq, worst: worst, deficit: deficit, clash: clash, shuffle: 0 };
+      }
+
+      function better(a, b) {
+        if (!a) return false;
+        if (!b) return true;
+        if (a.clash !== b.clash) return !a.clash;
+        if (a.deficit !== b.deficit) return a.deficit < b.deficit;
+        if (a.worst !== b.worst) return a.worst > b.worst;
+        return a.shuffle < b.shuffle;
+      }
+
+      function search() {
+        if (depth === total) {
+          var seq = items.slice();
+          var k;
+          for (k = 0; k < total; k++) seq[slots[k]] = perm[k];
+          var res = inspect(seq);
+          if (res) {
+            for (k = 0; k < total; k++) res.shuffle += Math.abs(pool.indexOf(perm[k]) - k);
+            if (better(res, best)) best = res;
+          }
+          return;
+        }
+        for (var p = 0; p < total; p++) {
+          if (used[p]) continue;
+          used[p] = true;
+          perm[depth] = pool[p];
+          depth++;
+          search();
+          depth--;
+          used[p] = false;
+        }
+      }
+
+      search();
+      return best ? best.seq : items;
+    }
+
+    function layout(attempt) {
+      var w = stack.clientWidth;
+      if (!w) return false;
+      stack.classList.add("is-cloud");
+      var remeasured = false;
+      items.forEach(function (el) {
+        el.style.left = "0px";
+        el.style.top = "0px";
+        var iw = el.offsetWidth;
+        var ih = el.offsetHeight;
+        if (iw !== el.__w || ih !== el.__h) remeasured = true;
+        el.__w = iw;
+        el.__h = ih;
+      });
+      var narrow = w < 640;
+      var seq = narrow ? chooseOrder(w) : items;
+      var res = place(seq, w, narrow);
+      res.cells.forEach(function (cell) {
+        var el = cell.el;
+        el.style.left = cell.x + "px";
+        el.style.top = cell.y + "px";
+        el.__row = cell.row;
+        el.style.setProperty("--d", Math.min(760, cell.n * 24) + "ms");
+        el.style.setProperty("--fy", (3 + (cell.i % 5)) + "px");
+        el.style.setProperty("--fd", (5 + (cell.i % 6)) + "s");
+        el.style.setProperty("--fdel", "-" + (((cell.i * 7) % 13) * 0.7).toFixed(1) + "s");
+      });
+      stack.style.height = res.height + "px";
       settle();
+      if (remeasured && (attempt || 0) < 3) {
+        layout((attempt || 0) + 1);
+      }
       return true;
     }
 
     // Optional clearance rule: the stack may declare
-    // data-keep-clear="<subject>|<guard>,<guard>". When the flow lines a guard
-    // up too close to the subject, every row below the subject's row is nudged
-    // down until the breathing space matches data-keep-gap (a smaller target on
-    // narrow screens, where the cloud is packed). The subject therefore keeps
-    // its natural place in the sequence instead of being parked in the empty
-    // space under the constellation; only a same-row collision falls back to
-    // that last resort.
+    // data-keep-clear="<subject>|<guard>,<guard>". chooseOrder() keeps them
+    // apart on phones by re-ordering the interchangeable peer group; this
+    // routine is the safety net for any remaining collision.
     function settle() {
-      var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
-      if (rule.length < 2) return;
-      var subject = (rule[0] || "").trim();
-      var guards = (rule[1] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-      if (!subject || !guards.length) return;
+      if (!keepClear) return;
       var narrow = stack.clientWidth < 640;
       var minGap = parseFloat(stack.getAttribute("data-keep-gap")) || 120;
-      var target = narrow ? Math.min(minGap, 58) : minGap;
-      var find = function (name) {
-        for (var k = 0; k < items.length; k++) {
-          if ((items[k].textContent || "").trim() === name) return items[k];
-        }
-        return null;
-      };
-      var me = find(subject);
+      var target = narrow ? Math.min(minGap, 56) : minGap;
+      var me = findWalker(keepClear.subject);
       if (!me) return;
       function box(el) {
         return {
@@ -880,13 +1021,10 @@
       var mine = box(me);
       var below = [];
       var sameRow = false;
-      guards.forEach(function (name) {
-        var g = find(name);
+      keepClear.guards.forEach(function (name) {
+        var g = findWalker(name);
         if (!g) return;
-        var r = box(g);
-        var dx = Math.max(0, Math.max(mine.x, r.x) - Math.min(mine.x + mine.w, r.x + r.w));
-        var dy = Math.max(0, Math.max(mine.y, r.y) - Math.min(mine.y + mine.h, r.y + r.h));
-        var dist = Math.sqrt(dx * dx + dy * dy);
+        var dist = edgeGap(mine, box(g));
         if (dist >= target) return;
         if (g.__row > me.__row) below.push(dist);
         else sameRow = true;
@@ -939,6 +1077,14 @@
     }
     on(window, "resize", throttle(relayout, 200));
     on(window, "load", relayout);
+    // Fonts may swap after the first pass; keep re-measuring until the boxes
+    // settle, and watch the name boxes themselves for late font loads.
+    setTimeout(function () { relayout(); }, 450);
+    setTimeout(function () { relayout(); }, 1600);
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(function () { relayout(); });
+      items.forEach(function (el) { ro.observe(el); });
+    }
 
     if ("IntersectionObserver" in window && !reduceMotion) {
       var io = new IntersectionObserver(function (entries) {
