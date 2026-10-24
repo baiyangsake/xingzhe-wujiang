@@ -838,7 +838,61 @@
         n++;
       });
       stack.style.height = Math.round(y + rowH + drift + 26) + "px";
+      settle();
       return true;
+    }
+
+    // Optional clearance rule: the stack may declare
+    // data-keep-clear="<subject>|<guard>,<guard>" so the subject never settles
+    // next to one of the guards. When the flow layout brings a pair closer than
+    // data-keep-gap px, the subject is parked in the open space underneath the
+    // constellation, far away from both guards.
+    function settle() {
+      var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
+      if (rule.length < 2) return;
+      var subject = (rule[0] || "").trim();
+      var guards = (rule[1] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (!subject || !guards.length) return;
+      var minGap = parseFloat(stack.getAttribute("data-keep-gap")) || 120;
+      var find = function (name) {
+        for (var k = 0; k < items.length; k++) {
+          if ((items[k].textContent || "").trim() === name) return items[k];
+        }
+        return null;
+      };
+      var me = find(subject);
+      if (!me) return;
+      function box(el) {
+        return {
+          x: parseFloat(el.style.left) || 0,
+          y: parseFloat(el.style.top) || 0,
+          w: el.offsetWidth,
+          h: el.offsetHeight
+        };
+      }
+      var mine = box(me);
+      var clash = guards.some(function (name) {
+        var g = find(name);
+        if (!g) return false;
+        var r = box(g);
+        var dx = Math.max(0, Math.max(mine.x, r.x) - Math.min(mine.x + mine.w, r.x + r.w));
+        var dy = Math.max(0, Math.max(mine.y, r.y) - Math.min(mine.y + mine.h, r.y + r.h));
+        return Math.sqrt(dx * dx + dy * dy) < minGap;
+      });
+      if (!clash) return;
+      var floor = 0;
+      items.forEach(function (el) {
+        if (el === me) return;
+        var r = box(el);
+        floor = Math.max(floor, r.y + r.h);
+      });
+      var drift = stack.clientWidth < 640 ? 6 : 12;
+      var top = Math.round(floor + drift + 30);
+      me.style.left = Math.max(0, Math.round((stack.clientWidth - mine.w) / 2)) + "px";
+      me.style.top = top + "px";
+      var height = parseFloat(stack.style.height) || 0;
+      var total = top + mine.h + 26;
+      if (height < total) stack.style.height = Math.round(total) + "px";
     }
 
     function reveal() {
