@@ -810,7 +810,7 @@
       var gapMax = narrow ? 30 : 62;
       var drift = narrow ? 6 : 12;
       var rowGap = narrow ? 18 : 22;
-      var x = 0, y = 0, rowH = 0, n = 0;
+      var x = 0, y = 0, rowH = 0, n = 0, row = 0;
       items.forEach(function (el, i) {
         var iw = el.offsetWidth;
         var ih = el.offsetHeight;
@@ -819,6 +819,7 @@
           x = 0;
           y += Math.round(rowH * 0.95) + rowGap;
           rowH = 0;
+          row++;
         }
         // deterministic pseudo-random jitter: no two neighbours share a baseline
         var jy = (((i * 61) % 100) / 100 - 0.5) * 2 * drift;
@@ -828,6 +829,7 @@
         }
         el.style.left = Math.max(0, Math.round(x + jx)) + "px";
         el.style.top = Math.max(0, Math.round(y + jy)) + "px";
+        el.__row = row;
         el.style.setProperty("--d", Math.min(760, n * 24) + "ms");
         el.style.setProperty("--fy", (3 + (i % 5)) + "px");
         el.style.setProperty("--fd", (5 + (i % 6)) + "s");
@@ -843,17 +845,22 @@
     }
 
     // Optional clearance rule: the stack may declare
-    // data-keep-clear="<subject>|<guard>,<guard>" so the subject never settles
-    // next to one of the guards. When the flow layout brings a pair closer than
-    // data-keep-gap px, the subject is parked in the open space underneath the
-    // constellation, far away from both guards.
+    // data-keep-clear="<subject>|<guard>,<guard>". When the flow lines a guard
+    // up too close to the subject, every row below the subject's row is nudged
+    // down until the breathing space matches data-keep-gap (a smaller target on
+    // narrow screens, where the cloud is packed). The subject therefore keeps
+    // its natural place in the sequence instead of being parked in the empty
+    // space under the constellation; only a same-row collision falls back to
+    // that last resort.
     function settle() {
       var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
       if (rule.length < 2) return;
       var subject = (rule[0] || "").trim();
       var guards = (rule[1] || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
       if (!subject || !guards.length) return;
+      var narrow = stack.clientWidth < 640;
       var minGap = parseFloat(stack.getAttribute("data-keep-gap")) || 120;
+      var target = narrow ? Math.min(minGap, 58) : minGap;
       var find = function (name) {
         for (var k = 0; k < items.length; k++) {
           if ((items[k].textContent || "").trim() === name) return items[k];
@@ -871,22 +878,40 @@
         };
       }
       var mine = box(me);
-      var clash = guards.some(function (name) {
+      var below = [];
+      var sameRow = false;
+      guards.forEach(function (name) {
         var g = find(name);
-        if (!g) return false;
+        if (!g) return;
         var r = box(g);
         var dx = Math.max(0, Math.max(mine.x, r.x) - Math.min(mine.x + mine.w, r.x + r.w));
         var dy = Math.max(0, Math.max(mine.y, r.y) - Math.min(mine.y + mine.h, r.y + r.h));
-        return Math.sqrt(dx * dx + dy * dy) < minGap;
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist >= target) return;
+        if (g.__row > me.__row) below.push(dist);
+        else sameRow = true;
       });
-      if (!clash) return;
+      if (below.length) {
+        var deficit = 0;
+        below.forEach(function (d) { deficit = Math.max(deficit, target - d); });
+        var delta = Math.ceil(deficit) + 4;
+        items.forEach(function (el) {
+          if (el.__row > me.__row) {
+            el.style.top = Math.round((parseFloat(el.style.top) || 0) + delta) + "px";
+          }
+        });
+        stack.style.height = Math.round((parseFloat(stack.style.height) || 0) + delta) + "px";
+        return;
+      }
+      if (!sameRow) return;
+      // Last resort: park the subject in the open space under the constellation.
       var floor = 0;
       items.forEach(function (el) {
         if (el === me) return;
         var r = box(el);
         floor = Math.max(floor, r.y + r.h);
       });
-      var drift = stack.clientWidth < 640 ? 6 : 12;
+      var drift = narrow ? 6 : 12;
       var top = Math.round(floor + drift + 30);
       me.style.left = Math.max(0, Math.round((stack.clientWidth - mine.w) / 2)) + "px";
       me.style.top = top + "px";
