@@ -7,6 +7,7 @@
   var body = doc.body;
   var BASE = body ? body.getAttribute("data-base") || "" : "";
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var resetFilters = null;
 
   function $(sel, root) {
     return (root || doc).querySelector(sel);
@@ -40,6 +41,133 @@
     };
   }
 
+  /* One overlay at a time; restore only the inert states we changed. */
+  var overlays = (function () {
+    var active = null;
+    var background = [];
+    var wasLocked = false;
+    var focusables = 'a[href], button, input, select, textarea, [tabindex]';
+
+    function available(el) {
+      return el && el.isConnected && !el.disabled && !el.closest("[inert]") &&
+        el.getClientRects().length && window.getComputedStyle(el).visibility !== "hidden";
+    }
+    function focus(el) {
+      if (available(el)) el.focus({ preventScroll: true });
+    }
+    function tabs(el) {
+      return $$(focusables, el).filter(function (item) {
+        return item.tabIndex >= 0 && available(item);
+      });
+    }
+    function register(el, label) {
+      if (!el) return;
+      el.setAttribute("inert", "");
+      el.setAttribute("aria-hidden", "true");
+      el.setAttribute("role", "dialog");
+      el.setAttribute("aria-modal", "true");
+      if (!el.hasAttribute("aria-label") && label) el.setAttribute("aria-label", label);
+      if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+    }
+    function close(el, restore) {
+      if (!active || active.el !== el) return;
+      var old = active;
+      active = null;
+      if (old.cancelFocus) old.cancelFocus();
+      background.forEach(function (item) {
+        if (item.value === null) item.el.removeAttribute("inert");
+        else item.el.setAttribute("inert", item.value);
+      });
+      background = [];
+      body.classList.toggle("is-locked", wasLocked);
+      if (restore !== false && available(old.trigger)) focus(old.trigger);
+      if (el.contains(doc.activeElement)) doc.activeElement.blur();
+      el.classList.remove("is-open");
+      el.setAttribute("aria-hidden", "true");
+      el.setAttribute("inert", "");
+      if (old.closed) old.closed();
+    }
+    function open(el, trigger, initial, closed) {
+      if (active && active.el === el) return false;
+      trigger = trigger || doc.activeElement;
+      if (active) {
+        // A shortcut inside an overlay returns to that overlay's original opener.
+        if (!trigger || active.el.contains(trigger)) trigger = active.trigger;
+        close(active.el, false);
+      }
+      active = { el: el, trigger: trigger, initial: initial, closed: closed };
+      wasLocked = body.classList.contains("is-locked");
+      el.removeAttribute("inert");
+      el.setAttribute("aria-hidden", "false");
+      el.classList.add("is-open");
+      // Inert siblings along the ancestor path also supports nested overlays.
+      for (var branch = el; branch && branch !== body; branch = branch.parentElement) {
+        if (!branch.parentElement) break;
+        Array.prototype.forEach.call(branch.parentElement.children, function (sibling) {
+          if (sibling === branch) return;
+          background.push({ el: sibling, value: sibling.getAttribute("inert") });
+          sibling.setAttribute("inert", "");
+        });
+      }
+      body.classList.add("is-locked");
+      focus(initial || tabs(el)[0] || el);
+      // Visibility can remain in transition beyond the first rendered frame.
+      var opening = active;
+      function retryFocus() {
+        if (active === opening && !el.contains(doc.activeElement)) {
+          focus(initial || tabs(el)[0] || el);
+        }
+      }
+      function afterTransition(e) {
+        if (e.target === el) retryFocus();
+      }
+      function milliseconds(value) {
+        return (parseFloat(value) || 0) * (value.indexOf("ms") >= 0 ? 1 : 1000);
+      }
+      var style = window.getComputedStyle(el);
+      var delays = style.transitionDelay.split(",");
+      var wait = 0;
+      style.transitionDuration.split(",").forEach(function (duration, i) {
+        wait = Math.max(wait, milliseconds(duration) + milliseconds(delays[i % delays.length]));
+      });
+      el.addEventListener("transitionend", afterTransition);
+      var focusTimer = setTimeout(function () {
+        retryFocus();
+        opening.cancelFocus();
+      }, wait + 60);
+      opening.cancelFocus = function () {
+        clearTimeout(focusTimer);
+        el.removeEventListener("transitionend", afterTransition);
+      };
+      raf(retryFocus);
+      return true;
+    }
+    on(doc, "keydown", function (e) {
+      if (!active) return;
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        close(active.el);
+      } else if (e.key === "Tab") {
+        var list = tabs(active.el);
+        var index = list.indexOf(doc.activeElement);
+        if (!list.length || index < 0 || (e.shiftKey && index === 0) ||
+            (!e.shiftKey && index === list.length - 1)) {
+          e.preventDefault();
+          focus(list.length ? list[e.shiftKey ? list.length - 1 : 0] : active.el);
+        }
+      }
+    }, true);
+    on(doc, "focusin", function (e) {
+      if (active && !active.el.contains(e.target)) {
+        focus(active.initial || tabs(active.el)[0] || active.el);
+      }
+    });
+    return { register: register, open: open, close: close, isOpen: function (el) {
+      return !!active && active.el === el;
+    } };
+  })();
+
   /* ------------------------------------------------------------ nav */
   function initNav() {
     var nav = $("[data-nav]");
@@ -56,30 +184,32 @@
     var drawer = $("[data-drawer]");
     var burger = $("[data-burger]");
     var closeBtn = $("[data-drawer-close]");
-    function setDrawer(open) {
-      if (!drawer) return;
-      drawer.classList.toggle("is-open", open);
-      drawer.setAttribute("aria-hidden", open ? "false" : "true");
-      body.classList.toggle("is-locked", open);
-      if (burger) burger.setAttribute("aria-expanded", open ? "true" : "false");
-    }
+    overlays.register(drawer, "网站导航");
     on(burger, "click", function () {
-      setDrawer(true);
+      if (drawer && overlays.open(drawer, burger, closeBtn, function () {
+        burger.setAttribute("aria-expanded", "false");
+      })) burger.setAttribute("aria-expanded", "true");
     });
     on(closeBtn, "click", function () {
-      setDrawer(false);
+      overlays.close(drawer);
     });
     $$("[data-drawer] a").forEach(function (a) {
       on(a, "click", function () {
-        setDrawer(false);
+        overlays.close(drawer);
       });
     });
 
     // mark current nav item
     var path = location.pathname.split("/").pop() || "index.html";
+    var page = body.getAttribute("data-page");
+    if (page === "project") path = "projects.html";
+    if (page === "post") path = "archive.html";
     $$(".nav__links a, .drawer__links a").forEach(function (a) {
       var href = (a.getAttribute("href") || "").split("/").pop();
-      if (href === path) a.classList.add("is-active");
+      var current = href === path;
+      a.classList.toggle("is-active", current);
+      if (current) a.setAttribute("aria-current", page === "project" || page === "post" ? "location" : "page");
+      else a.removeAttribute("aria-current");
     });
   }
 
@@ -202,14 +332,16 @@
     var next = $("[data-lb-next]", lb);
     var list = [];
     var cur = 0;
+    overlays.register(lb, "放大图片");
 
-    function open(items, index) {
+    function open(items, index, trigger) {
+      if (!items.length || index < 0 || overlays.isOpen(lb)) return false;
       list = items;
       cur = index;
       render();
-      lb.classList.add("is-open");
-      lb.setAttribute("aria-hidden", "false");
-      body.classList.add("is-locked");
+      return overlays.open(lb, trigger, $("[data-lb-close]", lb), function () {
+        imgEl.removeAttribute("src");
+      });
     }
     function render() {
       var it = list[cur];
@@ -223,10 +355,7 @@
       next.style.display = multi ? "" : "none";
     }
     function close() {
-      lb.classList.remove("is-open");
-      lb.setAttribute("aria-hidden", "true");
-      body.classList.remove("is-locked");
-      imgEl.src = "";
+      overlays.close(lb);
     }
     function go(dir) {
       if (!list.length) return;
@@ -244,10 +373,11 @@
       if (e.target === lb || e.target.classList.contains("lb__stage")) close();
     });
     on(doc, "keydown", function (e) {
-      if (!lb.classList.contains("is-open")) return;
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") go(-1);
-      if (e.key === "ArrowRight") go(1);
+      if (!overlays.isOpen(lb)) return;
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+        e.preventDefault();
+        go(e.key === "ArrowLeft" ? -1 : 1);
+      }
     });
 
     // collect article images
@@ -256,10 +386,18 @@
     });
     proseImgs.forEach(function (im) {
       im.classList.add("js-lightbox");
+      im.setAttribute("tabindex", "0");
+      im.setAttribute("role", "button");
+      im.setAttribute("aria-label", "放大图片：" + (im.alt || "文章图片"));
     });
-    document.addEventListener("click", function (e) {
-      var t = e.target;
-      if (!t || t.nodeType !== 1) return;
+    $$("[data-gallery] figure").forEach(function (figure) {
+      var img = $("img", figure);
+      figure.setAttribute("tabindex", "0");
+      figure.setAttribute("role", "button");
+      figure.setAttribute("aria-label", "放大图片：" + (figure.getAttribute("data-cap") || (img && img.alt) || "影像"));
+    });
+    function activateImage(t) {
+      if (!t || t.nodeType !== 1) return false;
       var figure = t.closest ? t.closest("[data-gallery] figure") : null;
       if (figure && !figure.classList.contains("is-hidden")) {
         var figures = $$("[data-gallery] figure").filter(function (f) {
@@ -272,16 +410,22 @@
             cap: f.getAttribute("data-cap") || (img ? img.alt : "")
           };
         });
-        open(items, figures.indexOf(figure));
-        return;
+        return open(items, figures.indexOf(figure), figure);
       }
       if (t.classList.contains("js-lightbox") || (t.tagName === "IMG" && t.parentNode && t.parentNode.closest && t.parentNode.closest(".prose"))) {
         if (!t.classList.contains("js-lightbox") && t.tagName === "IMG") t.classList.add("js-lightbox");
         var items2 = proseImgs.map(function (im) {
           return { full: im.getAttribute("src"), cap: im.alt || "" };
         });
-        open(items2, proseImgs.indexOf(t));
+        return open(items2, proseImgs.indexOf(t), t);
       }
+      return false;
+    }
+    on(doc, "click", function (e) {
+      if (activateImage(e.target)) e.preventDefault();
+    });
+    on(doc, "keydown", function (e) {
+      if (!e.repeat && (e.key === "Enter" || e.key === " ") && activateImage(e.target)) e.preventDefault();
     });
   }
 
@@ -292,6 +436,7 @@
     var items = $$("[data-filter-item]");
     var searches = $$("[data-filter-search]");
     var state = { q: "" };
+    var timer = null;
     bars.forEach(function (bar) {
       state[bar.getAttribute("data-filterbar") || "series"] = "all";
     });
@@ -304,7 +449,7 @@
           return false;
         }
       }
-      if (state.q && (el.getAttribute("data-text") || "").indexOf(state.q) < 0) return false;
+      if (state.q && (el.getAttribute("data-text") || "").toLowerCase().indexOf(state.q) < 0) return false;
       return true;
     }
 
@@ -341,24 +486,31 @@
       if (empty) empty.style.display = shown === 0 ? "" : "none";
     }
 
+    function setFacet(bar, value) {
+      state[bar.getAttribute("data-filterbar") || "series"] = value;
+      $$("[data-filter]", bar).forEach(function (btn) {
+        var selected = (btn.getAttribute("data-filter") || "all") === value;
+        btn.classList.toggle("is-active", selected);
+        btn.setAttribute("aria-pressed", selected ? "true" : "false");
+      });
+    }
+    resetFilters = function () {
+      clearTimeout(timer);
+      state.q = "";
+      searches.forEach(function (input) { input.value = ""; });
+      bars.forEach(function (bar) { setFacet(bar, "all"); });
+      apply();
+    };
     bars.forEach(function (bar) {
-      var g = bar.getAttribute("data-filterbar") || "series";
       $$("[data-filter]", bar).forEach(function (btn) {
         on(btn, "click", function () {
-          $$("[data-filter]", bar).forEach(function (b) {
-            b.classList.remove("is-active");
-            b.setAttribute("aria-pressed", "false");
-          });
-          btn.classList.add("is-active");
-          btn.setAttribute("aria-pressed", "true");
-          state[g] = btn.getAttribute("data-filter") || "all";
+          setFacet(bar, btn.getAttribute("data-filter") || "all");
           apply();
         });
       });
     });
 
     if (searches.length) {
-      var timer = null;
       searches.forEach(function (input) {
         on(input, "input", function () {
           clearTimeout(timer);
@@ -400,7 +552,20 @@
       sync();
     });
 
-    apply();
+    resetFilters();
+    if (body.getAttribute("data-page") === "archive") {
+      var series = new URLSearchParams(location.search).get("series");
+      if (series && items.some(function (item) {
+        return (item.getAttribute("data-series") || "").split(" ").indexOf(series) >= 0;
+      })) {
+        bars.forEach(function (bar) {
+          if (bar.getAttribute("data-filterbar") === "series" && $$("[data-filter]", bar).some(function (btn) {
+            return btn.getAttribute("data-filter") === series;
+          })) setFacet(bar, series);
+        });
+        apply();
+      }
+    }
   }
 
   /* ------------------------------------------------------------ archive sort */
@@ -437,6 +602,7 @@
     var data = null;
     var loading = false;
     var cur = -1;
+    overlays.register(modal, "站内搜索");
 
     function load(cb) {
       if (data) return cb();
@@ -518,21 +684,14 @@
       );
     }
 
-    function openModal() {
-      modal.classList.add("is-open");
-      modal.setAttribute("aria-hidden", "false");
-      body.classList.add("is-locked");
+    function openModal(trigger) {
+      if (!overlays.open(modal, trigger, input)) return;
       load(function () {
-        render((input.value || "").trim().toLowerCase());
-        setTimeout(function () {
-          input.focus();
-        }, 60);
+        if (overlays.isOpen(modal)) render((input.value || "").trim().toLowerCase());
       });
     }
     function closeModal() {
-      modal.classList.remove("is-open");
-      modal.setAttribute("aria-hidden", "true");
-      body.classList.remove("is-locked");
+      overlays.close(modal);
     }
     function move(dir) {
       var rows = $$(".sresult", results);
@@ -547,7 +706,7 @@
     openers.forEach(function (b) {
       on(b, "click", function (e) {
         e.preventDefault();
-        openModal();
+        openModal(b);
       });
     });
     on($("[data-search-close]", modal), "click", closeModal);
@@ -581,18 +740,18 @@
     });
     on(doc, "keydown", function (e) {
       var tag = (e.target && e.target.tagName) || "";
-      var typing = tag === "INPUT" || tag === "TEXTAREA";
-      if ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k")) {
+      var typing = tag === "INPUT" || tag === "TEXTAREA" || (e.target && e.target.isContentEditable);
+      if (!e.isComposing && ((e.key === "/" && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"))) {
         e.preventDefault();
-        openModal();
+        openModal(doc.activeElement);
       }
-      if (e.key === "Escape" && modal.classList.contains("is-open")) closeModal();
     });
   }
 
   /* ------------------------------------------------------------ misc */
   function initSmoothAnchors() {
     $$('a[href^="#"]').forEach(function (a) {
+      if (a.hasAttribute("data-year-link")) return;
       var id = a.getAttribute("href");
       if (!id || id === "#" || id.length < 2) return;
       var target = doc.getElementById(id.slice(1));
@@ -601,6 +760,10 @@
         e.preventDefault();
         var top = target.getBoundingClientRect().top + window.scrollY - 90;
         window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
+        if (a.classList.contains("skip-link")) {
+          target.setAttribute("tabindex", "-1");
+          target.focus({ preventScroll: true });
+        }
       });
     });
   }
@@ -612,17 +775,7 @@
         var el = doc.getElementById("y" + y);
         if (!el) return;
         e.preventDefault();
-        var chips = $$("[data-filter]", $("[data-filterbar]") || doc);
-        chips.forEach(function (b) {
-          b.classList.remove("is-active");
-        });
-        var any = $('[data-filter="all"]');
-        if (any) any.classList.add("is-active");
-        $$("[data-filter-item]").forEach(function (i) {
-          i.classList.remove("is-hidden");
-        });
-        var c = $("[data-filter-count]");
-        if (c) c.textContent = $$("[data-filter-item]").length;
+        if (resetFilters) resetFilters();
         var top = el.getBoundingClientRect().top + window.scrollY - 80;
         window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
       });
@@ -743,6 +896,7 @@
   }
 
   function boot() {
+    body.classList.add("site-enhanced");
     initNav();
     initReveal();
     initCounters();
