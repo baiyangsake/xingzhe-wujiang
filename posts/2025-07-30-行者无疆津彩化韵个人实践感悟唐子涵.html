@@ -12,11 +12,89 @@
 <meta property="og:image" content="../assets/img/posts/89c87020962016e379.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="../assets/fonts/fonts.css">
-<link rel="stylesheet" href="../assets/css/site.css?v=20261024-r2">
-<link rel="stylesheet" href="../assets/css/field-design.css?v=20261024-r2">
-<link rel="stylesheet" href="../assets/css/field-interiors.css?v=20261024-r2">
+<link rel="stylesheet" href="../assets/css/experience.css?v=2e23b4ba0edc">
+<script data-atelier-transition>
+/* Load as a small classic script in <head>, before the first render. */
+(function () {
+  "use strict";
+  if (window.__walkersTransitions) return;
+  window.__walkersTransitions = true;
+  var doc = document;
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var assigned = [];
+  var clicked = null;
+  var generation = 0;
+
+  function url(value) {
+    try {
+      var result = new URL(value, location.href);
+      return result.origin === location.origin ? result : null;
+    } catch (_) { return null; }
+  }
+  function project(value) { return value && /\/project-[^/]+\.html$/.test(value.pathname); }
+  function visible(el) {
+    if (!el) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight &&
+      window.getComputedStyle(el).visibility !== "hidden";
+  }
+  function clear() {
+    assigned.forEach(function (entry) { entry.el.style.viewTransitionName = entry.old; });
+    assigned = [];
+  }
+  function name(el, value) {
+    if (!el || assigned.some(function (entry) { return entry.el === el; })) return;
+    assigned.push({ el: el, old: el.style.viewTransitionName });
+    el.style.viewTransitionName = value;
+  }
+  function prepare(other, transition, outgoing) {
+    clear();
+    var currentGeneration = ++generation;
+    if (!transition) return;
+    if (reduced.matches) { transition.skipTransition(); return; }
+    var current = url(location.href);
+    var title = doc.querySelector("[data-vt-title], .phero__title, .proj-hero__title, .article__title, main h1, h1");
+    var cover = null;
+    if (project(current) && (!project(other) || other.pathname === current.pathname)) {
+      cover = doc.querySelector("[data-vt-cover], .proj-hero__bg img");
+    } else if (project(other) && !project(current)) {
+      var links = Array.prototype.filter.call(doc.querySelectorAll("a[href]"), function (link) {
+        var target = url(link.href);
+        return target && target.pathname === other.pathname && link.querySelector("[data-vt-cover], img");
+      });
+      var link = outgoing && links.indexOf(clicked) >= 0 && visible(clicked) ? clicked : links.filter(visible)[0];
+      if (link) {
+        var card = link.closest("[data-vt-project], .exp-detail, .prow, .pcard, .index__row") || link;
+        cover = link.querySelector("[data-vt-cover], img");
+        title = card.querySelector("[data-vt-title], [data-exp-name], .prow__name, .pcard__title, .index__name, h2, h3") || title;
+      }
+    }
+    // Only one title and one active project cover ever receive these names.
+    if (visible(title)) name(title, "page-title");
+    if (visible(cover)) name(cover, "project-cover");
+    var done = outgoing ? transition.finished : transition.ready;
+    function cleanThisTransition() { if (generation === currentGeneration) clear(); }
+    Promise.resolve(done).then(cleanThisTransition, cleanThisTransition);
+  }
+  doc.addEventListener("click", function (event) {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    clicked = event.target.closest && event.target.closest("a[href]");
+  }, true);
+  window.addEventListener("pageswap", function (event) {
+    var other = event.activation && event.activation.entry && url(event.activation.entry.url);
+    prepare(other, event.viewTransition, true);
+  });
+  window.addEventListener("pagereveal", function (event) {
+    var activation = window.navigation && window.navigation.activation;
+    var other = activation && activation.from ? url(activation.from.url) : url(doc.referrer || location.href);
+    prepare(other, event.viewTransition, false);
+  });
+})();
+
+</script>
+<noscript data-atelier-fallback><style>.nav{height:auto}.nav__inner{flex-wrap:wrap;padding-block:10px}.nav__links{display:flex;order:3;width:100%;overflow-x:auto;white-space:nowrap;padding-bottom:5px}.nav__tools,.drawer,.search-modal,.lb,.totop,.filterbar,.gallery-filters,[data-search-open],[data-random-story]{display:none!important}.field-atlas__tabs{display:none}.field-atlas__grid{grid-template-columns:1fr}</style></noscript>
 </head>
-<body data-page="post" data-base="../">
+<body data-page="post" data-base="../" class="atelier-site">
 <a class="skip-link" href="#main-content">跳到主要内容</a>
 
 <header class="nav nav--solid" data-nav>
@@ -38,7 +116,7 @@
       <a class="" href="../contact.html">联系我们</a>
     </nav>
     <div class="nav__tools">
-      <button class="icon-btn" type="button" data-search-open aria-label="搜索推文"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+      <button class="icon-btn" type="button" data-search-open title="搜索推文 · Ctrl K" aria-label="搜索推文"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
       <button class="nav__burger" type="button" data-burger aria-label="打开菜单" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h12"/></svg></button>
     </div>
   </div>
@@ -67,7 +145,7 @@
 <article class="article">
   <header class="article__head">
     <div class="article__tags"><a class="tag tag--gold" href="../project-jincai-2025.html">行者无疆·津韵</a><span class="tag tag--ink">实践感悟</span></div>
-    <h1 class="article__title">【行者无疆·津彩化韵】个人实践感悟——唐子涵</h1>
+    <h1 data-motion="text" class="article__title">【行者无疆·津彩化韵】个人实践感悟——唐子涵</h1>
     <div class="article__meta">
       <span>2025 年 7 月 30 日 16:18</span><span class="sep">/</span>
       <span>行者无疆·津彩化韵</span><span class="sep">/</span>
@@ -90,7 +168,7 @@
   <div class="wrap wrap--narrow">
     <p class="eyebrow">SAME EXPEDITION / 同期推文</p>
     <div class="cards">
-<a class="pcard" href="../posts/2025-11-12-行者无疆邀你共赴匠心之约.html" data-reveal>
+<a class="pcard" href="../posts/2025-11-12-行者无疆邀你共赴匠心之约.html">
   <div class="pcard__cover"><img src="../assets/img/posts/thumbs/fa0dea66310ea1ce12.jpg" alt="行者无疆邀你共赴匠心之约！" loading="lazy"></div>
   <div class="pcard__body">
     <p class="pcard__meta"><span>2025.11.12</span><span class="dot">·</span><span>行者无疆·津彩化韵</span><span class="dot">·</span><span>团队动态</span></p>
@@ -99,7 +177,7 @@
   </div>
 </a>
 
-<a class="pcard" href="../posts/2025-07-31-行者无疆津彩化韵个人实践感悟周子斐.html" data-reveal>
+<a class="pcard" href="../posts/2025-07-31-行者无疆津彩化韵个人实践感悟周子斐.html">
   <div class="pcard__cover"><img src="../assets/img/posts/thumbs/3d57478d5c6538f6a3.jpg" alt="【行者无疆·津彩化韵】个人实践感悟——周子斐" loading="lazy"></div>
   <div class="pcard__body">
     <p class="pcard__meta"><span>2025.07.31</span><span class="dot">·</span><span>行者无疆·津彩化韵</span><span class="dot">·</span><span>实践感悟</span></p>
@@ -108,7 +186,7 @@
   </div>
 </a>
 
-<a class="pcard" href="../posts/2025-07-31-行者无疆津彩化韵个人实践感悟肖盛强.html" data-reveal>
+<a class="pcard" href="../posts/2025-07-31-行者无疆津彩化韵个人实践感悟肖盛强.html">
   <div class="pcard__cover"><img src="../assets/img/posts/thumbs/4c64e758f46be8adf1.jpg" alt="【行者无疆·津彩化韵】个人实践感悟——肖盛强" loading="lazy"></div>
   <div class="pcard__body">
     <p class="pcard__meta"><span>2025.07.31</span><span class="dot">·</span><span>行者无疆·津彩化韵</span><span class="dot">·</span><span>实践感悟</span></p>
@@ -178,7 +256,6 @@
   <button class="lb__nav lb__next" type="button" data-lb-next aria-label="下一张">›</button>
   <div class="lb__cap lb__cap--idx" data-lb-idx></div>
 </div>
-<script src="../assets/js/site.js?v=20261024-r2" defer></script>
-<script src="../assets/js/field-design.js?v=20261024-r2" defer></script>
+<script src="../assets/js/experience.js?v=214919268d7a" defer></script>
 </body>
 </html>

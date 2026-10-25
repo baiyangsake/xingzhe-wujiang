@@ -130,6 +130,7 @@
       });
     }, {threshold:.08, rootMargin:'0px 0px -24px 0px'});
     document.querySelectorAll('.field-manifesto h2,.field-atlas__heading,.field-images__heading,.field-story').forEach(function (el) {
+      if (el.hasAttribute('data-motion') || el.closest('[data-motion]')) return;
       el.setAttribute('data-field-reveal', ''); observer.observe(el);
     });
     document.body.classList.add('field-motion');

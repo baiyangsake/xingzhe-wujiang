@@ -10,11 +10,89 @@
 <meta name="author" content="行者无疆社会实践团">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%230c1a15'/%3E%3Crect x='3' y='3' width='58' height='58' rx='5' fill='none' stroke='%23c9a961' stroke-width='2'/%3E%3Ctext x='32' y='45' text-anchor='middle' font-family='serif' font-size='34' fill='%23c9a961'%3E行%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/fonts/fonts.css">
-<link rel="stylesheet" href="assets/css/site.css?v=20261024-r2">
-<link rel="stylesheet" href="assets/css/field-design.css?v=20261024-r2">
-<link rel="stylesheet" href="assets/css/field-interiors.css?v=20261024-r2">
+<link rel="stylesheet" href="assets/css/experience.css?v=2e23b4ba0edc">
+<script data-atelier-transition>
+/* Load as a small classic script in <head>, before the first render. */
+(function () {
+  "use strict";
+  if (window.__walkersTransitions) return;
+  window.__walkersTransitions = true;
+  var doc = document;
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  var assigned = [];
+  var clicked = null;
+  var generation = 0;
+
+  function url(value) {
+    try {
+      var result = new URL(value, location.href);
+      return result.origin === location.origin ? result : null;
+    } catch (_) { return null; }
+  }
+  function project(value) { return value && /\/project-[^/]+\.html$/.test(value.pathname); }
+  function visible(el) {
+    if (!el) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight &&
+      window.getComputedStyle(el).visibility !== "hidden";
+  }
+  function clear() {
+    assigned.forEach(function (entry) { entry.el.style.viewTransitionName = entry.old; });
+    assigned = [];
+  }
+  function name(el, value) {
+    if (!el || assigned.some(function (entry) { return entry.el === el; })) return;
+    assigned.push({ el: el, old: el.style.viewTransitionName });
+    el.style.viewTransitionName = value;
+  }
+  function prepare(other, transition, outgoing) {
+    clear();
+    var currentGeneration = ++generation;
+    if (!transition) return;
+    if (reduced.matches) { transition.skipTransition(); return; }
+    var current = url(location.href);
+    var title = doc.querySelector("[data-vt-title], .phero__title, .proj-hero__title, .article__title, main h1, h1");
+    var cover = null;
+    if (project(current) && (!project(other) || other.pathname === current.pathname)) {
+      cover = doc.querySelector("[data-vt-cover], .proj-hero__bg img");
+    } else if (project(other) && !project(current)) {
+      var links = Array.prototype.filter.call(doc.querySelectorAll("a[href]"), function (link) {
+        var target = url(link.href);
+        return target && target.pathname === other.pathname && link.querySelector("[data-vt-cover], img");
+      });
+      var link = outgoing && links.indexOf(clicked) >= 0 && visible(clicked) ? clicked : links.filter(visible)[0];
+      if (link) {
+        var card = link.closest("[data-vt-project], .exp-detail, .prow, .pcard, .index__row") || link;
+        cover = link.querySelector("[data-vt-cover], img");
+        title = card.querySelector("[data-vt-title], [data-exp-name], .prow__name, .pcard__title, .index__name, h2, h3") || title;
+      }
+    }
+    // Only one title and one active project cover ever receive these names.
+    if (visible(title)) name(title, "page-title");
+    if (visible(cover)) name(cover, "project-cover");
+    var done = outgoing ? transition.finished : transition.ready;
+    function cleanThisTransition() { if (generation === currentGeneration) clear(); }
+    Promise.resolve(done).then(cleanThisTransition, cleanThisTransition);
+  }
+  doc.addEventListener("click", function (event) {
+    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    clicked = event.target.closest && event.target.closest("a[href]");
+  }, true);
+  window.addEventListener("pageswap", function (event) {
+    var other = event.activation && event.activation.entry && url(event.activation.entry.url);
+    prepare(other, event.viewTransition, true);
+  });
+  window.addEventListener("pagereveal", function (event) {
+    var activation = window.navigation && window.navigation.activation;
+    var other = activation && activation.from ? url(activation.from.url) : url(doc.referrer || location.href);
+    prepare(other, event.viewTransition, false);
+  });
+})();
+
+</script>
+<noscript data-atelier-fallback><style>.nav{height:auto}.nav__inner{flex-wrap:wrap;padding-block:10px}.nav__links{display:flex;order:3;width:100%;overflow-x:auto;white-space:nowrap;padding-bottom:5px}.nav__tools,.drawer,.search-modal,.lb,.totop,.filterbar,.gallery-filters,[data-search-open],[data-random-story]{display:none!important}.field-atlas__tabs{display:none}.field-atlas__grid{grid-template-columns:1fr}</style></noscript>
 </head>
-<body data-page="projects" data-base="">
+<body data-page="projects" data-base="" class="atelier-site">
 <a class="skip-link" href="#main-content">跳到主要内容</a>
 
 <header class="nav nav--solid" data-nav>
@@ -36,7 +114,7 @@
       <a class="" href="contact.html">联系我们</a>
     </nav>
     <div class="nav__tools">
-      <button class="icon-btn" type="button" data-search-open aria-label="搜索推文"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
+      <button class="icon-btn" type="button" data-search-open title="搜索推文 · Ctrl K" aria-label="搜索推文"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg></button>
       <button class="nav__burger" type="button" data-burger aria-label="打开菜单" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M3 7h18M3 12h18M3 17h12"/></svg></button>
     </div>
   </div>
@@ -67,7 +145,7 @@
   <div class="phero__inner wrap">
     <nav class="phero__crumbs" aria-label="面包屑"><a href="index.html">首页</a><span>/</span><span>实践项目</span></nav>
     <p class="eyebrow">PROJECTS / 实践项目</p>
-    <h1 class="phero__title">每一程，<br><span class="field-title-accent">都有名字。</span></h1>
+    <h1 data-motion="text" class="phero__title">每一程，<br><span class="field-title-accent">都有名字。</span></h1>
     <p class="phero__lead">行者无疆以「一期一题」组织实践：每一期选定一条文化线索、一片地理区域，行前科普、行中纪实、行后复盘。以下是全部十八期项目档案。</p>
   </div>
 </section>
@@ -97,7 +175,7 @@
 </div>
 
     <div class="prow-list">
-<a class="prow" id="qilu-2017" href="project-qilu-2017.html" data-reveal>
+<a class="prow" id="qilu-2017" href="project-qilu-2017.html">
   <span class="prow__no"><b>I</b><i>第 01 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/c88942be931af43ab8.jpg" alt="行者无疆 · 文溯齐鲁" loading="lazy"></span>
   <span class="prow__body">
@@ -108,7 +186,7 @@
   </span>
 </a>
 
-<a class="prow" id="zhongyuan-2017" href="project-zhongyuan-2017.html" data-reveal>
+<a class="prow" id="zhongyuan-2017" href="project-zhongyuan-2017.html">
   <span class="prow__no"><b>II</b><i>第 02 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/5c5c59109676c116fe.jpg" alt="行者无疆 · 知遇中原" loading="lazy"></span>
   <span class="prow__body">
@@ -119,7 +197,7 @@
   </span>
 </a>
 
-<a class="prow" id="wuyue-2018" href="project-wuyue-2018.html" data-reveal>
+<a class="prow" id="wuyue-2018" href="project-wuyue-2018.html">
   <span class="prow__no"><b>III</b><i>第 03 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/0f95864f09b03ddc2a.jpg" alt="行者无疆 · 致旅吴越" loading="lazy"></span>
   <span class="prow__body">
@@ -130,7 +208,7 @@
   </span>
 </a>
 
-<a class="prow" id="wanhui-2018" href="project-wanhui-2018.html" data-reveal>
+<a class="prow" id="wanhui-2018" href="project-wanhui-2018.html">
   <span class="prow__no"><b>IV</b><i>第 04 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/758528a4bfe13a0a8a.jpg" alt="行者无疆 · 拾遗皖徽" loading="lazy"></span>
   <span class="prow__body">
@@ -141,7 +219,7 @@
   </span>
 </a>
 
-<a class="prow" id="changan-2019" href="project-changan-2019.html" data-reveal>
+<a class="prow" id="changan-2019" href="project-changan-2019.html">
   <span class="prow__no"><b>V</b><i>第 05 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/c684f85f7aae1451fc.jpg" alt="行者无疆 · 韶忆长安" loading="lazy"></span>
   <span class="prow__body">
@@ -152,7 +230,7 @@
   </span>
 </a>
 
-<a class="prow" id="yuzhou-2019" href="project-yuzhou-2019.html" data-reveal>
+<a class="prow" id="yuzhou-2019" href="project-yuzhou-2019.html">
   <span class="prow__no"><b>VI</b><i>第 06 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/e62fa2775ad19a2a0d.jpg" alt="行者无疆 · 源洄渝州" loading="lazy"></span>
   <span class="prow__body">
@@ -163,7 +241,7 @@
   </span>
 </a>
 
-<a class="prow" id="xiaoxiang-2020" href="project-xiaoxiang-2020.html" data-reveal>
+<a class="prow" id="xiaoxiang-2020" href="project-xiaoxiang-2020.html">
   <span class="prow__no"><b>VII</b><i>第 07 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/1614140364a84e7b7e.jpg" alt="行者无疆 · 言念潇湘" loading="lazy"></span>
   <span class="prow__body">
@@ -174,7 +252,7 @@
   </span>
 </a>
 
-<a class="prow" id="dunhuang-2021" href="project-dunhuang-2021.html" data-reveal>
+<a class="prow" id="dunhuang-2021" href="project-dunhuang-2021.html">
   <span class="prow__no"><b>VIII</b><i>第 08 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/c3ae9a6ab9bdf5bced.jpg" alt="行者无疆 · 聆谂丝韵" loading="lazy"></span>
   <span class="prow__body">
@@ -185,7 +263,7 @@
   </span>
 </a>
 
-<a class="prow" id="huaiyang-2021" href="project-huaiyang-2021.html" data-reveal>
+<a class="prow" id="huaiyang-2021" href="project-huaiyang-2021.html">
   <span class="prow__no"><b>IX</b><i>第 09 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/80b8a662d52ecddfdc.jpg" alt="行者无疆 · 寓绻淮扬" loading="lazy"></span>
   <span class="prow__body">
@@ -196,7 +274,7 @@
   </span>
 </a>
 
-<a class="prow" id="gengxu-2022" href="project-gengxu-2022.html" data-reveal>
+<a class="prow" id="gengxu-2022" href="project-gengxu-2022.html">
   <span class="prow__no"><b>X</b><i>第 10 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/7b2affd93f9a5f6501.jpg" alt="行者无疆 · 赓续前行" loading="lazy"></span>
   <span class="prow__body">
@@ -207,7 +285,7 @@
   </span>
 </a>
 
-<a class="prow" id="suhang-2022" href="project-suhang-2022.html" data-reveal>
+<a class="prow" id="suhang-2022" href="project-suhang-2022.html">
   <span class="prow__no"><b>XI</b><i>第 11 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/7d84ad7a4f6d900180.jpg" alt="行者无疆 · 流眄苏杭" loading="lazy"></span>
   <span class="prow__body">
@@ -218,7 +296,7 @@
   </span>
 </a>
 
-<a class="prow" id="dongao-2023" href="project-dongao-2023.html" data-reveal>
+<a class="prow" id="dongao-2023" href="project-dongao-2023.html">
   <span class="prow__no"><b>XII</b><i>第 12 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/05fd86ead9f97fa235.jpg" alt="行者无疆 · 踏冰逐梦" loading="lazy"></span>
   <span class="prow__body">
@@ -229,7 +307,7 @@
   </span>
 </a>
 
-<a class="prow" id="zhiyi-2023" href="project-zhiyi-2023.html" data-reveal>
+<a class="prow" id="zhiyi-2023" href="project-zhiyi-2023.html">
   <span class="prow__no"><b>XIII</b><i>第 13 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/40fa180b05076131b5.jpg" alt="行者无疆 · 纸绎齊缘" loading="lazy"></span>
   <span class="prow__body">
@@ -240,7 +318,7 @@
   </span>
 </a>
 
-<a class="prow" id="yulv-2024" href="project-yulv-2024.html" data-reveal>
+<a class="prow" id="yulv-2024" href="project-yulv-2024.html">
   <span class="prow__no"><b>XIV</b><i>第 14 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/c752a9ed1f8f4bcd35.jpg" alt="行者无疆 · 豫旅拾遗" loading="lazy"></span>
   <span class="prow__body">
@@ -251,7 +329,7 @@
   </span>
 </a>
 
-<a class="prow" id="qinyu-2025" href="project-qinyu-2025.html" data-reveal>
+<a class="prow" id="qinyu-2025" href="project-qinyu-2025.html">
   <span class="prow__no"><b>XV</b><i>第 15 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/6d84f51e4962075510.jpg" alt="行者无疆 · 秦育遗韵" loading="lazy"></span>
   <span class="prow__body">
@@ -262,7 +340,7 @@
   </span>
 </a>
 
-<a class="prow" id="jincai-2025" href="project-jincai-2025.html" data-reveal>
+<a class="prow" id="jincai-2025" href="project-jincai-2025.html">
   <span class="prow__no"><b>XVI</b><i>第 16 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/4c64e758f46be8adf1.jpg" alt="行者无疆 · 津彩化韵" loading="lazy"></span>
   <span class="prow__body">
@@ -273,7 +351,7 @@
   </span>
 </a>
 
-<a class="prow" id="yujian-2026" href="project-yujian-2026.html" data-reveal>
+<a class="prow" id="yujian-2026" href="project-yujian-2026.html">
   <span class="prow__no"><b>XVII</b><i>第 17 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/4850b79bd230b9bed3.jpg" alt="行者无疆 · 渝见非遗" loading="lazy"></span>
   <span class="prow__body">
@@ -284,7 +362,7 @@
   </span>
 </a>
 
-<a class="prow" id="wenyun-2026" href="project-wenyun-2026.html" data-reveal>
+<a class="prow" id="wenyun-2026" href="project-wenyun-2026.html">
   <span class="prow__no"><b>XVIII</b><i>第 18 期</i></span>
   <span class="prow__media"><img src="assets/img/posts/31f90cd4a69b7b237b.jpg" alt="行者无疆 · 文韵皖南" loading="lazy"></span>
   <span class="prow__body">
@@ -355,7 +433,6 @@
   <button class="lb__nav lb__next" type="button" data-lb-next aria-label="下一张">›</button>
   <div class="lb__cap lb__cap--idx" data-lb-idx></div>
 </div>
-<script src="assets/js/site.js?v=20261024-r2" defer></script>
-<script src="assets/js/field-design.js?v=20261024-r2" defer></script>
+<script src="assets/js/experience.js?v=214919268d7a" defer></script>
 </body>
 </html>

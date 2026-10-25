@@ -332,7 +332,68 @@
     var next = $("[data-lb-next]", lb);
     var list = [];
     var cur = 0;
+    var stage = $(".lb__stage", lb);
+    var zoom = 1;
+    var baseWidth = 0, baseHeight = 0;
+    var originalWidth = imgEl.style.width, originalHeight = imgEl.style.height;
+    var stageOriginal = {};
+    ["tabindex", "role", "aria-label", "aria-describedby"].forEach(function (key) { stageOriginal[key] = stage.getAttribute(key); });
+    var swipe = null, swipeClickUntil = 0;
+    var zoomTools = doc.createElement("div");
+    zoomTools.className = "lb__zoom-tools";
+    var zoomIn = doc.createElement("button");
+    zoomIn.className = "lb__zoom"; zoomIn.type = "button";
+    zoomIn.textContent = "放大 +"; zoomIn.setAttribute("aria-label", "放大图片，最多三倍");
+    var zoomReset = doc.createElement("button");
+    zoomReset.className = "lb__zoom"; zoomReset.type = "button";
+    zoomReset.textContent = "复位"; zoomReset.setAttribute("aria-label", "图片恢复适应屏幕");
+    zoomTools.appendChild(zoomIn); zoomTools.appendChild(zoomReset);
+    $(".lb__top", lb).insertBefore(zoomTools, $("[data-lb-close]", lb));
+    if (!idxEl.id) idxEl.id = "lightbox-view-help";
+    idxEl.setAttribute("aria-live", "polite");
+    var descriptions = (lb.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean);
+    if (descriptions.indexOf(idxEl.id) < 0) descriptions.push(idxEl.id);
+    lb.setAttribute("aria-describedby", descriptions.join(" "));
     overlays.register(lb, "放大图片");
+
+    function zoomButtons() {
+      zoomIn.disabled = !imgEl.complete || !imgEl.naturalWidth || zoom >= 3;
+      zoomReset.disabled = zoom === 1;
+      zoomIn.setAttribute("aria-label", "放大图片，当前 " + Math.round(zoom * 100) + "%");
+      if (list.length) idxEl.textContent = cur + 1 + " / " + list.length + (zoom > 1 ?
+        " · " + Math.round(zoom * 100) + "% · 方向键平移 · 0 复位" : " · 左右键或滑动切图 · +/− 缩放");
+    }
+    function resetZoom() {
+      zoom = 1; baseWidth = baseHeight = 0; swipe = null;
+      imgEl.style.width = originalWidth; imgEl.style.height = originalHeight;
+      stage.classList.remove("is-zoomed"); stage.scrollLeft = stage.scrollTop = 0;
+      Object.keys(stageOriginal).forEach(function (key) {
+        if (stageOriginal[key] === null) stage.removeAttribute(key);
+        else stage.setAttribute(key, stageOriginal[key]);
+      });
+      zoomButtons();
+      if (doc.activeElement === stage && overlays.isOpen(lb) && !zoomIn.disabled) zoomIn.focus({ preventScroll: true });
+    }
+    function changeZoom(amount) {
+      if (!imgEl.complete || !imgEl.naturalWidth) return;
+      if (zoom === 1) { baseWidth = imgEl.clientWidth; baseHeight = imgEl.clientHeight; }
+      if (!baseWidth || !baseHeight) return;
+      zoom = Math.max(1, Math.min(3, zoom + amount));
+      if (zoom === 1) { resetZoom(); return; }
+      stage.classList.add("is-zoomed");
+      stage.setAttribute("tabindex", "0");
+      stage.setAttribute("role", "region");
+      stage.setAttribute("aria-label", "已放大的图片，可用方向键平移");
+      stage.setAttribute("aria-describedby", idxEl.id);
+      imgEl.style.width = Math.round(baseWidth * zoom) + "px";
+      imgEl.style.height = Math.round(baseHeight * zoom) + "px";
+      zoomButtons();
+    }
+    on(zoomIn, "click", function () { changeZoom(0.5); });
+    on(zoomReset, "click", resetZoom);
+    on(imgEl, "load", zoomButtons);
+    on(imgEl, "error", zoomButtons);
+    on(window, "resize", throttle(function () { if (overlays.isOpen(lb)) resetZoom(); }, 180));
 
     function open(items, index, trigger) {
       if (!items.length || index < 0 || overlays.isOpen(lb)) return false;
@@ -340,16 +401,18 @@
       cur = index;
       render();
       return overlays.open(lb, trigger, $("[data-lb-close]", lb), function () {
+        resetZoom();
         imgEl.removeAttribute("src");
       });
     }
     function render() {
       var it = list[cur];
       if (!it) return;
+      resetZoom();
       imgEl.src = it.full;
+      zoomButtons();
       imgEl.alt = it.cap || "";
       capEl.textContent = it.cap || "";
-      idxEl.textContent = cur + 1 + " / " + list.length;
       var multi = list.length > 1;
       prev.style.display = multi ? "" : "none";
       next.style.display = multi ? "" : "none";
@@ -370,15 +433,46 @@
       go(1);
     });
     on(lb, "click", function (e) {
+      if (stage.contains(e.target) && performance.now() < swipeClickUntil) { e.preventDefault(); return; }
       if (e.target === lb || e.target.classList.contains("lb__stage")) close();
     });
     on(doc, "keydown", function (e) {
       if (!overlays.isOpen(lb)) return;
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing || e.keyCode === 229) return;
+      if (zoom > 1 && ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].indexOf(e.key) >= 0) {
+        e.preventDefault();
+        var horizontal = Math.max(40, stage.clientWidth * 0.2);
+        var vertical = Math.max(40, stage.clientHeight * 0.2);
+        if (e.key === "ArrowLeft") stage.scrollLeft -= horizontal;
+        if (e.key === "ArrowRight") stage.scrollLeft += horizontal;
+        if (e.key === "ArrowUp") stage.scrollTop -= vertical;
+        if (e.key === "ArrowDown") stage.scrollTop += vertical;
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
         e.preventDefault();
         go(e.key === "ArrowLeft" ? -1 : 1);
+      } else if (e.key === "+" || e.key === "=" || e.key === "-" || e.key === "0") {
+        e.preventDefault();
+        if (e.key === "0") resetZoom();
+        else changeZoom(e.key === "-" ? -0.5 : 0.5);
       }
     });
+    on(stage, "touchstart", function (e) {
+      if (zoom !== 1 || e.touches.length !== 1) { swipe = null; return; }
+      swipe = { x: e.touches[0].clientX, y: e.touches[0].clientY,
+        id: e.touches[0].identifier, time: performance.now() };
+    }, { passive: true });
+    on(stage, "touchmove", function (e) { if (e.touches.length !== 1) swipe = null; }, { passive: true });
+    on(stage, "touchend", function (e) {
+      if (!swipe || zoom !== 1 || !overlays.isOpen(lb)) return;
+      var start = swipe; swipe = null;
+      var touch = Array.prototype.filter.call(e.changedTouches, function (item) { return item.identifier === start.id; })[0];
+      if (!touch) return;
+      var dx = touch.clientX - start.x, dy = touch.clientY - start.y;
+      if (list.length > 1 && Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy) * 1.35 && performance.now() - start.time < 850) {
+        go(dx < 0 ? 1 : -1); swipeClickUntil = performance.now() + 450;
+      }
+    }, { passive: true });
+    on(stage, "touchcancel", function () { swipe = null; }, { passive: true });
 
     // Decorative icons and separators remain ordinary article content.
     var proseImgs = [];
@@ -516,11 +610,26 @@
 
     function setFacet(bar, value) {
       state[bar.getAttribute("data-filterbar") || "series"] = value;
+      var selectedButton = null;
       $$("[data-filter]", bar).forEach(function (btn) {
         var selected = (btn.getAttribute("data-filter") || "all") === value;
         btn.classList.toggle("is-active", selected);
         btn.setAttribute("aria-pressed", selected ? "true" : "false");
+        if (selected) selectedButton = btn;
       });
+      // Reveal the chip only within its nearest overflowing horizontal rail.
+      // scrollIntoView would also move the document's vertical position.
+      for (var track = selectedButton && selectedButton.parentElement; track && bar.contains(track); track = track.parentElement) {
+        var overflow = window.getComputedStyle(track).overflowX;
+        if ((overflow !== "auto" && overflow !== "scroll") || !track.clientWidth || track.scrollWidth <= track.clientWidth + 1) continue;
+        var bounds = track.getBoundingClientRect();
+        var buttonBounds = selectedButton.getBoundingClientRect();
+        var left = bounds.left + track.clientLeft + 8;
+        var right = bounds.left + track.clientLeft + track.clientWidth - 8;
+        if (buttonBounds.left < left) track.scrollLeft -= left - buttonBounds.left;
+        else if (buttonBounds.right > right) track.scrollLeft += buttonBounds.right - right;
+        break;
+      }
     }
     resetFilters = function () {
       clearTimeout(timer);
@@ -651,7 +760,7 @@
               c: p[3],
               u: BASE + p[4],
               x: p[5] || "",
-              lc: p[0].toLowerCase() + " " + (p[5] || "").toLowerCase()
+              lc: [p[0], p[2], p[3], p[5]].join(" ").toLowerCase()
             };
           });
           loading = false;
