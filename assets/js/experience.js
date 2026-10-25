@@ -1119,7 +1119,6 @@
     boot();
   }
 })();
-
 ;
 /* field-design.js */
 /* Small, native enhancements. The photographs and stories remain usable without JS. */
@@ -1271,7 +1270,6 @@
     });
   }
 })();
-
 ;
 /* motion-system.js */
 /* Shared, optional motion. All links, images and native scrolling work without it. */
@@ -1540,12 +1538,60 @@
   if (doc.readyState === "loading") on(doc, "DOMContentLoaded", boot, { once: true });
   else boot();
 })();
-
 ;
 /* atelier-home.js */
 /* Open a real entry from the historical archive. */
 (function () {
   'use strict';
+  function initPhotoFilm() {
+    var rail = document.getElementById('home-photo-film');
+    var tools = document.querySelector('[data-film-controls]');
+    if (!rail || !tools) return;
+    var cards = Array.from(rail.querySelectorAll('.field-frame'));
+    var previous = tools.querySelector('[data-film-prev]');
+    var next = tools.querySelector('[data-film-next]');
+    var current = tools.querySelector('[data-film-current]');
+    var progress = tools.querySelector('[data-film-progress]');
+    var reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    var frame = 0;
+    function index() {
+      var max = rail.scrollWidth - rail.clientWidth;
+      if (max > 0 && rail.scrollLeft >= max - 3) return cards.length - 1;
+      var start = rail.getBoundingClientRect().left + parseFloat(getComputedStyle(rail).paddingLeft || 0);
+      var closest = 0, distance = Infinity;
+      cards.forEach(function (card, i) {
+        var delta = Math.abs(card.getBoundingClientRect().left - start);
+        if (delta < distance) { closest = i; distance = delta; }
+      });
+      return closest;
+    }
+    function update() {
+      frame = 0;
+      var max = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      var fraction = max ? Math.max(0, Math.min(1, rail.scrollLeft / max)) : 0;
+      previous.disabled = rail.scrollLeft < 3;
+      next.disabled = !max || rail.scrollLeft >= max - 3;
+      current.textContent = String(index() + 1).padStart(2, '0');
+      progress.style.setProperty('--film-progress', fraction);
+      progress.setAttribute('aria-valuenow', String(Math.round(fraction * 100)));
+    }
+    function schedule() { if (!frame) frame = requestAnimationFrame(update); }
+    function move(direction) {
+      var target = cards[Math.max(0, Math.min(cards.length - 1, index() + direction))];
+      if (!target) return;
+      var inset = parseFloat(getComputedStyle(rail).paddingLeft || 0);
+      var left = rail.scrollLeft + target.getBoundingClientRect().left - rail.getBoundingClientRect().left - inset;
+      rail.scrollTo({ left: Math.max(0, left), behavior: reduced.matches ? 'auto' : 'smooth' });
+    }
+    previous.addEventListener('click', function () { move(-1); });
+    next.addEventListener('click', function () { move(1); });
+    rail.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    window.addEventListener('pagehide', function () { if (frame) cancelAnimationFrame(frame); frame = 0; });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+    tools.hidden = false;
+    update();
+  }
   function initRandomReading() {
     var buttons = Array.from(document.querySelectorAll('[data-random-story]'));
     if (!buttons.length) return;
@@ -1570,7 +1616,290 @@
       });
     });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initRandomReading, { once: true });
-  else initRandomReading();
+  function boot() { initRandomReading(); initPhotoFilm(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
+  else boot();
 })();
+;
+/* home-carousel.js */
+/* The cover remains a static photograph unless this enhancement succeeds. */
+(function () {
+  "use strict";
+  var doc = document;
+  function on(el, type, fn, options) { if (el) el.addEventListener(type, fn, options || false); }
+  function all(selector, root) { return Array.prototype.slice.call(root.querySelectorAll(selector)); }
 
+  function enhance(region) {
+    if (region.hasAttribute("data-carousel-enhanced")) return;
+    var slides = all("[data-carousel-slide]", region);
+    if (!slides.length) return;
+    var controls = region.querySelector("[data-carousel-controls]");
+    var previous = region.querySelector("[data-carousel-prev]");
+    var next = region.querySelector("[data-carousel-next]");
+    var toggle = region.querySelector("[data-carousel-toggle]");
+    var dots = all("[data-carousel-go]", region);
+    var count = region.querySelector("[data-carousel-count]");
+    var status = region.querySelector("[data-carousel-status]");
+    var captionLeft = region.querySelector("[data-carousel-caption-left]");
+    var captionRight = region.querySelector("[data-carousel-caption-right]");
+    var captionLink = region.querySelector("[data-carousel-caption-link]");
+    var photo = region.querySelector(".field-cover__photo") || slides[0].parentElement;
+    var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+    var current = Math.max(0, slides.findIndex(function (image) { return !image.hidden; }));
+    var desired = current;
+    var userIntent = null;
+    var hovered = false;
+    var focused = region.contains(doc.activeElement);
+    var touching = false;
+    var visible = false;
+    var pending = false;
+    var timer = null;
+    var sequence = 0;
+    var transition = null;
+    var swipe = null;
+    var swallowClickUntil = 0;
+    var records = slides.map(function (image) {
+      return { image: image, state: "idle", promise: null, z: image.style.zIndex };
+    });
+    var dotLabels = dots.map(function (button) { return button.getAttribute("aria-label") || "第 " + (Number(button.getAttribute("data-carousel-go")) + 1) + " 幅"; });
+
+    function wantsPlay() { return userIntent === null ? !reduced.matches : userIntent; }
+    function usableCount() { return records.filter(function (record) { return record.state !== "error"; }).length; }
+    function clearClock() { if (timer !== null) clearTimeout(timer); timer = null; }
+    function canRotate() { return wantsPlay() && visible && !hovered && !focused && !touching && !doc.hidden && usableCount() > 1; }
+    function schedule() {
+      clearClock();
+      if (!pending && canRotate()) timer = setTimeout(function () {
+        timer = null;
+        if (canRotate()) select(adjacent(current, 1), "auto", 1, slides.length);
+      }, 6000);
+    }
+    function announce(message) { if (status) status.textContent = message; }
+    function syncControls() {
+      if (count) count.textContent = String(current + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0");
+      dots.forEach(function (button, i) {
+        var index = Number(button.getAttribute("data-carousel-go"));
+        var valid = Number.isInteger(index) && index >= 0 && index < slides.length;
+        var failed = valid && records[index].state === "error";
+        button.setAttribute("aria-pressed", index === current ? "true" : "false");
+        button.disabled = !valid || failed;
+        button.setAttribute("aria-label", dotLabels[i] + (failed ? "，图片暂不可用" : ""));
+      });
+      if (previous) previous.disabled = usableCount() < 2;
+      if (next) next.disabled = usableCount() < 2;
+      if (toggle) {
+        toggle.disabled = usableCount() < 2;
+        toggle.textContent = wantsPlay() ? "暂停" : "播放";
+        toggle.setAttribute("aria-label", wantsPlay() ? "暂停自动播放" : "开始自动播放");
+        toggle.setAttribute("aria-pressed", wantsPlay() ? "false" : "true");
+      }
+    }
+    function normalize() {
+      records.forEach(function (record, i) {
+        record.image.hidden = i !== current;
+        record.image.style.zIndex = record.z;
+        record.image.setAttribute("aria-hidden", i === current ? "false" : "true");
+      });
+    }
+    function finishVisuals() {
+      var old = transition;
+      transition = null;
+      if (old) old.animation.cancel();
+      normalize();
+    }
+    function pauseEnvironment() { clearClock(); finishVisuals(); }
+    function adjacent(start, direction) {
+      for (var step = 1; step <= slides.length; step++) {
+        var index = (start + direction * step + slides.length * 2) % slides.length;
+        if (records[index].state !== "error") return index;
+      }
+      return current;
+    }
+    function prepare(index) {
+      var record = records[index], image = record.image;
+      if (record.state === "ready" && image.complete && image.naturalWidth) return Promise.resolve();
+      if (record.promise) return record.promise;
+      record.state = "loading";
+      record.promise = new Promise(function (resolve, reject) {
+        var settled = false;
+        function cleanup() { image.removeEventListener("load", loaded); image.removeEventListener("error", failed); }
+        function failed() {
+          if (settled) return;
+          settled = true; cleanup(); reject(new Error("Cover image unavailable"));
+        }
+        function ready() {
+          if (settled) return;
+          if (!image.naturalWidth) { failed(); return; }
+          settled = true; cleanup(); resolve();
+        }
+        function loaded() {
+          if (settled) return;
+          if (image.decode) image.decode().then(ready, failed);
+          else ready();
+        }
+        image.addEventListener("load", loaded);
+        image.addEventListener("error", failed);
+        // Hidden lazy images otherwise need never start their request.
+        image.loading = "eager";
+        if (image.complete) { if (image.naturalWidth) loaded(); else failed(); }
+      }).then(function () { record.state = "ready"; }, function (error) { record.state = "error"; throw error; });
+      return record.promise;
+    }
+    function commit(index, origin) {
+      var old = current;
+      finishVisuals();
+      current = desired = index;
+      if (captionLeft) captionLeft.textContent = slides[index].getAttribute("data-caption-left") || "";
+      if (captionRight) captionRight.textContent = slides[index].getAttribute("data-caption-right") || "";
+      if (captionLink) {
+        var href = slides[index].getAttribute("data-href");
+        captionLink.hidden = !href;
+        if (href) captionLink.setAttribute("href", href);
+        else captionLink.removeAttribute("href");
+      }
+      normalize();
+      if (old !== index && !reduced.matches && visible && !doc.hidden && slides[index].animate) {
+        slides[old].hidden = false;
+        slides[old].setAttribute("aria-hidden", "true");
+        slides[old].style.zIndex = "1";
+        slides[index].style.zIndex = "2";
+        try {
+          var owned = { animation: slides[index].animate([{ opacity: 0 }, { opacity: 1 }],
+            { duration: 650, easing: "ease-in-out", fill: "both" }) };
+          transition = owned;
+          function done() { if (transition === owned) finishVisuals(); }
+          owned.animation.finished.then(done, done);
+        } catch (_) { normalize(); }
+      }
+      syncControls();
+      if (origin === "manual") announce("第 " + (index + 1) + " 幅，共 " + slides.length + " 幅。" +
+        (slides[index].getAttribute("data-caption-left") || slides[index].alt || ""));
+    }
+    function select(index, origin, direction, budget) {
+      if (index < 0 || index >= slides.length) return;
+      var request = ++sequence;
+      desired = index;
+      pending = true;
+      clearClock();
+      finishVisuals();
+      region.setAttribute("aria-busy", "true");
+      prepare(index).then(function () {
+        if (request !== sequence) return;
+        pending = false;
+        region.removeAttribute("aria-busy");
+        // A pending automatic fetch cannot turn a pause into a late slide change.
+        if (origin === "auto" && !canRotate()) { desired = current; schedule(); return; }
+        commit(index, origin);
+        schedule();
+      }, function () {
+        syncControls();
+        if (request !== sequence) return;
+        pending = false;
+        desired = current;
+        region.removeAttribute("aria-busy");
+        var fallback = adjacent(index, direction || 1);
+        if (direction && budget > 1 && fallback !== current && fallback !== index) {
+          select(fallback, origin, direction, budget - 1);
+        } else {
+          if (origin === "manual") announce("这幅图片暂不可用，已保留当前画面。");
+          schedule();
+        }
+      });
+    }
+    function move(direction) { select(adjacent(desired, direction), "manual", direction, slides.length); }
+    on(previous, "click", function () { move(-1); });
+    on(next, "click", function () { move(1); });
+    dots.forEach(function (button) { on(button, "click", function () {
+      if (!button.disabled) select(Number(button.getAttribute("data-carousel-go")), "manual", 0, 1);
+    }); });
+    on(toggle, "click", function () {
+      userIntent = !wantsPlay();
+      pauseEnvironment(); syncControls(); schedule();
+      announce(wantsPlay() ? "自动播放已开启；移出鼠标并离开轮播焦点后继续。" : "自动播放已暂停。");
+    });
+    on(region, "keydown", function (event) {
+      if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || event.isComposing ||
+          event.target.closest("input, textarea, select, [contenteditable='true']")) return;
+      if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+      event.preventDefault(); move(event.key === "ArrowLeft" ? -1 : 1);
+    });
+    on(region, "pointerenter", function (event) { if (event.pointerType === "mouse") { hovered = true; pauseEnvironment(); } });
+    on(region, "pointerleave", function (event) { if (event.pointerType === "mouse") { hovered = false; schedule(); } });
+    on(region, "focusin", function () { focused = true; pauseEnvironment(); });
+    on(region, "focusout", function (event) {
+      if (event.relatedTarget && region.contains(event.relatedTarget)) return;
+      focused = false; schedule();
+    });
+    on(photo, "touchstart", function (event) {
+      touching = true;
+      pauseEnvironment();
+      if (event.touches.length !== 1) { swipe = null; return; }
+      var point = event.touches[0];
+      swipe = { id: point.identifier, x: point.clientX, y: point.clientY, time: performance.now() };
+    }, { passive: true });
+    on(photo, "touchmove", function (event) { if (event.touches.length !== 1) swipe = null; }, { passive: true });
+    on(photo, "touchcancel", function (event) {
+      swipe = null; touching = !!(event.touches && event.touches.length);
+      if (!touching) schedule();
+    }, { passive: true });
+    on(photo, "touchend", function (event) {
+      touching = !!(event.touches && event.touches.length);
+      if (touching) { swipe = null; return; }
+      if (!swipe) { schedule(); return; }
+      var start = swipe; swipe = null;
+      var point = Array.prototype.filter.call(event.changedTouches, function (item) { return item.identifier === start.id; })[0];
+      if (!point) { schedule(); return; }
+      var dx = point.clientX - start.x, dy = point.clientY - start.y;
+      if (Math.abs(dx) >= 50 && Math.abs(dx) > Math.abs(dy) * 1.4 && performance.now() - start.time < 900) {
+        move(dx < 0 ? 1 : -1); swallowClickUntil = performance.now() + 500;
+      }
+      schedule();
+    }, { passive: true });
+    on(photo, "click", function (event) {
+      if (event.detail > 0 && event.button === 0 && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey && performance.now() < swallowClickUntil) {
+        event.preventDefault(); event.stopImmediatePropagation(); swallowClickUntil = 0;
+      }
+    }, true);
+
+    function measureVisible() {
+      var rect = region.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < innerHeight && rect.right > 0 && rect.left < innerWidth;
+    }
+    function visibility(value) {
+      if (visible === value) return;
+      visible = value;
+      if (!visible) pauseEnvironment();
+      else schedule();
+    }
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) { visibility(entries[0].isIntersecting); }).observe(region);
+    } else {
+      visible = measureVisible();
+      on(window, "scroll", function () { visibility(measureVisible()); }, { passive: true });
+      on(window, "resize", function () { visibility(measureVisible()); }, { passive: true });
+    }
+    on(doc, "visibilitychange", function () {
+      if (doc.hidden) { touching = false; swipe = null; pauseEnvironment(); }
+      else schedule();
+    });
+    on(window, "pagehide", function () {
+      ++sequence; pending = false; desired = current; touching = false; swipe = null;
+      region.removeAttribute("aria-busy"); pauseEnvironment();
+    });
+    on(window, "pageshow", function () { visibility(measureVisible()); schedule(); });
+    function preference() {
+      if (reduced.matches && userIntent === true) userIntent = null;
+      pauseEnvironment(); syncControls(); schedule();
+    }
+    if (reduced.addEventListener) on(reduced, "change", preference);
+    else if (reduced.addListener) reduced.addListener(preference);
+    region.setAttribute("data-carousel-enhanced", "");
+    if (!region.hasAttribute("aria-roledescription")) region.setAttribute("aria-roledescription", "轮播");
+    if (controls) controls.hidden = false;
+    syncControls();
+    select(current, "initial", 1, slides.length);
+  }
+  function boot() { all("[data-home-carousel]", doc).forEach(enhance); }
+  if (doc.readyState === "loading") on(doc, "DOMContentLoaded", boot, { once: true });
+  else boot();
+})();

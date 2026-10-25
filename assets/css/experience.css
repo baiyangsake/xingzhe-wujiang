@@ -4484,7 +4484,6 @@ body.is-locked {
 .namecloud__stack.is-cloud .nw.is-in:focus-visible { transform: scale(1.07); }
 .namecloud__stack.is-cloud .nw__t { transition: color 0.35s var(--ease), letter-spacing 0.35s var(--ease), text-shadow 0.35s var(--ease); }
 
-
 /* field-design.css */
 /* 行者无疆 / a living field journal, 2026 edition. */
 :root {
@@ -4823,7 +4822,6 @@ body[data-page="chronicle"] .field-title-accent {color:var(--acid)}
  .exp-detail__archive{font-size:10px;margin-top:8px}
 }
 @media(prefers-reduced-motion:reduce){.field-people-invite i,.exp-detail__image img{transition:none}}
-
 
 /* field-interiors.css */
 /* Field Notes — interior editions. Loaded after site.css and field-design.css. */
@@ -5245,7 +5243,6 @@ body:not([data-page="index"]) :is(.chip, .entry, .prow, .pcard, .yb-chip, .tl__i
   body:not([data-page="index"]) :is(.prow, .pcard):hover img { transform: none; }
 }
 
-
 /* namecloud.css */
 /* The walkers: generous type, stable hit areas, and a quiet live record. */
 body[data-page="team"] .namecloud { margin-top: 12px; isolation: isolate; }
@@ -5344,7 +5341,6 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   body[data-page="team"] .namecloud .namecloud__stack .nw .nw__t { animation: none; transition: none; transform: none; }
 }
 
-
 /* atelier-core.css */
 /* Paper field journal. Real photographs, open composition and restrained motion. */
 :root {--paper:#f3f0e8;--ink:#151a17;--gold:#cf3e27;--gold-2:#e95639;--acid:#dceab3;--nav-h:78px;--atelier-line:rgba(21,26,23,.17)}
@@ -5376,8 +5372,6 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
 .atelier-home .field-rail {right:14px;border-radius:0;backdrop-filter:blur(14px);background:#f3f0e8df;padding:7px 3px;border-color:#151a1727;gap:5px;box-shadow:none}
 .atelier-home .field-rail a {border-radius:0;width:28px;height:30px}
 .atelier-home .field-rail a[aria-current] {background:var(--gold);color:var(--paper)}
-.atelier-cover {min-height:700px;height:calc(100svh - var(--nav-h));max-height:1120px;position:relative;background:var(--ink);color:var(--paper);isolation:isolate;overflow:hidden;padding:24px var(--pad) 0}
-.atelier-cover__scene,.atelier-cover__veil {position:absolute;inset:0;z-index:-2;pointer-events:none}
 .atelier-home :is(.field-atlas,.field-images,.field-journal) {padding-block:clamp(80px,10vw,155px)}
 .atelier-home .field-atlas {position:relative;overflow:hidden;isolation:isolate;background:#151a17}
 .atelier-home .field-atlas::before {content:"XVIII";position:absolute;top:0;right:-15px;color:transparent;-webkit-text-stroke:1px #dceab31f;font:400 min(35vw,520px)/1 var(--font-serif);letter-spacing:-.06em;z-index:-1;pointer-events:none}
@@ -5454,6 +5448,68 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
 @media(hover:hover) and (pointer:fine){.atelier-home .field-film{scroll-snap-type:none}}
 @media(prefers-reduced-motion:reduce){.atelier-story-preview,.atelier-site .brand__seal--image,.atelier-site .sresult,.atelier-random>span{transition:none}.atelier-site .brand:hover .brand__seal--image,.atelier-home .field-frame{transform:none}}
 
+/* Photography stays inside the established paper composition. */
+.field-manifesto__aside {min-width:0}
+.field-manifesto__photos {position:relative;height:435px;margin-top:28px;isolation:isolate}
+.field-manifesto__snapshot {position:absolute;display:block;width:82%;padding:7px 7px 0;background:#faf8f2;box-shadow:0 8px 28px #151a171a;transition:transform .35s var(--ease)}
+.field-manifesto__snapshot figure {margin:0}
+.field-manifesto__snapshot img {display:block;width:100%;aspect-ratio:1.5;object-fit:cover;height:auto}
+.field-manifesto__snapshot figcaption {font:10px/1.6 var(--font-serif);padding:9px 3px 10px;overflow-wrap:anywhere}
+.field-manifesto__snapshot--1 {top:0;left:0;transform:rotate(-4deg);z-index:1}
+.field-manifesto__snapshot--2 {top:145px;right:0;width:76%;transform:rotate(4deg);z-index:2}
+.field-manifesto__snapshot--3 {top:285px;left:3%;width:73%;transform:rotate(-3deg);z-index:3}
+.field-manifesto__snapshot--3 img {aspect-ratio:1.9}
+.field-manifesto__snapshot:hover {transform:rotate(0deg) translateY(-4px);z-index:4}
+.field-manifesto__snapshot:focus-visible {outline:2px solid var(--gold);outline-offset:5px;z-index:4}
+.home-carousel.field-cover__visual {padding-right:0}
+.home-carousel__stage {position:relative;padding-right:28px}
+.home-carousel [data-carousel-slide] {position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.home-carousel [data-carousel-slide][hidden],.home-carousel__controls[hidden],.field-film-toolbar[hidden] {display:none!important}
+.home-carousel__controls {display:flex;flex-wrap:wrap;align-items:center;gap:3px 12px;margin-top:45px;padding-right:28px}
+.home-carousel__transport,.home-carousel__pages {display:flex;align-items:center;flex:none}
+.home-carousel__controls button,.field-film-toolbar button {height:44px;min-width:44px;display:grid;place-items:center;border:1px solid var(--atelier-line);font:16px/1 var(--font-sans);transition:color .2s,background .2s}
+.home-carousel__controls button+button {border-left:0}
+.home-carousel__controls button:hover,.field-film-toolbar button:hover {background:var(--ink);color:var(--paper)}
+.home-carousel__controls button:focus-visible,.field-film-toolbar button:focus-visible {outline:2px solid var(--gold);outline-offset:3px}
+.home-carousel__pages {gap:0;margin-left:auto}
+.home-carousel__pages button {border:0!important;min-width:44px;font-size:10px;color:var(--muted);position:relative}
+.home-carousel__pages button[aria-pressed="true"] {color:var(--gold)}
+.home-carousel__pages button[aria-pressed="true"]::after {content:"";position:absolute;bottom:4px;height:2px;left:9px;right:9px;background:currentColor}
+.home-carousel__count {font:10px/1.5 var(--font-sans);letter-spacing:.06em;font-variant-numeric:tabular-nums;margin-left:auto}
+.home-carousel__source {flex-basis:100%;font:9px/1.8 var(--font-sans);color:var(--muted);display:flex;gap:15px;align-items:center;width:fit-content}
+.home-carousel__source:hover {color:var(--gold)}
+.home-carousel__source span {font-size:14px}
+.home-carousel:focus-visible {outline:2px solid var(--gold);outline-offset:6px}
+.home-carousel .field-cover__photo::after {z-index:3}
+.home-carousel .field-cover__photo figcaption {right:clamp(140px,13vw,210px);flex-direction:column;gap:3px;z-index:4}
+.field-film-toolbar {display:flex;align-items:center;gap:22px;margin:0 var(--pad) 12px}
+.field-film-toolbar__count {font:12px/1.5 var(--font-sans);letter-spacing:.08em;font-variant-numeric:tabular-nums;white-space:nowrap;flex:none}
+.field-film-toolbar__count i {font-style:normal;color:var(--muted)}
+.field-film-toolbar__progress {height:2px;background:#151a1726;flex:1;min-width:15px;overflow:hidden}
+.field-film-toolbar__progress>span {display:block;width:100%;height:100%;background:var(--gold);transform:scaleX(var(--film-progress,0));transform-origin:left}
+.field-film-toolbar__hint {font-size:10px;color:var(--muted);flex:none}
+.field-film-toolbar__buttons {display:flex;gap:8px;flex:none}
+.field-film-toolbar button {width:44px;border-radius:50%}
+.field-film-toolbar button:disabled {opacity:.25;cursor:default;background:transparent;color:var(--ink)}
+.atelier-home .field-film {scroll-padding-inline:var(--pad)}
+.atelier-home .field-frame img {background:#e2e1d9}
+@media(max-width:1100px){
+ .home-carousel__controls{gap-inline:7px}
+ .field-manifesto__photos{height:370px}.field-manifesto__snapshot--2{top:120px}.field-manifesto__snapshot--3{top:240px}
+}
+@media(max-width:900px){
+ .home-carousel__pages{display:none}.home-carousel__count{margin-left:auto}
+ .field-manifesto__photos{height:270px;margin-top:20px}.field-manifesto__snapshot{width:95%;padding:5px 5px 0}.field-manifesto__snapshot--2{top:115px;width:93%}.field-manifesto__snapshot--3{display:none}.field-manifesto__snapshot figcaption{font-size:8px;padding:7px 2px}
+ .field-film-toolbar__hint{display:none}
+}
+@media(max-width:600px){
+ .home-carousel__stage{padding-right:17px}.home-carousel__controls{padding-right:17px;margin-top:36px;gap:3px 10px}.home-carousel__source{font-size:8px}.home-carousel .field-cover__photo figcaption{right:110px}
+ .field-manifesto__grid{display:grid;grid-template-columns:1fr;gap:0}.field-manifesto__aside{display:contents}.field-manifesto__aside>.field-side-note{grid-row:1}.field-manifesto__grid>div:not(.field-manifesto__aside){grid-row:2}.field-manifesto__photos{grid-row:3;grid-column:1;height:220px;margin-top:30px;width:100%}
+ .field-manifesto__snapshot{width:49%;padding:5px 5px 0}.field-manifesto__snapshot--1{left:0;top:5px}.field-manifesto__snapshot--2{right:0;top:23px;width:48%}.field-manifesto__snapshot--3{display:block;left:30%;top:100px;width:40%}.field-manifesto__snapshot figcaption{font-size:8px;line-height:1.4;padding:7px 2px}.field-manifesto__snapshot--3 figcaption{font-size:7px}
+ .field-film-toolbar{margin:0 20px 6px;gap:12px}.field-film-toolbar__count{font-size:10px}.field-film-toolbar__buttons{gap:6px}
+}
+@media(max-width:360px){.field-manifesto__photos{height:200px}.field-manifesto__snapshot--3{top:90px}.home-carousel__controls{gap-inline:5px}}
+@media(prefers-reduced-motion:reduce){.field-manifesto__snapshot{transition:none}.field-manifesto__snapshot:hover{transform:none}}
 
 /* atelier-interiors.css */
 /* ATELIER / 先锋田野档案馆 — interior edition, after the field layers. */
@@ -5879,7 +5935,6 @@ body:not([data-page="index"]) [data-filter-item].is-hidden,
 body:not([data-page="index"]) [data-group-section].is-hidden,
 body:not([data-page="index"]) [data-year-group].is-hidden { display: none; }
 
-
 /* motion-system.css */
 /* Progressive motion: no selector hides content before JavaScript runs. */
 @view-transition { navigation: auto; }
@@ -5931,4 +5986,3 @@ body:not([data-page="index"]) [data-year-group].is-hidden { display: none; }
   .motion-cursor { display: none !important; }
   .motion-is-revealing { will-change: auto; }
 }
-
