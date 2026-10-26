@@ -948,30 +948,15 @@
     var frame = 0;
     var signature = "";
     var lastWidth = 0;
-    var rule = (stack.getAttribute("data-keep-clear") || "").split("|");
-    var subject = (rule[0] || "").trim();
-    var guards = (rule[1] || "").split(",").map(function (name) { return name.trim(); }).filter(Boolean);
-    var keepGap = Math.max(0, parseFloat(stack.getAttribute("data-keep-gap")) || 120);
-
     function walkerName(el) {
       return (el.textContent || "").replace(/\s+/g, "");
     }
-    function protectedPair(a, b) {
-      return (a === subject && guards.indexOf(b) >= 0) ||
-        (b === subject && guards.indexOf(a) >= 0);
-    }
-    function edgeGap(a, b) {
-      var dx = Math.max(0, Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w));
-      var dy = Math.max(0, Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h));
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-
     // Link boxes include their touch area and the text's small motion envelope.
-    // Follow DOM order: keyboard traversal and the visual reading order agree.
+    // Plain flow in DOM order: keyboard traversal and the visual reading order
+    // agree, and no name gets a bespoke slot.
     function place(measured, width) {
       var narrow = width < 640;
       var rowGap = narrow ? 9 : 17;
-      var target = narrow ? Math.min(keepGap, 56) : keepGap;
       var gaps = narrow ? [10, 16, 8, 13] : [25, 42, 20, 34];
       var indents = narrow ? [0, 8, 2, 12] : [0, 32, 10, 44];
       var cells = [];
@@ -986,29 +971,6 @@
         if (x + item.w > width) nextRow(item);
         var cell = { el: item.el, name: item.name, w: item.w, h: item.h,
           x: x, y: y + (narrow ? 0 : (i * 3) % 7) };
-        // Keep the authored separation rule without moving a name to the foot
-        // of the whole cloud, changing metadata, or searching permutations.
-        var blocked = cells.filter(function (other) {
-          return protectedPair(cell.name, other.name) && edgeGap(cell, other) < target;
-        });
-        while (blocked.length) {
-          var right = cell.x;
-          var floor = cell.y;
-          blocked.forEach(function (other) {
-            var dy = Math.max(0, cell.y - other.y - other.h);
-            right = Math.max(right, other.x + other.w + Math.sqrt(Math.max(0, target * target - dy * dy)));
-            floor = Math.max(floor, other.y + other.h + target);
-          });
-          if (right + cell.w <= width) cell.x = Math.ceil(right);
-          else {
-            nextRow(item);
-            cell.x = x;
-            cell.y = y = Math.max(y, Math.ceil(floor));
-          }
-          blocked = cells.filter(function (other) {
-            return protectedPair(cell.name, other.name) && edgeGap(cell, other) + 0.01 < target;
-          });
-        }
         cells.push(cell);
         bottom = Math.max(bottom, cell.y + cell.h);
         x = cell.x + cell.w + gaps[i % gaps.length];
@@ -1124,144 +1086,103 @@
       revealObserver.observe(stack);
     }
 
-    // Ambient motion: each name wanders on its own slow, uneven rhythm, and a
-    // pointer sweeping across the wall sends a soft ring of ripples through
-    // the grid. Only the glyph spans move, so the layout charted above stays
-    // exactly where it was.
+    // Ambient float rides a CSS keyframe animation on each glyph, so the
+    // compositor keeps the 89 names drifting without a script frame loop. The
+    // pointer ripple is the only scripted motion: it nudges a glyph through the
+    // `translate` property (independent of the animated `transform`) and the
+    // loop shuts itself down once the rings have decayed.
     if (!reduceMotion) {
-      var movers = [];
-      var ripples = [];
-      var motionRaf = 0;
-      var motionOn = false;
-      var stackRect = null;
-      var lastRipple = 0;
-      var lastPaint = 0;
-      var coarse = touch.matches;
-
-      items.forEach(function (el) {
+      items.forEach(function (el, i) {
         var glyph = el.querySelector(".nw__t");
         if (!glyph) return;
-        glyph.style.animation = "none";
-        movers.push({
-          el: el,
-          glyph: glyph,
-          cx: 0,
-          cy: 0,
-          ax: (2 + Math.random() * 3) * (coarse ? 0.65 : 1),
-          ay: (4 + Math.random() * 5) * (coarse ? 0.65 : 1),
-          sx: 0.25 + Math.random() * 0.25,
-          sy: 0.3 + Math.random() * 0.28,
-          qy: 0.58 + Math.random() * 0.34,
-          px: Math.random() * Math.PI * 2,
-          py: Math.random() * Math.PI * 2,
-          pz: Math.random() * Math.PI * 2
-        });
+        var tempo = 7 + Math.random() * 6;
+        glyph.style.animationName = "nwFloat" + (1 + i % 4);
+        glyph.style.animationDuration = tempo.toFixed(2) + "s";
+        glyph.style.animationDelay = (-Math.random() * tempo).toFixed(2) + "s";
+        glyph.style.animationTimingFunction = "ease-in-out";
+        glyph.style.animationIterationCount = "infinite";
+        glyph.style.animationDirection = "alternate";
+        glyph.style.setProperty("--nc-amp", (2.2 + Math.random() * 2.6).toFixed(2) + "px");
       });
 
-      if (movers.length) {
-        var refreshCentres = function () {
-          stackRect = stack.getBoundingClientRect();
-          for (var i = 0; i < movers.length; i++) {
-            var node = movers[i].el;
-            movers[i].cx = node.offsetLeft + node.offsetWidth / 2;
-            movers[i].cy = node.offsetTop + node.offsetHeight / 2;
+      if ("IntersectionObserver" in window) {
+        new IntersectionObserver(function (entries) {
+          stack.classList.toggle("is-motile", !!entries[0].isIntersecting);
+        }, { threshold: 0 }).observe(stack);
+      } else {
+        stack.classList.add("is-motile");
+      }
+
+      if (!touch.matches && "translate" in doc.body.style) {
+        var glyphs = items.map(function (el) { return el.querySelector(".nw__t"); });
+        var centres = items.map(function () { return { cx: 0, cy: 0 }; });
+        var seeds = [];
+        var rippleFrame = 0;
+        var lastSeed = 0;
+
+        var measure = function () {
+          for (var i = 0; i < items.length; i++) {
+            centres[i].cx = items[i].offsetLeft + items[i].offsetWidth / 2;
+            centres[i].cy = items[i].offsetTop + items[i].offsetHeight / 2;
           }
         };
+        measure();
 
-        var addRipple = function (x, y) {
-          ripples.push({ x: x, y: y, t0: performance.now() });
-          if (ripples.length > 5) ripples.shift();
-        };
-
-        var rippleAt = function (cx, cy, now) {
-          var dx = 0;
-          var dy = 0;
-          for (var r = 0; r < ripples.length; r++) {
-            var seed = ripples[r];
+        var offsetAt = function (cx, cy, now) {
+          var tx = 0;
+          var ty = 0;
+          for (var r = 0; r < seeds.length; r++) {
+            var seed = seeds[r];
             var age = (now - seed.t0) / 1000;
-            if (age < 0 || age > 1.7) continue;
+            if (age < 0 || age > 1.5) continue;
             var rx = cx - seed.x;
             var ry = cy - seed.y;
             var dist = Math.sqrt(rx * rx + ry * ry) || 1;
-            var ring = dist - 620 * age;
-            var reach = Math.exp(-dist / 620);
-            var fade = age > 0.5 ? 1 - (age - 0.5) / 1.2 : 1;
-            var bump = Math.exp(-ring * ring / 18000) * 26;
-            var tail = Math.sin(ring / 130) * Math.exp(-Math.abs(ring) / 240) * 9;
+            var ring = dist - 540 * age;
+            var reach = Math.exp(-dist / 560);
+            var fade = age > 0.45 ? 1 - (age - 0.45) / 1.05 : 1;
+            var bump = Math.exp(-ring * ring / 15000) * 22;
+            var tail = Math.sin(ring / 120) * Math.exp(-Math.abs(ring) / 220) * 7;
             var wave = (bump + tail) * reach * fade;
-            dx += wave * (rx / dist);
-            dy += wave * (ry / dist);
+            tx += wave * (rx / dist);
+            ty += wave * (ry / dist);
           }
-          return { x: dx, y: dy };
+          return { x: tx, y: ty };
         };
 
-        var motionFrame = function (now) {
-          if (!motionOn) return;
-          if (now - lastPaint < 28) {
-            motionRaf = raf(motionFrame);
-            return;
+        var rippleStep = function (now) {
+          if (seeds.length && now - seeds[0].t0 > 1500) {
+            seeds = seeds.filter(function (seed) { return now - seed.t0 <= 1500; });
           }
-          lastPaint = now;
-          var t = now / 1000;
-          for (var i = 0; i < movers.length; i++) {
-            var m = movers[i];
-            var x = Math.sin(t * m.sx + m.px) * m.ax;
-            var y = (Math.sin(t * m.sy + m.py) * 0.72 + Math.sin(t * m.qy + m.pz) * 0.46) * m.ay;
-            if (ripples.length) {
-              var push = rippleAt(m.cx, m.cy, now);
-              x += push.x;
-              y += push.y;
+          for (var i = 0; i < items.length; i++) {
+            var glyph = glyphs[i];
+            if (!glyph) continue;
+            var off = seeds.length ? offsetAt(centres[i].cx, centres[i].cy, now) : null;
+            if (off && (Math.abs(off.x) > 0.06 || Math.abs(off.y) > 0.06)) {
+              glyph.style.translate = off.x.toFixed(1) + "px " + off.y.toFixed(1) + "px";
+            } else if (glyph.style.translate) {
+              glyph.style.translate = "";
             }
-            m.glyph.style.transform = "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0)";
           }
-          if (ripples.length && now - ripples[0].t0 > 1700) {
-            ripples = ripples.filter(function (seed) { return now - seed.t0 <= 1700; });
-          }
-          motionRaf = raf(motionFrame);
+          rippleFrame = seeds.length ? raf(rippleStep) : 0;
         };
 
-        var startMotion = function () {
-          if (motionOn) return;
-          motionOn = true;
-          refreshCentres();
-          motionRaf = raf(motionFrame);
-        };
-
-        var stopMotion = function () {
-          motionOn = false;
-          window.cancelAnimationFrame(motionRaf);
-          motionRaf = 0;
-          ripples = [];
-          for (var i = 0; i < movers.length; i++) movers[i].glyph.style.transform = "";
-        };
-
-        if ("IntersectionObserver" in window) {
-          new IntersectionObserver(function (entries) {
-            if (entries[0].isIntersecting) startMotion();
-            else stopMotion();
-          }, { threshold: 0 }).observe(stack);
-        } else {
-          startMotion();
-        }
-
-        var centreTimer = 0;
-        on(window, "resize", function () {
-          window.clearTimeout(centreTimer);
-          centreTimer = window.setTimeout(refreshCentres, 260);
-        });
-        on(doc, "visibilitychange", function () {
+        var seed = function (clientX, clientY) {
           var box = stack.getBoundingClientRect();
-          if (!doc.hidden && box.bottom > 0 && box.top < window.innerHeight) startMotion();
-          else stopMotion();
-        });
-        on(stack, window.PointerEvent ? "pointermove" : "mousemove", function (e) {
+          seeds.push({ x: clientX - box.left, y: clientY - box.top, t0: performance.now() });
+          if (seeds.length > 4) seeds.shift();
+          if (!rippleFrame) rippleFrame = raf(rippleStep);
+        };
+
+        on(stack, "pointermove", function (e) {
           if (e.pointerType && e.pointerType !== "mouse") return;
           var now = performance.now();
-          if (now - lastRipple < 45) return;
-          lastRipple = now;
-          var rect = stackRect || stack.getBoundingClientRect();
-          addRipple(e.clientX - rect.left, e.clientY - rect.top);
+          if (now - lastSeed < 50) return;
+          lastSeed = now;
+          seed(e.clientX, e.clientY);
         });
+        on(window, "resize", function () { window.setTimeout(measure, 300); });
+        if (doc.fonts) doc.fonts.ready.then(measure);
       }
     }
   }

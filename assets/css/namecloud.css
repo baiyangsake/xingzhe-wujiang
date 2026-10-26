@@ -99,28 +99,50 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
 @media (prefers-reduced-motion: no-preference) {
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw {
     opacity: 0;
-    transform: translate3d(0, 15px, 0) scale(0.97);
-    transition: opacity 820ms var(--ease), transform 820ms var(--ease), filter 820ms var(--ease);
+    transform: translate3d(0, 15px, 0) scale(0.985);
+    transition: opacity 760ms var(--ease), transform 760ms var(--ease);
     transition-delay: var(--nc-reveal, 0ms);
   }
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in {
     opacity: 1;
     transform: none;
-    filter: none;
   }
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud.is-settled .nw {
-    transition: opacity 320ms var(--ease), transform 320ms var(--ease), filter 320ms var(--ease);
+    transition: opacity 300ms var(--ease), transform 300ms var(--ease);
     transition-delay: 0ms;
   }
-  @media (hover: hover) and (pointer: fine) {
-    body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw { filter: blur(4px); }
-  }
 }
-/* The uneven per-name float and the pointer ripple are animated from
-   assets/js/site.js so that every name can wander on its own rhythm. */
+
+/* Every name drifts on its own track. Tempo, phase shape and amplitude are
+   dealt out in initNameCloud, so the wall never breathes in unison; keeping
+   the drift in CSS lets the compositor do the work while the page scrolls. */
+@keyframes nwFloat1 {
+  from { transform: translate3d(calc(var(--nc-amp, 3px) * -0.7), calc(var(--nc-amp, 3px) * -1), 0); }
+  50% { transform: translate3d(calc(var(--nc-amp, 3px) * 0.75), calc(var(--nc-amp, 3px) * 0.3), 0); }
+  to { transform: translate3d(calc(var(--nc-amp, 3px) * -0.5), calc(var(--nc-amp, 3px) * 0.85), 0); }
+}
+@keyframes nwFloat2 {
+  from { transform: translate3d(calc(var(--nc-amp, 3px) * 0.85), 0, 0); }
+  50% { transform: translate3d(calc(var(--nc-amp, 3px) * -0.6), calc(var(--nc-amp, 3px) * -0.85), 0); }
+  to { transform: translate3d(calc(var(--nc-amp, 3px) * 0.2), calc(var(--nc-amp, 3px) * 0.6), 0); }
+}
+@keyframes nwFloat3 {
+  from { transform: translate3d(0, calc(var(--nc-amp, 3px) * 0.8), 0); }
+  50% { transform: translate3d(calc(var(--nc-amp, 3px) * -0.8), calc(var(--nc-amp, 3px) * -0.4), 0); }
+  to { transform: translate3d(calc(var(--nc-amp, 3px) * 0.65), calc(var(--nc-amp, 3px) * 0.15), 0); }
+}
+@keyframes nwFloat4 {
+  from { transform: translate3d(calc(var(--nc-amp, 3px) * -0.9), calc(var(--nc-amp, 3px) * 0.35), 0); }
+  50% { transform: translate3d(calc(var(--nc-amp, 3px) * 0.4), calc(var(--nc-amp, 3px) * 0.9), 0); }
+  to { transform: translate3d(calc(var(--nc-amp, 3px) * 0.7), calc(var(--nc-amp, 3px) * -0.55), 0); }
+}
+body[data-page="team"] .namecloud .namecloud__stack.is-cloud:not(.is-motile) .nw__t {
+  animation-play-state: paused;
+}
+
 @media (hover: hover) and (pointer: fine) {
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in {
-    transition: transform 320ms var(--ease);
+    transition: transform 300ms var(--ease);
   }
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in:hover,
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in:focus-visible {
@@ -133,7 +155,6 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw .nw__t {
     opacity: 1;
     transform: none;
-    filter: none;
     animation: none;
     transition: none;
   }
@@ -143,7 +164,6 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw .nw__t {
     opacity: 1;
     transform: none;
-    filter: none;
     animation: none;
     transition: none;
   }
