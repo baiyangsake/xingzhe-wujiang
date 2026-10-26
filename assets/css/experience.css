@@ -5341,7 +5341,7 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   body[data-page="team"] .namecloud .namecloud__stack .nw .nw__t { animation: none; transition: none; transform: none; }
 }
 
-/* --- motion: arrival, drift, and a warm hover ------------------------- */
+/* --- motion: arrival, ambient float, pointer ripple ------------------- */
 @media (prefers-reduced-motion: no-preference) {
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw {
     opacity: 0;
@@ -5362,32 +5362,16 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
     body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw { filter: blur(4px); }
   }
 }
-@keyframes nwDrift {
-  from { transform: translateY(0); }
-  to { transform: translateY(calc(-1 * var(--nc-drift, 4px))); }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in .nw__t {
-    animation-name: nwDrift;
-    animation-duration: var(--nc-duration, 8s);
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-    animation-delay: var(--nc-phase, 0s);
-    transition: color .2s ease, text-shadow .25s ease;
-  }
-  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in:hover .nw__t,
-  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in:focus-visible .nw__t,
-  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in.is-current .nw__t {
-    color: var(--gold);
-    text-shadow: 0 0 22px rgba(176, 138, 62, 0.3);
-    animation-play-state: paused;
+/* The uneven per-name float and the pointer ripple are animated from
+   assets/js/site.js so that every name can wander on its own rhythm. */
+@media (hover: hover) and (pointer: fine) {
+  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in {
+    transition: transform 320ms var(--ease);
   }
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in:hover,
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw.is-in:focus-visible {
     transform: translateY(-2px) scale(1.06);
     z-index: 3;
-    transition: transform 320ms var(--ease);
   }
 }
 @media (prefers-reduced-motion: reduce) {

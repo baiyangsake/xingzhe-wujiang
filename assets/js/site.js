@@ -1083,10 +1083,7 @@
       }, 2600);
     }
 
-    items.forEach(function (el, i) {
-      el.style.setProperty("--nc-duration", (6 + i % 5) + "s");
-      el.style.setProperty("--nc-phase", "-" + (i % 9) + "s");
-      el.style.setProperty("--nc-drift", (3 + (i % 4)) + "px");
+    items.forEach(function (el) {
       on(el, "mouseenter", function () { if (!touch.matches) show(el); });
       on(el, "focus", function () { show(el); });
       on(el, "click", function (e) {
@@ -1124,6 +1121,147 @@
         }
       }, { threshold: 0.06, rootMargin: "0px 0px -6% 0px" });
       revealObserver.observe(stack);
+    }
+
+    // Ambient motion: each name wanders on its own slow, uneven rhythm, and a
+    // pointer sweeping across the wall sends a soft ring of ripples through
+    // the grid. Only the glyph spans move, so the layout charted above stays
+    // exactly where it was.
+    if (!reduceMotion) {
+      var movers = [];
+      var ripples = [];
+      var motionRaf = 0;
+      var motionOn = false;
+      var stackRect = null;
+      var lastRipple = 0;
+      var lastPaint = 0;
+      var coarse = touch.matches;
+
+      items.forEach(function (el) {
+        var glyph = el.querySelector(".nw__t");
+        if (!glyph) return;
+        glyph.style.animation = "none";
+        movers.push({
+          el: el,
+          glyph: glyph,
+          cx: 0,
+          cy: 0,
+          ax: (2 + Math.random() * 3) * (coarse ? 0.65 : 1),
+          ay: (4 + Math.random() * 5) * (coarse ? 0.65 : 1),
+          sx: 0.25 + Math.random() * 0.25,
+          sy: 0.3 + Math.random() * 0.28,
+          qy: 0.58 + Math.random() * 0.34,
+          px: Math.random() * Math.PI * 2,
+          py: Math.random() * Math.PI * 2,
+          pz: Math.random() * Math.PI * 2
+        });
+      });
+
+      if (movers.length) {
+        var refreshCentres = function () {
+          stackRect = stack.getBoundingClientRect();
+          for (var i = 0; i < movers.length; i++) {
+            var node = movers[i].el;
+            movers[i].cx = node.offsetLeft + node.offsetWidth / 2;
+            movers[i].cy = node.offsetTop + node.offsetHeight / 2;
+          }
+        };
+
+        var addRipple = function (x, y) {
+          ripples.push({ x: x, y: y, t0: performance.now() });
+          if (ripples.length > 5) ripples.shift();
+        };
+
+        var rippleAt = function (cx, cy, now) {
+          var dx = 0;
+          var dy = 0;
+          for (var r = 0; r < ripples.length; r++) {
+            var seed = ripples[r];
+            var age = (now - seed.t0) / 1000;
+            if (age < 0 || age > 1.7) continue;
+            var rx = cx - seed.x;
+            var ry = cy - seed.y;
+            var dist = Math.sqrt(rx * rx + ry * ry) || 1;
+            var ring = dist - 620 * age;
+            var reach = Math.exp(-dist / 620);
+            var fade = age > 0.5 ? 1 - (age - 0.5) / 1.2 : 1;
+            var bump = Math.exp(-ring * ring / 18000) * 26;
+            var tail = Math.sin(ring / 130) * Math.exp(-Math.abs(ring) / 240) * 9;
+            var wave = (bump + tail) * reach * fade;
+            dx += wave * (rx / dist);
+            dy += wave * (ry / dist);
+          }
+          return { x: dx, y: dy };
+        };
+
+        var motionFrame = function (now) {
+          if (!motionOn) return;
+          if (now - lastPaint < 28) {
+            motionRaf = raf(motionFrame);
+            return;
+          }
+          lastPaint = now;
+          var t = now / 1000;
+          for (var i = 0; i < movers.length; i++) {
+            var m = movers[i];
+            var x = Math.sin(t * m.sx + m.px) * m.ax;
+            var y = (Math.sin(t * m.sy + m.py) * 0.72 + Math.sin(t * m.qy + m.pz) * 0.46) * m.ay;
+            if (ripples.length) {
+              var push = rippleAt(m.cx, m.cy, now);
+              x += push.x;
+              y += push.y;
+            }
+            m.glyph.style.transform = "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0)";
+          }
+          if (ripples.length && now - ripples[0].t0 > 1700) {
+            ripples = ripples.filter(function (seed) { return now - seed.t0 <= 1700; });
+          }
+          motionRaf = raf(motionFrame);
+        };
+
+        var startMotion = function () {
+          if (motionOn) return;
+          motionOn = true;
+          refreshCentres();
+          motionRaf = raf(motionFrame);
+        };
+
+        var stopMotion = function () {
+          motionOn = false;
+          window.cancelAnimationFrame(motionRaf);
+          motionRaf = 0;
+          ripples = [];
+          for (var i = 0; i < movers.length; i++) movers[i].glyph.style.transform = "";
+        };
+
+        if ("IntersectionObserver" in window) {
+          new IntersectionObserver(function (entries) {
+            if (entries[0].isIntersecting) startMotion();
+            else stopMotion();
+          }, { threshold: 0 }).observe(stack);
+        } else {
+          startMotion();
+        }
+
+        var centreTimer = 0;
+        on(window, "resize", function () {
+          window.clearTimeout(centreTimer);
+          centreTimer = window.setTimeout(refreshCentres, 260);
+        });
+        on(doc, "visibilitychange", function () {
+          var box = stack.getBoundingClientRect();
+          if (!doc.hidden && box.bottom > 0 && box.top < window.innerHeight) startMotion();
+          else stopMotion();
+        });
+        on(stack, window.PointerEvent ? "pointermove" : "mousemove", function (e) {
+          if (e.pointerType && e.pointerType !== "mouse") return;
+          var now = performance.now();
+          if (now - lastRipple < 45) return;
+          lastRipple = now;
+          var rect = stackRect || stack.getBoundingClientRect();
+          addRipple(e.clientX - rect.left, e.clientY - rect.top);
+        });
+      }
     }
   }
 
