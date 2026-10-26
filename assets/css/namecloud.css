@@ -110,8 +110,8 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
    the compositor; tempo and phase are dealt out in initNameCloud, so the wall
    never breathes in unison and nothing ever stops mid-stride. */
 body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw__t {
-  will-change: transform;
-  backface-visibility: hidden;
+  will-change: auto;
+  backface-visibility: visible;
 }
 @keyframes nwFloat1A {
   0% { transform: translate3d(1.8px, 2.4px, 0); }
@@ -274,13 +274,22 @@ body[data-page="team"] .namecloud .namecloud__stack.is-cloud:not(.is-motile) .nw
     animation: none;
     transition: none;
   }
+  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw__t {
+    animation-duration: var(--nc-tempo, 10s) !important;
+    animation-iteration-count: infinite !important;
+    animation-play-state: paused !important;
+    translate: none !important;
+    will-change: auto !important;
+  }
 }
 @media print {
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw,
   body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw .nw__t {
     opacity: 1;
     transform: none;
-    animation: none;
+    animation: none !important;
     transition: none;
+    translate: none !important;
+    will-change: auto !important;
   }
 }
