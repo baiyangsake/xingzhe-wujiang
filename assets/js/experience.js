@@ -1067,10 +1067,27 @@
     }
 
     box.classList.add("is-interactive");
+
+    // Arrival: the names surface one after another, like a constellation
+    // slowly gathering. Positions are written already, so the reveal never
+    // shifts a comfortable hit area.
+    var revealTimer = 0;
+    function revealWalkers() {
+      window.clearTimeout(revealTimer);
+      items.forEach(function (el, i) {
+        el.style.setProperty("--nc-reveal", Math.min(900, i * 16) + "ms");
+        el.classList.add("is-in");
+      });
+      revealTimer = window.setTimeout(function () {
+        stack.classList.add("is-settled");
+        items.forEach(function (el) { el.style.setProperty("--nc-reveal", "0ms"); });
+      }, 2600);
+    }
+
     items.forEach(function (el, i) {
-      el.classList.add("is-in");
       el.style.setProperty("--nc-duration", (6 + i % 5) + "s");
       el.style.setProperty("--nc-phase", "-" + (i % 9) + "s");
+      el.style.setProperty("--nc-drift", (3 + (i % 4)) + "px");
       on(el, "mouseenter", function () { if (!touch.matches) show(el); });
       on(el, "focus", function () { show(el); });
       on(el, "click", function (e) {
@@ -1094,6 +1111,20 @@
     if (doc.fonts) {
       doc.fonts.ready.then(schedule);
       on(doc.fonts, "loadingdone", schedule);
+    }
+    if (reduceMotion || !("IntersectionObserver" in window)) {
+      revealWalkers();
+    } else {
+      var revealObserver = new IntersectionObserver(function (entries) {
+        for (var r = 0; r < entries.length; r++) {
+          if (entries[r].isIntersecting) {
+            revealObserver.disconnect();
+            revealWalkers();
+            return;
+          }
+        }
+      }, { threshold: 0.06, rootMargin: "0px 0px -6% 0px" });
+      revealObserver.observe(stack);
     }
   }
 
