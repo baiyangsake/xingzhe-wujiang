@@ -5297,7 +5297,6 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:is(:hover, :focus-visibl
 body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 2px;
 }
-@keyframes walkerBreath { from { transform: translateY(0); } to { transform: translateY(-2px); } }
 @media (min-width: 901px) {
   body[data-page="team"] #namewall .sec-head { margin-bottom: 28px; }
   body[data-page="team"] #namewall .sec-head__main {
@@ -5307,13 +5306,6 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   body[data-page="team"] #namewall .sec-head__main .sec-title { margin: 0; }
   body[data-page="team"] #namewall .sec-head__main .sec-desc { margin: 0; max-width: 36em; padding-bottom: 5px; }
   body[data-page="team"] .namecloud__hint { position: absolute; top: 0; right: 0; margin: 0; font-size: 10px; line-height: 18px; }
-}
-@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
-  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw__t {
-    animation: walkerBreath var(--nc-duration, 8s) ease-in-out infinite alternate;
-    animation-delay: var(--nc-phase, 0s);
-  }
-  body[data-page="team"] .namecloud:is(:hover, :focus-within) .namecloud__stack.is-cloud .nw__t { animation-play-state: paused; }
 }
 @media (max-width: 900px) {
   body[data-page="team"] .namecloud .namecloud__stack .nw[data-tier="3"] .nw__t { font-size: 27px; }
@@ -5359,31 +5351,155 @@ body[data-page="team"] .namecloud .namecloud__stack .nw:focus-visible {
   }
 }
 
-/* Every name drifts on its own track. Tempo, phase shape and amplitude are
-   dealt out in initNameCloud, so the wall never breathes in unison; keeping
-   the drift in CSS lets the compositor do the work while the page scrolls. */
-@keyframes nwFloat1 {
-  from { transform: translate3d(calc(var(--nc-amp, 3px) * -0.7), calc(var(--nc-amp, 3px) * -1), 0); }
-  50% { transform: translate3d(calc(var(--nc-amp, 3px) * 0.75), calc(var(--nc-amp, 3px) * 0.3), 0); }
-  to { transform: translate3d(calc(var(--nc-amp, 3px) * -0.5), calc(var(--nc-amp, 3px) * 0.85), 0); }
+/* Every name drifts on its own track. The keyframes are plain pixel paths
+   (four shapes at three amplitudes) so the browser can hand each animation to
+   the compositor; tempo and phase are dealt out in initNameCloud, so the wall
+   never breathes in unison and nothing ever stops mid-stride. */
+body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw__t {
+  will-change: transform;
+  backface-visibility: hidden;
 }
-@keyframes nwFloat2 {
-  from { transform: translate3d(calc(var(--nc-amp, 3px) * 0.85), 0, 0); }
-  50% { transform: translate3d(calc(var(--nc-amp, 3px) * -0.6), calc(var(--nc-amp, 3px) * -0.85), 0); }
-  to { transform: translate3d(calc(var(--nc-amp, 3px) * 0.2), calc(var(--nc-amp, 3px) * 0.6), 0); }
+@keyframes nwFloat1A {
+  0% { transform: translate3d(1.8px, 2.4px, 0); }
+  12.5% { transform: translate3d(1.3px, 0.9px, 0); }
+  25% { transform: translate3d(0.0px, -1.7px, 0); }
+  37.5% { transform: translate3d(-1.3px, -2.2px, 0); }
+  50% { transform: translate3d(-1.8px, 0.0px, 0); }
+  62.5% { transform: translate3d(-1.3px, 2.2px, 0); }
+  75% { transform: translate3d(0.0px, 1.7px, 0); }
+  87.5% { transform: translate3d(1.3px, -0.9px, 0); }
+  100% { transform: translate3d(1.8px, -2.4px, 0); }
 }
-@keyframes nwFloat3 {
-  from { transform: translate3d(0, calc(var(--nc-amp, 3px) * 0.8), 0); }
-  50% { transform: translate3d(calc(var(--nc-amp, 3px) * -0.8), calc(var(--nc-amp, 3px) * -0.4), 0); }
-  to { transform: translate3d(calc(var(--nc-amp, 3px) * 0.65), calc(var(--nc-amp, 3px) * 0.15), 0); }
+@keyframes nwFloat1B {
+  0% { transform: translate3d(2.7px, 3.6px, 0); }
+  12.5% { transform: translate3d(1.9px, 1.4px, 0); }
+  25% { transform: translate3d(0.0px, -2.5px, 0); }
+  37.5% { transform: translate3d(-1.9px, -3.3px, 0); }
+  50% { transform: translate3d(-2.7px, 0.0px, 0); }
+  62.5% { transform: translate3d(-1.9px, 3.3px, 0); }
+  75% { transform: translate3d(0.0px, 2.5px, 0); }
+  87.5% { transform: translate3d(1.9px, -1.4px, 0); }
+  100% { transform: translate3d(2.7px, -3.6px, 0); }
 }
-@keyframes nwFloat4 {
-  from { transform: translate3d(calc(var(--nc-amp, 3px) * -0.9), calc(var(--nc-amp, 3px) * 0.35), 0); }
-  50% { transform: translate3d(calc(var(--nc-amp, 3px) * 0.4), calc(var(--nc-amp, 3px) * 0.9), 0); }
-  to { transform: translate3d(calc(var(--nc-amp, 3px) * 0.7), calc(var(--nc-amp, 3px) * -0.55), 0); }
+@keyframes nwFloat1C {
+  0% { transform: translate3d(3.6px, 4.8px, 0); }
+  12.5% { transform: translate3d(2.5px, 1.8px, 0); }
+  25% { transform: translate3d(0.0px, -3.4px, 0); }
+  37.5% { transform: translate3d(-2.5px, -4.4px, 0); }
+  50% { transform: translate3d(-3.6px, 0.0px, 0); }
+  62.5% { transform: translate3d(-2.5px, 4.4px, 0); }
+  75% { transform: translate3d(0.0px, 3.4px, 0); }
+  87.5% { transform: translate3d(2.5px, -1.8px, 0); }
+  100% { transform: translate3d(3.6px, -4.8px, 0); }
 }
+@keyframes nwFloat2A {
+  0% { transform: translate3d(1.7px, 2.4px, 0); }
+  12.5% { transform: translate3d(0.6px, 1.7px, 0); }
+  25% { transform: translate3d(-1.2px, 0.0px, 0); }
+  37.5% { transform: translate3d(-1.6px, -1.7px, 0); }
+  50% { transform: translate3d(0.0px, -2.4px, 0); }
+  62.5% { transform: translate3d(1.6px, -1.7px, 0); }
+  75% { transform: translate3d(1.2px, 0.0px, 0); }
+  87.5% { transform: translate3d(-0.6px, 1.7px, 0); }
+  100% { transform: translate3d(-1.7px, 2.4px, 0); }
+}
+@keyframes nwFloat2B {
+  0% { transform: translate3d(2.5px, 3.6px, 0); }
+  12.5% { transform: translate3d(1.0px, 2.5px, 0); }
+  25% { transform: translate3d(-1.8px, 0.0px, 0); }
+  37.5% { transform: translate3d(-2.3px, -2.5px, 0); }
+  50% { transform: translate3d(0.0px, -3.6px, 0); }
+  62.5% { transform: translate3d(2.3px, -2.5px, 0); }
+  75% { transform: translate3d(1.8px, 0.0px, 0); }
+  87.5% { transform: translate3d(-1.0px, 2.5px, 0); }
+  100% { transform: translate3d(-2.5px, 3.6px, 0); }
+}
+@keyframes nwFloat2C {
+  0% { transform: translate3d(3.4px, 4.8px, 0); }
+  12.5% { transform: translate3d(1.3px, 3.4px, 0); }
+  25% { transform: translate3d(-2.4px, 0.0px, 0); }
+  37.5% { transform: translate3d(-3.1px, -3.4px, 0); }
+  50% { transform: translate3d(0.0px, -4.8px, 0); }
+  62.5% { transform: translate3d(3.1px, -3.4px, 0); }
+  75% { transform: translate3d(2.4px, 0.0px, 0); }
+  87.5% { transform: translate3d(-1.3px, 3.4px, 0); }
+  100% { transform: translate3d(-3.4px, 4.8px, 0); }
+}
+@keyframes nwFloat3A {
+  0% { transform: translate3d(2.2px, 1.8px, 0); }
+  12.5% { transform: translate3d(1.5px, -0.7px, 0); }
+  25% { transform: translate3d(0.0px, -1.3px, 0); }
+  37.5% { transform: translate3d(-1.5px, 1.7px, 0); }
+  50% { transform: translate3d(-2.2px, 0.0px, 0); }
+  62.5% { transform: translate3d(-1.5px, -1.7px, 0); }
+  75% { transform: translate3d(0.0px, 1.3px, 0); }
+  87.5% { transform: translate3d(1.5px, 0.7px, 0); }
+  100% { transform: translate3d(2.2px, -1.8px, 0); }
+}
+@keyframes nwFloat3B {
+  0% { transform: translate3d(3.2px, 2.7px, 0); }
+  12.5% { transform: translate3d(2.3px, -1.0px, 0); }
+  25% { transform: translate3d(0.0px, -1.9px, 0); }
+  37.5% { transform: translate3d(-2.3px, 2.5px, 0); }
+  50% { transform: translate3d(-3.2px, 0.0px, 0); }
+  62.5% { transform: translate3d(-2.3px, -2.5px, 0); }
+  75% { transform: translate3d(0.0px, 1.9px, 0); }
+  87.5% { transform: translate3d(2.3px, 1.0px, 0); }
+  100% { transform: translate3d(3.2px, -2.7px, 0); }
+}
+@keyframes nwFloat3C {
+  0% { transform: translate3d(4.3px, 3.6px, 0); }
+  12.5% { transform: translate3d(3.1px, -1.4px, 0); }
+  25% { transform: translate3d(0.0px, -2.5px, 0); }
+  37.5% { transform: translate3d(-3.1px, 3.3px, 0); }
+  50% { transform: translate3d(-4.3px, 0.0px, 0); }
+  62.5% { transform: translate3d(-3.1px, -3.3px, 0); }
+  75% { transform: translate3d(0.0px, 2.5px, 0); }
+  87.5% { transform: translate3d(3.1px, 1.4px, 0); }
+  100% { transform: translate3d(4.3px, -3.6px, 0); }
+}
+@keyframes nwFloat4A {
+  0% { transform: translate3d(1.3px, 2.2px, 0); }
+  12.5% { transform: translate3d(0.0px, 0.8px, 0); }
+  25% { transform: translate3d(-1.3px, -1.5px, 0); }
+  37.5% { transform: translate3d(0.0px, -2.0px, 0); }
+  50% { transform: translate3d(1.3px, 0.0px, 0); }
+  62.5% { transform: translate3d(0.0px, 2.0px, 0); }
+  75% { transform: translate3d(-1.3px, 1.5px, 0); }
+  87.5% { transform: translate3d(0.0px, -0.8px, 0); }
+  100% { transform: translate3d(1.3px, -2.2px, 0); }
+}
+@keyframes nwFloat4B {
+  0% { transform: translate3d(2.0px, 3.2px, 0); }
+  12.5% { transform: translate3d(0.0px, 1.2px, 0); }
+  25% { transform: translate3d(-2.0px, -2.3px, 0); }
+  37.5% { transform: translate3d(0.0px, -3.0px, 0); }
+  50% { transform: translate3d(2.0px, 0.0px, 0); }
+  62.5% { transform: translate3d(0.0px, 3.0px, 0); }
+  75% { transform: translate3d(-2.0px, 2.3px, 0); }
+  87.5% { transform: translate3d(0.0px, -1.2px, 0); }
+  100% { transform: translate3d(2.0px, -3.2px, 0); }
+}
+@keyframes nwFloat4C {
+  0% { transform: translate3d(2.6px, 4.3px, 0); }
+  12.5% { transform: translate3d(0.0px, 1.7px, 0); }
+  25% { transform: translate3d(-2.6px, -3.1px, 0); }
+  37.5% { transform: translate3d(0.0px, -4.0px, 0); }
+  50% { transform: translate3d(2.6px, 0.0px, 0); }
+  62.5% { transform: translate3d(0.0px, 4.0px, 0); }
+  75% { transform: translate3d(-2.6px, 3.1px, 0); }
+  87.5% { transform: translate3d(0.0px, -1.7px, 0); }
+  100% { transform: translate3d(2.6px, -4.3px, 0); }
+}
+
 body[data-page="team"] .namecloud .namecloud__stack.is-cloud:not(.is-motile) .nw__t {
   animation-play-state: paused;
+}
+/* Only the name under the pointer holds still, so its line can be read. */
+@media (hover: hover) and (pointer: fine) {
+  body[data-page="team"] .namecloud .namecloud__stack.is-cloud .nw:is(:hover, :focus-visible) .nw__t {
+    animation-play-state: paused;
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {

@@ -1096,13 +1096,15 @@
         var glyph = el.querySelector(".nw__t");
         if (!glyph) return;
         var tempo = 7 + Math.random() * 6;
-        glyph.style.animationName = "nwFloat" + (1 + i % 4);
+        // Four paths at three amplitudes: plain pixel keyframes, so every
+        // animation stays on the compositor and never stalls on a keyframe.
+        var path = ["A", "B", "C"][Math.floor(Math.random() * 3)];
+        glyph.style.animationName = "nwFloat" + (1 + i % 4) + path;
         glyph.style.animationDuration = tempo.toFixed(2) + "s";
         glyph.style.animationDelay = (-Math.random() * tempo).toFixed(2) + "s";
-        glyph.style.animationTimingFunction = "ease-in-out";
+        glyph.style.animationTimingFunction = "linear";
         glyph.style.animationIterationCount = "infinite";
         glyph.style.animationDirection = "alternate";
-        glyph.style.setProperty("--nc-amp", (2.2 + Math.random() * 2.6).toFixed(2) + "px");
       });
 
       if ("IntersectionObserver" in window) {
