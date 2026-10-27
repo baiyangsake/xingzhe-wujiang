@@ -1668,3 +1668,16 @@ body.atelier-home .field-cover__vertical {
     right: 2px;
   }
 }
+
+/* ==========================================================================
+   19. Hero carousel stage — one rim only, on the picture itself
+   ==========================================================================
+   The photographic-surface pass copied the picture's rim shadow onto
+   `.home-carousel__stage` as well. The stage is 28px wider than the photo
+   (its right side is the vertical-label gutter) and no longer clipped, so the
+   stage's own 1px inner rim drew a faint rectangle floating around the photo.
+   The photo keeps its rim; the stage goes flat. */
+
+body.atelier-home .home-carousel__stage {
+  box-shadow: none;
+}
