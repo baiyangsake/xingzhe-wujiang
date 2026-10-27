@@ -1681,3 +1681,80 @@ body.atelier-home .field-cover__vertical {
 body.atelier-home .home-carousel__stage {
   box-shadow: none;
 }
+
+/* ==========================================================================
+   20. Hero cover photo — a liquid-glass bezel around the picture
+   ==========================================================================
+   A translucent glass frame runs around the cover photograph: a warm, milky
+   bezel with a bright top edge and a dark inner lip, so the picture reads as
+   sitting *inside* the glass rather than behind a white border. */
+
+body.atelier-home .field-cover__photo {
+  --g-bezel: 14px;
+  --g-photo-r: 36px;
+  --g-photo-r-in: 22px;
+  padding: var(--g-bezel);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: var(--g-photo-r);
+  overflow: hidden;
+  background:
+    radial-gradient(140% 170% at 14% -14%, rgba(255, 243, 219, 0.86), rgba(255, 243, 219, 0) 54%),
+    linear-gradient(155deg, rgba(255, 255, 255, 0.94), rgba(242, 236, 225, 0.72) 46%, rgba(255, 252, 246, 0.88));
+  box-shadow:
+    0 1px 0 0 rgba(255, 255, 255, 1) inset,
+    0 -1px 0 0 rgba(255, 255, 255, 0.55) inset,
+    0 0 0 1px rgba(21, 26, 23, 0.055),
+    inset 0 26px 34px -30px rgba(255, 255, 255, 1),
+    inset 0 -22px 28px -28px rgba(21, 26, 23, 0.3),
+    0 30px 60px -44px rgba(21, 26, 23, 0.6);
+  -webkit-backdrop-filter: blur(12px) saturate(1.6) brightness(1.05);
+  backdrop-filter: blur(12px) saturate(1.6) brightness(1.05);
+}
+
+body.atelier-home .field-cover__photo > img {
+  border-radius: var(--g-photo-r-in);
+}
+
+body.atelier-home .field-cover__photo figcaption {
+  inset: auto calc(19px + var(--g-bezel)) calc(16px + var(--g-bezel));
+}
+
+body.atelier-home .field-cover__photo::after {
+  inset: calc(65% + var(--g-bezel)) var(--g-bezel) var(--g-bezel);
+  border-radius: 0 0 var(--g-photo-r-in) var(--g-photo-r-in);
+}
+
+/* the glass lip around the picture: a dark hairline + a soft inner shade from
+   the top edge, so the photo is visibly recessed under the material */
+body.atelier-home .field-cover__photo::before {
+  content: "";
+  position: absolute;
+  inset: var(--g-bezel);
+  z-index: 2;
+  pointer-events: none;
+  border-radius: var(--g-photo-r-in);
+  box-shadow:
+    0 0 0 1px rgba(21, 26, 23, 0.32) inset,
+    inset 0 14px 20px -14px rgba(21, 26, 23, 0.5),
+    inset 0 -1px 0 0 rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 760px) {
+  body.atelier-home .field-cover__photo {
+    --g-bezel: 9px;
+    --g-photo-r: 28px;
+    --g-photo-r-in: 17px;
+  }
+
+  body.atelier-home .field-cover__photo figcaption {
+    inset: auto calc(12px + var(--g-bezel)) calc(11px + var(--g-bezel));
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body.atelier-home .field-cover__photo {
+    background: linear-gradient(180deg, #f8f4ea, #efe9db);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
