@@ -6571,3 +6571,404 @@ body[data-page="team"] .yb-chip__term {
   .motion-cursor { display: none !important; }
   .motion-is-revealing { will-change: auto; }
 }
+
+/* nav-island.css */
+/* ------------------------------------------------------------------------
+   Liquid-glass dynamic-island navigation.
+   The bar stays a floating glass capsule centred over the page; it condenses
+   to a small island while scrolling down and blooms back open on hover, on
+   focus, or when scrolling back up.
+   ------------------------------------------------------------------------ */
+
+:root {
+  --island-glass: 249 246 238;
+  --island-ink: #151a17;
+  --island-gold: #c2452d;
+  --island-ease: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* the strip itself: transparent, lets the page scroll beneath it */
+header.nav[data-nav] {
+  pointer-events: none;
+  height: var(--nav-h);
+  background: transparent;
+  border-bottom-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: var(--island-ink);
+  transition: color 0.4s var(--island-ease);
+}
+header.nav[data-nav]::after,
+header.nav[data-nav].is-scrolled::after,
+header.nav[data-nav].nav--solid::after { display: none; }
+header.nav[data-nav].is-scrolled,
+header.nav[data-nav].nav--solid {
+  height: var(--nav-h);
+  background: transparent;
+  border-bottom-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+header.nav[data-nav] .nav__inner {
+  pointer-events: auto;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 1.5vw, 24px);
+  width: fit-content;
+  max-width: min(calc(100vw - 20px), 1180px);
+  height: 56px;
+  margin-inline: auto;
+  padding: 0 9px 0 7px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background:
+    radial-gradient(120% 180% at 50% -30%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgb(var(--island-glass) / 0.84), rgb(var(--island-glass) / 0.70) 46%, rgb(var(--island-glass) / 0.80));
+  -webkit-backdrop-filter: blur(20px) saturate(1.85) brightness(1.1);
+  backdrop-filter: blur(20px) saturate(1.85) brightness(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 -1px 0 rgba(21, 26, 23, 0.08),
+    0 1px 2px rgba(21, 26, 23, 0.06),
+    0 16px 34px -20px rgba(21, 26, 23, 0.42);
+  transition:
+    box-shadow 0.5s var(--island-ease),
+    border-color 0.5s var(--island-ease),
+    background-color 0.5s var(--island-ease),
+    padding 0.5s var(--island-ease),
+    gap 0.5s var(--island-ease);
+}
+header.nav[data-nav].is-scrolled .nav__inner {
+  border-color: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(22px) saturate(1.9) brightness(1.08);
+  backdrop-filter: blur(22px) saturate(1.9) brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(21, 26, 23, 0.1),
+    0 2px 3px rgba(21, 26, 23, 0.07),
+    0 22px 44px -24px rgba(21, 26, 23, 0.5);
+}
+
+/* moving light across the glass — the "liquid" in liquid glass */
+header.nav[data-nav] .nav__inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(
+    104deg,
+    transparent 18%,
+    rgba(255, 255, 255, 0.34) 38%,
+    rgba(255, 255, 255, 0.10) 50%,
+    transparent 68%
+  );
+  background-size: 260% 100%;
+  opacity: 0.55;
+  transform: translate3d(0, 0, 0);
+  animation: island-sheen 11s var(--island-ease) infinite alternate;
+}
+/* crisp specular rim, like light catching the edge of the capsule */
+header.nav[data-nav] .nav__inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 1px 0 0 rgba(255, 255, 255, 0.35),
+    inset -1px 0 0 rgba(255, 255, 255, 0.25),
+    inset 0 -1px 0 rgba(21, 26, 23, 0.07);
+}
+@keyframes island-sheen {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 0%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  header.nav[data-nav] .nav__inner::before { animation: none; }
+}
+
+/* pointer-follow glow */
+header.nav[data-nav] .nav__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    calc(var(--island-glow, 170px)) calc(var(--island-glow, 170px) * 0.62) at var(--island-x, 50%) var(--island-y, 20%),
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0) 70%
+  );
+  transition: opacity 0.45s var(--island-ease);
+}
+header.nav[data-nav] .nav__inner:hover .nav__glow,
+header.nav[data-nav] .nav__inner:focus-within .nav__glow { opacity: 1; }
+
+/* brand — collapses to the seal when condensed */
+header.nav[data-nav] .brand {
+  gap: 10px;
+  color: inherit;
+  padding-left: 3px;
+}
+header.nav[data-nav] .brand__seal--image,
+header.nav[data-nav] .brand__seal {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  opacity: 1;
+  color: var(--island-ink);
+  transition: transform 0.45s var(--island-ease);
+}
+header.nav[data-nav] .brand__seal img { width: 100%; height: 100%; object-fit: contain; }
+header.nav[data-nav] .brand:hover .brand__seal--image { transform: rotate(-7deg); }
+header.nav[data-nav] .brand__text {
+  overflow: hidden;
+  max-width: 200px;
+  transition:
+    max-width 0.5s var(--island-ease),
+    opacity 0.35s var(--island-ease),
+    transform 0.5s var(--island-ease);
+}
+header.nav[data-nav] .brand__name {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  color: var(--island-ink);
+}
+header.nav[data-nav] .brand__en {
+  font-family: var(--font-display);
+  font-size: 7.5px;
+  letter-spacing: 0.24em;
+  color: var(--island-ink);
+  opacity: 0.55;
+}
+header.nav[data-nav].is-condensed .brand__text {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-6px);
+}
+
+/* links */
+header.nav[data-nav] .nav__links {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  max-width: 760px;
+  margin: 0 4px;
+  transition:
+    max-width 0.55s var(--island-ease),
+    opacity 0.35s var(--island-ease),
+    transform 0.55s var(--island-ease);
+}
+header.nav[data-nav] .nav__links a {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  color: var(--island-ink);
+  opacity: 0.68;
+  white-space: nowrap;
+  transition:
+    opacity 0.3s var(--island-ease),
+    color 0.3s var(--island-ease);
+}
+header.nav[data-nav] .nav__links a::after { display: none; }
+header.nav[data-nav] .nav__links a:hover,
+header.nav[data-nav] .nav__links a.is-active { opacity: 1; }
+header.nav[data-nav] .nav__links a.is-active { font-weight: 600; }
+header.nav[data-nav] .nav__links a:focus-visible {
+  outline: 2px solid var(--island-gold);
+  outline-offset: -2px;
+}
+
+/* the liquid droplet that glides behind the hovered / active link */
+header.nav[data-nav] .nav__drop {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  z-index: 0;
+  width: 0;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.42));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    0 2px 10px -4px rgba(21, 26, 23, 0.28);
+  opacity: 0;
+  transform: translateY(-50%);
+  transition:
+    left 0.45s var(--island-ease),
+    width 0.45s var(--island-ease),
+    opacity 0.3s var(--island-ease);
+  pointer-events: none;
+}
+header.nav[data-nav] .nav__drop.is-visible { opacity: 1; }
+
+/* the "now showing" pill that appears in the condensed island */
+header.nav[data-nav] .nav__now {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  overflow: hidden;
+  max-width: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--island-ink);
+  opacity: 0;
+  white-space: nowrap;
+  transform: translateX(-6px);
+  transition:
+    max-width 0.5s var(--island-ease),
+    opacity 0.35s var(--island-ease),
+    transform 0.5s var(--island-ease),
+    padding 0.5s var(--island-ease);
+}
+header.nav[data-nav] .nav__now::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--island-gold);
+  box-shadow: 0 0 0 3px rgba(194, 69, 45, 0.14);
+}
+header.nav[data-nav].is-condensed .nav__now {
+  max-width: 170px;
+  padding: 0 4px;
+  opacity: 1;
+  transform: none;
+}
+
+/* tools */
+header.nav[data-nav] .nav__tools {
+  gap: 2px;
+  padding-right: 2px;
+}
+header.nav[data-nav] .icon-btn,
+header.nav[data-nav] .nav__burger {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  color: var(--island-ink);
+  transition:
+    background 0.35s var(--island-ease),
+    border-color 0.35s var(--island-ease),
+    color 0.35s var(--island-ease),
+    transform 0.35s var(--island-ease);
+}
+header.nav[data-nav] .icon-btn:hover,
+header.nav[data-nav] .nav__burger:hover {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: var(--island-ink);
+  transform: translateY(-1px);
+}
+header.nav[data-nav] .icon-btn:hover,
+header.nav[data-nav] .nav__burger:hover,
+header.nav[data-nav] .icon-btn:focus-visible,
+header.nav[data-nav] .nav__burger:focus-visible {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(255, 255, 255, 0.85);
+}
+header.nav[data-nav] .nav__burger { display: none; }
+
+/* progress hairline along the bottom of the capsule */
+header.nav[data-nav] .nav__progress {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 4px;
+  height: 1.5px;
+  border-radius: 999px;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s var(--island-ease);
+}
+header.nav[data-nav] .nav__progress span {
+  display: block;
+  height: 100%;
+  width: calc(var(--island-progress, 0) * 100%);
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(21, 26, 23, 0.55), var(--island-gold));
+}
+header.nav[data-nav].is-scrolled .nav__progress { opacity: 0.55; }
+
+/* condensed island: links collapse, brand text folds away */
+header.nav[data-nav].is-condensed .nav__links {
+  max-width: 0;
+  margin: 0;
+  opacity: 0;
+  transform: translateX(-10px);
+}
+header.nav[data-nav].is-condensed .nav__inner {
+  gap: 8px;
+  padding: 0 9px 0 7px;
+  border-color: rgba(255, 255, 255, 0.88);
+  background:
+    radial-gradient(120% 180% at 50% -30%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 62%),
+    linear-gradient(180deg, rgb(var(--island-glass) / 0.94), rgb(var(--island-glass) / 0.84));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 0 rgba(21, 26, 23, 0.1),
+    0 2px 3px rgba(21, 26, 23, 0.08),
+    0 18px 36px -22px rgba(21, 26, 23, 0.55);
+}
+
+/* the mobile drawer / search overlays keep their own styling */
+@media (max-width: 930px) {
+  header.nav[data-nav] .nav__inner { gap: 8px; }
+  header.nav[data-nav] .nav__links { display: none; }
+  header.nav[data-nav] .nav__burger { display: grid; }
+  header.nav[data-nav] .brand__en { display: none; }
+  header.nav[data-nav].is-condensed .brand__text { max-width: 0; }
+  header.nav[data-nav].is-condensed .nav__inner { justify-content: flex-start; }
+}
+@media (max-width: 560px) {
+  header.nav[data-nav] .nav__inner { height: 52px; padding: 0 6px 0 5px; gap: 6px; }
+  header.nav[data-nav] .brand__name { font-size: 15px; letter-spacing: 0.12em; }
+  header.nav[data-nav] .nav__links a { font-size: 11.5px; padding: 7px 9px; }
+  header.nav[data-nav] .nav__now { letter-spacing: 0.1em; }
+  header.nav[data-nav] .nav__progress { left: 10px; right: 10px; }
+}
+
+/* no backdrop support: fall back to a solid frosted capsule */
+@supports not ((-webkit-backdrop-filter: blur(4px)) or (backdrop-filter: blur(4px))) {
+  header.nav[data-nav] .nav__inner {
+    background: rgb(var(--island-glass) / 0.96);
+    box-shadow: 0 12px 30px -18px rgba(21, 26, 23, 0.45);
+  }
+}
+
+/* reduced motion: no morph animation, no sheen */
+@media (prefers-reduced-motion: reduce) {
+  header.nav[data-nav] .brand__text,
+  header.nav[data-nav] .nav__links,
+  header.nav[data-nav] .nav__now,
+  header.nav[data-nav] .nav__drop,
+  header.nav[data-nav] .nav__inner,
+  header.nav[data-nav] .nav__inner::before {
+    transition: none;
+    animation: none;
+  }
+}
