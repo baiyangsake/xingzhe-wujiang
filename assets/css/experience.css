@@ -8745,3 +8745,83 @@ body.atelier-home .field-cover__photo::before {
         rgba(10, 14, 12, 0.16));
   }
 }
+
+/* ==========================================================================
+   21. Hero caption — a small glass tag, set off the corner of the picture
+   ==========================================================================
+   The v2 layer let the caption stretch almost the full width of the photo,
+   so the text sat right on its own border and the tag's corners crowded the
+   rounded corner of the picture. Here it becomes a compact tag: it hugs its
+   two lines, keeps a comfortable inset, and its corner clears the frame. */
+
+body.atelier-home .home-carousel .field-cover__photo figcaption {
+  inset: auto auto 22px 22px;
+  right: auto;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  inline-size: max-content;
+  max-inline-size: min(62%, 400px);
+  padding: 11px 15px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 15px;
+  color: rgba(247, 243, 234, 0.96);
+  background: linear-gradient(180deg, rgba(20, 24, 20, 0.72), rgba(12, 15, 13, 0.6));
+  box-shadow:
+    0 10px 26px -20px rgba(0, 0, 0, 0.75),
+    0 1px 0 0 rgba(255, 255, 255, 0.12) inset;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+body.atelier-home .home-carousel .field-cover__photo figcaption > span {
+  display: block;
+  white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+body.atelier-home .home-carousel .field-cover__photo figcaption > span[data-carousel-caption-left] {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+}
+
+body.atelier-home .home-carousel .field-cover__photo figcaption > span[data-carousel-caption-right] {
+  font-size: 10px;
+  line-height: 1.3;
+  letter-spacing: 0.14em;
+  color: rgba(247, 243, 234, 0.72);
+}
+
+body.atelier-home .home-carousel .field-cover__photo:hover figcaption {
+  -webkit-backdrop-filter: blur(14px) saturate(1.4) brightness(1.02);
+  backdrop-filter: blur(14px) saturate(1.4) brightness(1.02);
+}
+
+@media (max-width: 760px) {
+  body.atelier-home .home-carousel .field-cover__photo figcaption {
+    inset: auto auto 15px 15px;
+    max-inline-size: min(76%, 290px);
+    padding: 9px 12px 10px;
+    border-radius: 13px;
+  }
+
+  body.atelier-home .home-carousel .field-cover__photo figcaption > span[data-carousel-caption-left] {
+    font-size: 11.5px;
+  }
+
+  body.atelier-home .home-carousel .field-cover__photo figcaption > span[data-carousel-caption-right] {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  body.atelier-home .home-carousel .field-cover__photo figcaption {
+    background: rgb(18, 22, 18);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
