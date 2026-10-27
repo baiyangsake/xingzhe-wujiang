@@ -1,0 +1,214 @@
+/* Liquid Glass / a quiet control plane above a photographic field journal.
+   Opaque defaults are intentional. Only compact, supported surfaces blur. */
+:root {
+  --lg-paper:#f6f5f0; --lg-surface:#fffdf8; --lg-ink:#202723;
+  --lg-muted:#616861; --lg-accent:#b8442e; --lg-line:rgba(32,39,35,.14);
+  --lg-radius:24px; --lg-radius-sm:14px; --lg-radius-pill:999px;
+  --lg-blur:14px; --lg-ease:cubic-bezier(.22,.68,0,1);
+  --lg-shadow:0 18px 50px -32px rgba(25,31,27,.28);
+  --lg-shadow-soft:0 6px 18px -14px rgba(25,31,27,.28);
+  --lg-rim:inset 0 1px 0 rgba(255,255,255,.94),inset 0 -1px 0 rgba(32,39,35,.06);
+  --lg-glass:linear-gradient(145deg,rgba(255,255,255,.45),rgba(255,255,255,0) 45%),rgba(252,251,246,.9);
+}
+body.atelier-site {--paper:var(--lg-paper);background:var(--lg-paper);color:var(--lg-ink);-webkit-tap-highlight-color:rgba(184,68,46,.12)}
+body.atelier-site :is(button,input,select,textarea) {font-family:var(--font-sans)}
+body.atelier-site :is(.section,.field-space) {scroll-margin-top:calc(var(--nav-h) + 18px)}
+body.atelier-site :is(a,button,input,select,textarea,[tabindex]):focus-visible {outline:2px solid var(--lg-accent);outline-offset:4px}
+body.atelier-site :is(.section__head,.sec-head,.field-section-label) {border-color:var(--lg-line)}
+body.atelier-site .chip:is(.is-active,[aria-pressed="true"]) :is(i,span,small) {color:inherit}
+
+/* The island keeps the user's compact/expanded navigation behaviour. */
+header.nav[data-nav] .nav__inner {
+  color:var(--lg-ink);border-color:rgba(255,255,255,.84);
+  background:var(--lg-glass);box-shadow:var(--lg-rim),0 8px 32px -22px rgba(25,31,27,.4);
+  -webkit-backdrop-filter:none;backdrop-filter:none;
+  transition:background .3s var(--lg-ease),box-shadow .3s var(--lg-ease),color .3s var(--lg-ease);
+}
+header.nav[data-nav].is-scrolled .nav__inner {
+  background:linear-gradient(145deg,rgba(255,255,255,.4),transparent 48%),rgba(249,248,242,.96);
+  box-shadow:var(--lg-rim),0 12px 36px -24px rgba(25,31,27,.44);
+}
+header.nav[data-nav] .nav__inner::before {animation:none;transform:none;opacity:.5;background-size:100% 100%}
+header.nav[data-nav] .nav__inner::after {box-shadow:var(--lg-rim)}
+header.nav[data-nav] :is(.icon-btn,.nav__burger) {width:44px;height:44px;min-width:44px;min-height:44px;flex:none}
+header.nav[data-nav] .nav__links a {font-size:12px;letter-spacing:.025em;color:#414841}
+header.nav[data-nav] .brand__en {color:#646b63;letter-spacing:.12em}
+header.nav[data-nav] .nav__drop {background:#fffefa;box-shadow:0 1px 2px #2027230c,0 4px 12px -6px #20272320}
+header.nav[data-nav] .nav__links a.is-active {color:var(--lg-accent)}
+header.nav[data-nav].is-over-dark .nav__inner,
+header.nav[data-nav].is-over-dark.is-condensed .nav__inner {
+  color:#fffdf6;background:linear-gradient(150deg,#ffffff15,transparent 55%),rgba(32,38,33,.94);
+  border-color:rgba(255,255,255,.26);box-shadow:inset 0 1px 0 #ffffff36,0 12px 36px -24px #0009;
+}
+header.nav[data-nav].is-over-dark :is(.nav__links a,.brand__name,.brand__en,.nav__now) {color:#f5f4ec}
+header.nav[data-nav].is-over-dark .brand__seal--image img {filter:invert(1)}
+header.nav[data-nav].is-over-dark .nav__links a.is-active {color:#fffdf7;font-weight:600}
+header.nav[data-nav].is-over-dark .nav__links a:hover {color:#fffdf7}
+header.nav[data-nav].is-over-dark .nav__drop {background:#ffffff16;box-shadow:inset 0 1px 0 #ffffff38,inset 0 0 0 1px #ffffff20}
+header.nav[data-nav].is-over-dark .nav__inner::before {opacity:.25}
+header.nav[data-nav].is-over-dark .nav__glow {display:none}
+header.nav[data-nav] .nav__progress {background:#2027230d;opacity:1}
+header.nav[data-nav] .nav__progress>span {background:linear-gradient(90deg,#c49b6b,#b8442e);opacity:.7}
+
+/* Functional glass: one light panel, no full-screen backdrop filters. */
+body.atelier-site :is(.search-modal,.lb,.drawer) {-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-site .search-modal {background:rgba(18,24,20,.38)}
+body.atelier-site .search-modal__panel {
+  width:min(780px,calc(100% - 40px));margin-top:clamp(92px,14vh,150px);
+  color:var(--lg-ink);border:1px solid #ffffffc9;border-radius:28px;outline:none;
+  background:var(--lg-surface);box-shadow:var(--lg-rim),0 28px 100px -40px #111a1470;
+  -webkit-backdrop-filter:none;backdrop-filter:none;overflow:hidden;
+}
+body.atelier-site .search-modal__field {padding:24px 26px;gap:16px;border-bottom:1px solid var(--lg-line);background:#ffffff3d}
+body.atelier-site .search-modal__field:focus-within {border-bottom-color:var(--lg-accent);box-shadow:inset 0 -1px 0 var(--lg-accent)}
+body.atelier-site .search-modal__field input {color:var(--lg-ink);font-size:clamp(18px,2vw,25px);min-width:0;line-height:1.5}
+body.atelier-site .search-modal__field input::placeholder {color:var(--lg-muted);opacity:1}
+body.atelier-site .search-modal__field kbd {border:1px solid var(--lg-line);border-radius:7px;padding:4px 7px;color:var(--lg-muted);background:#ffffff85}
+body.atelier-site .search-modal__hint {padding:14px 26px;color:var(--lg-muted);font-size:11px;letter-spacing:.02em;border-bottom:1px solid #2027230d}
+body.atelier-site .search-modal__results {max-height:min(58svh,560px);overscroll-behavior:contain;padding:6px 14px 16px}
+body.atelier-site .sresult {border:0;border-bottom:1px solid #2027230d;border-radius:12px;padding:16px 12px;color:var(--lg-ink);box-shadow:none;transform:none}
+body.atelier-site .sresult:is(:hover,.is-cur) {padding:16px 12px;background:#e9e7de;box-shadow:inset 0 0 0 1px #ffffffb3;transform:none}
+body.atelier-site .sresult b {font-size:15px;line-height:1.7;color:var(--lg-ink)}
+body.atelier-site .sresult :is(time,small) {color:#626b60;line-height:1.7}
+body.atelier-site .sresult mark {background:#b8442e14;color:#9b3020;border-radius:3px;padding:0 1px}
+body.atelier-site .search-modal__close {width:44px;height:44px;right:max(20px,calc((100vw - 780px)/2));top:26px;color:var(--lg-ink);background:#fffdf8e8;border:1px solid #ffffffa6;box-shadow:var(--lg-rim),var(--lg-shadow);-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-site .drawer {background:radial-gradient(ellipse at 15% 0%,#46504340,transparent 65%),#1c241f;color:#fffdf6}
+body.atelier-site .drawer__links a {font-size:clamp(23px,4vw,42px);font-weight:450;letter-spacing:-.02em;border-color:#ffffff24}
+body.atelier-site .drawer__links a:is(:hover,:focus-visible) {color:#fffdf7;background:#ffffff0d}
+body.atelier-site .drawer__close {width:44px;height:44px;background:#ffffff14;color:#fffdf7;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-site .lb {background:rgba(14,19,16,.96)}
+body.atelier-site .lb__img {border-radius:12px}
+body.atelier-site .lb :is(.lb__top,.lb__cap) {background:#242c26;color:#f5f4ec;-webkit-backdrop-filter:none;backdrop-filter:none;border:1px solid #ffffff26;border-radius:18px}
+body.atelier-site .lb .lb__top .lb__cap {padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-site .lb :is(.lb__close,.lb__nav,.lb__zoom) {color:#fffdf7;min-width:44px;min-height:44px;background:#303a32;border:1px solid #ffffff36;-webkit-backdrop-filter:none;backdrop-filter:none}
+
+/* Hero: generous editorial type, one uninterrupted photograph and light metadata. */
+body.atelier-home .field-cover {background:radial-gradient(ellipse at 88% 13%,#cfb58b12,transparent 60%),var(--lg-paper)}
+body.atelier-home .field-cover__edition > span {background:#fffdf89c;border:1px solid #ffffffd9;box-shadow:var(--lg-rim);padding:7px 11px;color:#485047;line-height:1.5;letter-spacing:.075em}
+body.atelier-home .field-cover__masthead h1 {letter-spacing:-.055em;line-height:1.1;color:#19211c}
+body.atelier-home .field-cover__masthead h1>span {color:var(--gold)}
+body.atelier-home .field-cover__masthead>p {font-weight:500;letter-spacing:-.04em;color:#263129}
+body.atelier-home .field-cover__masthead>p>span {font-weight:400;letter-spacing:.025em;color:var(--lg-muted)}
+body.atelier-home .field-cover__intro {padding-left:16px;border-left:2px solid #c44b3033;color:var(--lg-muted);font-size:14px;line-height:2.1}
+body.atelier-home .field-cover__copy h2 {font-size:clamp(36px,4.1vw,60px);letter-spacing:-.035em;line-height:1.35}
+body.atelier-home .home-carousel .home-carousel__stage {overflow:visible;border-radius:0;background:transparent;box-shadow:none;isolation:auto}
+body.atelier-home .field-cover__visual {overflow:visible}
+body.atelier-home .field-cover__photo {border-radius:26px;overflow:hidden;box-shadow:inset 0 0 0 1px #ffffff52,0 24px 54px -38px #1b281a66}
+body.atelier-home .field-cover__photo img {filter:none}
+body.atelier-home .home-carousel .field-cover__photo figcaption {
+  left:18px;bottom:17px;right:auto;top:auto;width:fit-content;min-width:0;max-width:calc(100% - 200px);
+  padding:9px 13px;gap:3px;border-radius:14px;border:1px solid #ffffff45;
+  color:#fffdf7;background:#242c26e6;box-shadow:inset 0 1px 0 #ffffff30,0 4px 16px -10px #0009;
+  -webkit-backdrop-filter:none;backdrop-filter:none;font-size:10px;line-height:1.6;
+}
+body.atelier-home .field-cover__photo figcaption span:last-child {color:#eeeade;font-size:9px;letter-spacing:.025em}
+body.atelier-home .field-cover__inset.inset-carousel {overflow:visible;border-radius:0;box-shadow:none;background:transparent}
+body.atelier-home .inset-carousel__print {border-radius:17px;overflow:hidden;outline:1px solid #ffffffcc;box-shadow:0 16px 30px -18px #18221c66;background:#fffdf8}
+body.atelier-home .inset-carousel__stage {border-radius:11px}
+body.atelier-home .inset-carousel figcaption {color:#565e53;background:transparent;font-size:9px}
+body.atelier-home .home-carousel__story {padding:8px 13px;border-color:#ffffffd9;font-size:10px;min-height:36px;color:#56604f;background:#fffdf8b3;box-shadow:var(--lg-rim),var(--lg-shadow-soft)}
+body.atelier-home .field-cover__bottom {border:1px solid #ffffffc9;border-radius:24px;background:#fffdf873;box-shadow:var(--lg-rim);padding:22px 26px;margin-top:58px;gap:22px}
+body.atelier-home .field-cover__bottom b {font-size:42px;letter-spacing:-.045em;color:var(--lg-ink)}
+body.atelier-home .field-cover__bottom span {color:#626c60}
+body.atelier-home .field-cover__scroll {padding:10px 13px;color:var(--lg-ink)}
+body.atelier-home .field-side-note {color:#60695e}
+body.atelier-home .field-manifesto__snapshot {border-radius:15px;overflow:hidden;background:#fffdf9;box-shadow:0 16px 34px -24px #2027235c}
+body.atelier-home .field-manifesto__snapshot img {border-radius:10px}
+body.atelier-home .field-manifesto__snapshot figcaption {color:#63695d;background:transparent}
+
+/* Dark walnut setting for the expedition photographs, rather than frosted cards. */
+body.atelier-home .field-atlas {background:radial-gradient(ellipse at 95% 0%,#8b755629,transparent 60%),#202b25;color:#f5f4ec}
+body.atelier-home .exp-tab {background:transparent;box-shadow:none;border:1px solid transparent;border-bottom-color:#ffffff20;border-radius:14px;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-home .exp-tab.is-selected {background:#ffffff14;box-shadow:inset 0 1px 0 #ffffff29;border-color:#ffffff38;color:#f5efdf;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-home .exp-tab>small {color:#c1cbbd}
+body.atelier-home .exp-detail__image {clip-path:none;border-radius:24px;box-shadow:0 22px 44px -25px #0008}
+body.atelier-home .exp-detail__image>i {width:52px;height:52px;right:20px;bottom:20px;color:#202b25;background:#fffdf6e8;box-shadow:var(--lg-rim),var(--lg-shadow-soft)}
+body.atelier-home .exp-detail__copy {gap:20px}
+body.atelier-home .exp-detail__copy h3 {letter-spacing:-.035em;color:#fffdf6}
+body.atelier-home .exp-detail__copy [data-exp-lead] {color:#d2d9cb;line-height:1.95}
+body.atelier-home .exp-detail__archive {color:#eee9d8;border:1px solid #ffffff30;background:#ffffff0d;padding:7px 12px}
+body.atelier-home .field-film-toolbar {gap:18px}
+body.atelier-home .field-film-toolbar__buttons button {background:#fffdf8;border-color:#ffffffbf;box-shadow:var(--lg-rim),var(--lg-shadow-soft);color:var(--lg-ink);width:44px;height:44px}
+body.atelier-home .field-frame {border-radius:21px;background:#fffdf8;box-shadow:0 20px 40px -30px #20272366}
+body.atelier-home .field-frame img {border-radius:14px;filter:none}
+body.atelier-home .field-frame figcaption {background:transparent;color:var(--lg-muted);box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+body.atelier-home .field-frame figcaption>b {color:var(--lg-ink);font-weight:500}
+body.atelier-home .field-journal__list {border-top-color:#20272338}
+body.atelier-home .field-story {border-color:#20272320;border-radius:0;background:transparent;box-shadow:none}
+body.atelier-home .field-story h3 {font-weight:500;letter-spacing:-.025em}
+body.atelier-home .field-story p {color:var(--lg-muted);line-height:1.9}
+body.atelier-home .atelier-random {padding:16px 22px;min-height:48px;color:var(--lg-ink);background:#fffdf8c9;border-color:#ffffffd9;box-shadow:var(--lg-rim),var(--lg-shadow-soft);border-radius:999px}
+body.atelier-home .field-invitation {background:radial-gradient(ellipse at 4% 5%,#987c4830,transparent 65%),#27332b}
+
+/* Real backdrop sampling belongs to small floating elements only. */
+@supports ((-webkit-backdrop-filter:blur(1px)) or (backdrop-filter:blur(1px))) {
+  header.nav[data-nav] .nav__inner {-webkit-backdrop-filter:blur(16px) saturate(1.2);backdrop-filter:blur(16px) saturate(1.2);background:linear-gradient(145deg,#ffffff77,transparent 45%),rgba(251,250,245,.78)}
+  header.nav[data-nav].is-scrolled .nav__inner {background:linear-gradient(145deg,#ffffff77,transparent 45%),rgba(251,250,245,.86)}
+  header.nav[data-nav].is-over-dark .nav__inner,header.nav[data-nav].is-over-dark.is-condensed .nav__inner {background:linear-gradient(145deg,#ffffff12,transparent 55%),rgba(32,38,33,.84)}
+  body.atelier-site .search-modal__panel {-webkit-backdrop-filter:blur(18px) saturate(1.15);backdrop-filter:blur(18px) saturate(1.15);background:linear-gradient(135deg,#ffffff66,transparent 60%),rgba(251,250,245,.94)}
+  body.atelier-home .field-cover__photo figcaption {-webkit-backdrop-filter:blur(10px) saturate(1.12);backdrop-filter:blur(10px) saturate(1.12);background:rgba(28,37,29,.76)}
+  body.atelier-site .lb :is(.lb__top,.lb__cap) {-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);background:rgba(33,41,35,.88)}
+}
+@media (max-width:930px) {
+  body.atelier-home .field-cover__copy h2 {font-size:36px}
+  body.atelier-home .field-cover__intro {font-size:12px}
+  body.atelier-home .home-carousel .field-cover__photo figcaption {max-width:calc(100% - 145px)}
+}
+@media (max-width:600px) {
+  header.nav[data-nav] .nav__inner {max-width:calc(100vw - 24px);height:56px}
+  body.atelier-site .search-modal__panel {width:calc(100% - 24px);margin-top:88px;border-radius:22px}
+  body.atelier-site .search-modal__field {padding:20px 16px;gap:10px}
+  body.atelier-site .search-modal__field input {font-size:16px}
+  body.atelier-site .search-modal__hint {padding:12px 16px;font-size:10px}
+  body.atelier-site .search-modal__results {padding:4px 8px 12px;max-height:calc(100svh - 210px)}
+  body.atelier-site .search-modal__close {top:20px;right:14px}
+  body.atelier-site .sresult b {font-size:14px}
+  body.atelier-site .sresult time {font-size:10px}
+  body.atelier-site .drawer__links a {font-size:24px;padding-block:12px;min-height:50px}
+  body.atelier-home .field-cover__edition > span {font-size:7px;padding:5px 7px;letter-spacing:.025em}
+  body.atelier-home .field-cover__masthead h1 {letter-spacing:-.045em;line-height:1.16}
+  body.atelier-home .field-cover__intro {padding-left:12px;font-size:12px;line-height:1.95}
+  body.atelier-home .field-cover__copy h2 {font-size:clamp(27px,8vw,36px);letter-spacing:-.035em}
+  body.atelier-home .field-cover__photo {border-radius:19px}
+  body.atelier-home .home-carousel .field-cover__photo figcaption {left:11px;bottom:11px;max-width:calc(100% - 125px);padding:6px 8px;border-radius:11px;font-size:8px}
+  body.atelier-home .field-cover__photo figcaption span:last-child {font-size:7px}
+  body.atelier-home .inset-carousel__print {border-radius:12px}
+  body.atelier-home .inset-carousel__stage {border-radius:8px}
+  body.atelier-home .inset-carousel figcaption {font-size:7px}
+  body.atelier-home .field-cover__bottom {padding:18px 15px;gap:16px;margin-top:30px;border-radius:19px}
+  body.atelier-home .field-cover__bottom b {font-size:34px}
+  body.atelier-home .field-cover__bottom span {font-size:9px}
+  body.atelier-home .field-cover__scroll {display:none}
+  body.atelier-home .exp-detail__image {border-radius:20px}
+  body.atelier-home .exp-tab {border-radius:14px}
+  body.atelier-home .field-frame {border-radius:17px}
+  body.atelier-home .field-frame img {border-radius:11px}
+  body.atelier-home .field-frame figcaption>b {font-size:15px;line-height:1.6}
+}
+@media (prefers-reduced-transparency:reduce) {
+  header.nav[data-nav] .nav__inner,header.nav[data-nav].is-scrolled .nav__inner {background:#faf9f3;-webkit-backdrop-filter:none;backdrop-filter:none}
+  header.nav[data-nav].is-over-dark .nav__inner,header.nav[data-nav].is-over-dark.is-condensed .nav__inner {background:#252e27}
+  body.atelier-site .search-modal__panel {background:#fffdf8;-webkit-backdrop-filter:none;backdrop-filter:none}
+  body.atelier-home .field-cover__photo figcaption {background:#253127;-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+@media (prefers-reduced-motion:reduce) {
+  header.nav[data-nav] .nav__glow {display:none}
+  body.atelier-site :is(.sresult,.brand__seal--image,.field-cover__photo,.inset-carousel__print,.field-frame,.field-manifesto__snapshot,.field-story__arrow,.exp-detail__image) {transition:none!important;animation:none!important}
+}
+@media (forced-colors:active) {
+  header.nav[data-nav] .nav__inner,body.atelier-site .search-modal__panel,body.atelier-site .sresult {background:Canvas;color:CanvasText;border:1px solid CanvasText;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none}
+  header.nav[data-nav] :is(.nav__glow,.nav__drop,.nav__progress),header.nav[data-nav] .nav__inner::before {display:none}
+  header.nav[data-nav] :is(.brand__name,.brand__en,.nav__links a) {color:LinkText}
+  header.nav[data-nav] .brand__seal--image img {filter:none}
+}
+/* A parsed noscript style exists only when scripting is disabled. Keep the
+   complete navigation in normal document flow, including on narrow screens. */
+html:has(noscript[data-atelier-fallback] style) header.nav[data-nav] {position:relative;height:auto;padding:12px 0}
+html:has(noscript[data-atelier-fallback] style) header.nav[data-nav] .nav__inner {height:auto;min-height:56px;width:calc(100% - 24px);max-width:1120px;flex-wrap:wrap;padding:12px;gap:10px;background:#faf9f3;border-radius:22px;-webkit-backdrop-filter:none;backdrop-filter:none}
+html:has(noscript[data-atelier-fallback] style) header.nav[data-nav] .nav__links {display:flex!important;order:3;width:100%;max-width:none;flex-wrap:wrap;gap:5px;white-space:normal;opacity:1;visibility:visible}
+html:has(noscript[data-atelier-fallback] style) header.nav[data-nav] .nav__links a {min-height:44px;padding:10px 12px}
+html:has(noscript[data-atelier-fallback] style) header.nav[data-nav] .nav__tools {display:none!important}
+@media print {
+  body.atelier-site {background:#fff;color:#111}
+  body.atelier-home :is(.home-carousel__stage,.field-cover__photo,.field-cover__bottom,.field-frame) {box-shadow:none;background:#fff}
+}

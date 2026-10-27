@@ -8659,78 +8659,89 @@ body.atelier-home .home-carousel__stage {
 }
 
 /* ==========================================================================
-   20. Hero cover photo — a liquid-glass bezel around the picture
+   20. Hero cover photo — the picture sits under a pane of glass
    ==========================================================================
-   A translucent glass frame runs around the cover photograph: a warm, milky
-   bezel with a bright top edge and a dark inner lip, so the picture reads as
-   sitting *inside* the glass rather than behind a white border. */
+   No mount, no mat: the photograph runs edge to edge in a rounded frame and
+   the glass lives in the light — one bright specular along the top edge, a
+   soft reflection drifting across the surface, shaded inner edges where the
+   material thickens, and a deep, quiet drop shadow that lifts it off paper. */
 
 body.atelier-home .field-cover__photo {
-  --g-bezel: 14px;
-  --g-photo-r: 36px;
-  --g-photo-r-in: 22px;
-  padding: var(--g-bezel);
-  border: 1px solid rgba(255, 255, 255, 0.82);
+  --g-photo-r: 28px;
+  padding: 0;
+  border: 0;
   border-radius: var(--g-photo-r);
   overflow: hidden;
-  background:
-    radial-gradient(140% 170% at 14% -14%, rgba(255, 243, 219, 0.86), rgba(255, 243, 219, 0) 54%),
-    linear-gradient(155deg, rgba(255, 255, 255, 0.94), rgba(242, 236, 225, 0.72) 46%, rgba(255, 252, 246, 0.88));
+  background: #0c0f0d;
   box-shadow:
-    0 1px 0 0 rgba(255, 255, 255, 1) inset,
-    0 -1px 0 0 rgba(255, 255, 255, 0.55) inset,
-    0 0 0 1px rgba(21, 26, 23, 0.055),
-    inset 0 26px 34px -30px rgba(255, 255, 255, 1),
-    inset 0 -22px 28px -28px rgba(21, 26, 23, 0.3),
-    0 30px 60px -44px rgba(21, 26, 23, 0.6);
-  -webkit-backdrop-filter: blur(12px) saturate(1.6) brightness(1.05);
-  backdrop-filter: blur(12px) saturate(1.6) brightness(1.05);
+    0 0 0 1px rgba(21, 26, 23, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.48),
+    inset 0 22px 34px -26px rgba(10, 14, 12, 0.58),
+    inset 0 -18px 26px -22px rgba(10, 14, 12, 0.5),
+    0 2px 4px -2px rgba(21, 26, 23, 0.16),
+    0 30px 64px -36px rgba(21, 26, 23, 0.55);
 }
 
 body.atelier-home .field-cover__photo > img {
-  border-radius: var(--g-photo-r-in);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
 }
 
 body.atelier-home .field-cover__photo figcaption {
-  inset: auto calc(19px + var(--g-bezel)) calc(16px + var(--g-bezel));
+  inset: auto 19px 16px;
 }
 
 body.atelier-home .field-cover__photo::after {
-  inset: calc(65% + var(--g-bezel)) var(--g-bezel) var(--g-bezel);
-  border-radius: 0 0 var(--g-photo-r-in) var(--g-photo-r-in);
+  inset: 62% 0 0;
+  border-radius: 0 0 calc(var(--g-photo-r) - 2px) calc(var(--g-photo-r) - 2px);
 }
 
-/* the glass lip around the picture: a dark hairline + a soft inner shade from
-   the top edge, so the photo is visibly recessed under the material */
 body.atelier-home .field-cover__photo::before {
   content: "";
   position: absolute;
-  inset: var(--g-bezel);
-  z-index: 2;
+  inset: 0;
+  z-index: 3;
   pointer-events: none;
-  border-radius: var(--g-photo-r-in);
+  border-radius: inherit;
+  background:
+    linear-gradient(116deg,
+      rgba(255, 255, 255, 0.16) 0%,
+      rgba(255, 255, 255, 0.03) 17%,
+      rgba(255, 255, 255, 0) 33%,
+      rgba(255, 255, 255, 0.07) 56%,
+      rgba(255, 255, 255, 0) 70%,
+      rgba(255, 255, 255, 0.13) 100%),
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0) 10%,
+      rgba(10, 14, 12, 0) 84%,
+      rgba(10, 14, 12, 0.16));
   box-shadow:
-    0 0 0 1px rgba(21, 26, 23, 0.32) inset,
-    inset 0 14px 20px -14px rgba(21, 26, 23, 0.5),
-    inset 0 -1px 0 0 rgba(255, 255, 255, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 @media (max-width: 760px) {
   body.atelier-home .field-cover__photo {
-    --g-bezel: 9px;
-    --g-photo-r: 28px;
-    --g-photo-r-in: 17px;
+    --g-photo-r: 24px;
   }
 
   body.atelier-home .field-cover__photo figcaption {
-    inset: auto calc(12px + var(--g-bezel)) calc(11px + var(--g-bezel));
+    inset: auto 13px 12px;
   }
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  body.atelier-home .field-cover__photo {
-    background: linear-gradient(180deg, #f8f4ea, #efe9db);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+  body.atelier-home .field-cover__photo::before {
+    background:
+      linear-gradient(180deg,
+        rgba(255, 255, 255, 0.14),
+        rgba(255, 255, 255, 0) 10%,
+        rgba(10, 14, 12, 0) 84%,
+        rgba(10, 14, 12, 0.16));
   }
 }
