@@ -80,7 +80,6 @@
         observer = new IntersectionObserver(function (entries) {
           entries.forEach(function (entry) {
             if (entry.isIntersecting) reveal(entry.target);
-            else if (animations.has(entry.target)) stopReveal(entry.target);
           });
         }, { threshold: 0.08, rootMargin: "0px 0px -4% 0px" });
         revealItems.forEach(function (el) { observer.observe(el); });
