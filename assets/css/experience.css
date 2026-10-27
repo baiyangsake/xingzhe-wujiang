@@ -8454,3 +8454,75 @@ header.nav[data-nav].is-condensed .nav__now {
     padding: 0 6px;
   }
 }
+
+/* ==========================================================================
+   16. Pointer light — a soft specular that follows the pointer
+   ==========================================================================
+   Each island carries a small specular that tracks the cursor with a little
+   lag: a tight glint plus a warm halo, so the glass reads as a wet surface
+   catching the light rather than a static white card. Decoration only:
+   pointer events pass through, and touch / reduced-motion readers skip it. */
+
+header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) {
+  --plx: 50%;
+  --ply: 40%;
+  --pl-on: 0;
+}
+
+header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) .nav__light {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: var(--pl-on, 0);
+  background:
+    radial-gradient(
+      96px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 255, 255, 0.68),
+      rgba(255, 250, 238, 0.3) 42%,
+      transparent 72%
+    ),
+    radial-gradient(
+      230px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 241, 214, 0.22),
+      transparent 68%
+    ),
+    linear-gradient(118deg, transparent 34%, rgba(255, 255, 255, 0.12) 48%, transparent 60%);
+  mix-blend-mode: screen;
+}
+
+/* text and controls stay above the specular */
+header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > :not(.nav__light) {
+  position: relative;
+  z-index: 3;
+}
+
+/* smoked islands catch a warmer, softer light */
+header.nav[data-nav].is-over-dark :is(.brand, .nav__links, .nav__tools) .nav__light {
+  background:
+    radial-gradient(
+      110px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 244, 224, 0.34),
+      rgba(255, 226, 182, 0.14) 44%,
+      transparent 74%
+    ),
+    radial-gradient(
+      240px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 214, 156, 0.16),
+      transparent 70%
+    ),
+    linear-gradient(118deg, transparent 32%, rgba(255, 255, 255, 0.08) 48%, transparent 60%);
+}
+
+@media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+  header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) .nav__light {
+    display: none;
+  }
+}
+
+@media print {
+  header.nav[data-nav] .nav__light {
+    display: none !important;
+  }
+}

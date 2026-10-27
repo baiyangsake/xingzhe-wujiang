@@ -2415,6 +2415,86 @@
   window.addEventListener("pageshow", syncGlowPreference);
   syncGlowPreference();
 
+  /* -------------------------------------------------------- pointer light */
+  var islands = [brand, links, tools].filter(Boolean);
+  var lights = islands.map(function (island) {
+    var light = document.createElement("span");
+    light.className = "nav__light";
+    light.setAttribute("aria-hidden", "true");
+    island.appendChild(light);
+    return { island: island, light: light, x: 0, y: 0, tx: 0, ty: 0, on: 0, ton: 0 };
+  });
+  var lightFrame = 0;
+  var LIGHT_REACH = 26; // px a pointer may stray outside an island and still light it
+
+  function lightAllowed() {
+    return !document.hidden &&
+      !(motionPreference && motionPreference.matches) &&
+      !!(pointerPreference && pointerPreference.matches);
+  }
+
+  function lightTick() {
+    lightFrame = 0;
+    var busy = false;
+    lights.forEach(function (item) {
+      item.on += (item.ton - item.on) * (item.ton > item.on ? 0.16 : 0.09);
+      item.x += (item.tx - item.x) * 0.2;
+      item.y += (item.ty - item.y) * 0.2;
+      if (Math.abs(item.ton - item.on) < 0.004) item.on = item.ton;
+      if (Math.abs(item.tx - item.x) < 0.25) item.x = item.tx;
+      if (Math.abs(item.ty - item.y) < 0.25) item.y = item.ty;
+      item.island.style.setProperty("--plx", item.x.toFixed(1) + "px");
+      item.island.style.setProperty("--ply", item.y.toFixed(1) + "px");
+      item.island.style.setProperty("--pl-on", item.on.toFixed(3));
+      if (item.on !== item.ton || item.x !== item.tx || item.y !== item.ty) busy = true;
+    });
+    if (busy) lightFrame = window.requestAnimationFrame(lightTick);
+  }
+
+  function scheduleLight() {
+    if (!lightFrame) lightFrame = window.requestAnimationFrame(lightTick);
+  }
+
+  function fadeLights() {
+    lights.forEach(function (item) { item.ton = 0; });
+    scheduleLight();
+  }
+
+  function trackLights(e) {
+    lights.forEach(function (item) {
+      var r = item.island.getBoundingClientRect();
+      if (!r.width) { item.ton = 0; return; }
+      var inside = e.clientX >= r.left - LIGHT_REACH && e.clientX <= r.right + LIGHT_REACH &&
+        e.clientY >= r.top - LIGHT_REACH && e.clientY <= r.bottom + LIGHT_REACH;
+      if (!inside) { item.ton = 0; return; }
+      item.tx = Math.max(-6, Math.min(r.width + 6, e.clientX - r.left));
+      item.ty = Math.max(-6, Math.min(r.height + 6, e.clientY - r.top));
+      item.ton = 1;
+    });
+    scheduleLight();
+  }
+
+  inner.addEventListener("pointermove", function (e) {
+    if (!lightAllowed()) return;
+    if (e.pointerType && e.pointerType !== "mouse") return;
+    trackLights(e);
+  });
+  inner.addEventListener("pointerleave", fadeLights);
+  window.addEventListener("blur", fadeLights);
+  document.addEventListener("visibilitychange", function () {
+    if (document.hidden) fadeLights();
+  });
+  if (motionPreference && motionPreference.addEventListener) {
+    motionPreference.addEventListener("change", function () {
+      if (!lightAllowed()) fadeLights();
+    });
+  }
+  if (pointerPreference && pointerPreference.addEventListener) {
+    pointerPreference.addEventListener("change", function () {
+      if (!lightAllowed()) fadeLights();
+    });
+  }
+
   /* --------------------------------------------------- condensed / expand */
   var condensed = false;
   var hovering = false;
