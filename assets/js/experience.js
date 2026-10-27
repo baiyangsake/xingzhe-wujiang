@@ -1802,7 +1802,7 @@
 })();
 ;
 /* home-carousel.js */
-/* The cover remains a static photograph unless this enhancement succeeds. */
+/* Each photograph keeps its static first frame unless enhancement succeeds. */
 (function () {
   "use strict";
   var doc = document;
@@ -1810,20 +1810,26 @@
   function all(selector, root) { return Array.prototype.slice.call(root.querySelectorAll(selector)); }
 
   function enhance(region) {
-    if (region.hasAttribute("data-carousel-enhanced")) return;
-    var slides = all("[data-carousel-slide]", region);
+    // The small print is nested inside the cover: separate attributes keep
+    // either carousel from claiming the other's slides and controls.
+    var prefix = region.hasAttribute("data-inset-carousel") ? "inset" : "carousel";
+    function attr(name) { return "data-" + prefix + "-" + name; }
+    function find(name) { return region.querySelector("[" + attr(name) + "]"); }
+    if (region.hasAttribute(attr("enhanced"))) return;
+    var slides = all("[" + attr("slide") + "]", region);
     if (!slides.length) return;
-    var controls = region.querySelector("[data-carousel-controls]");
-    var previous = region.querySelector("[data-carousel-prev]");
-    var next = region.querySelector("[data-carousel-next]");
-    var toggle = region.querySelector("[data-carousel-toggle]");
-    var dots = all("[data-carousel-go]", region);
-    var count = region.querySelector("[data-carousel-count]");
-    var status = region.querySelector("[data-carousel-status]");
-    var captionLeft = region.querySelector("[data-carousel-caption-left]");
-    var captionRight = region.querySelector("[data-carousel-caption-right]");
-    var captionLink = region.querySelector("[data-carousel-caption-link]");
-    var photo = region.querySelector(".field-cover__photo") || slides[0].parentElement;
+    var controls = find("controls");
+    var previous = find("prev");
+    var next = find("next");
+    var toggle = find("toggle");
+    var dots = all("[" + attr("go") + "]", region);
+    var count = find("count");
+    var status = find("status");
+    var captionLeft = find("caption-left");
+    var captionRight = find("caption-right");
+    var captionLink = find("caption-link");
+    var photo = find("photo") || region.querySelector(".field-cover__photo") || slides[0].parentElement;
+    var interval = Math.max(3000, Math.min(30000, Number(region.getAttribute(attr("interval"))) || 6000));
     var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     var current = Math.max(0, slides.findIndex(function (image) { return !image.hidden; }));
     var desired = current;
@@ -1841,7 +1847,7 @@
     var records = slides.map(function (image) {
       return { image: image, state: "idle", promise: null, z: image.style.zIndex };
     });
-    var dotLabels = dots.map(function (button) { return button.getAttribute("aria-label") || "第 " + (Number(button.getAttribute("data-carousel-go")) + 1) + " 幅"; });
+    var dotLabels = dots.map(function (button) { return button.getAttribute("aria-label") || "第 " + (Number(button.getAttribute(attr("go"))) + 1) + " 幅"; });
 
     function wantsPlay() { return userIntent === null ? !reduced.matches : userIntent; }
     function usableCount() { return records.filter(function (record) { return record.state !== "error"; }).length; }
@@ -1852,13 +1858,13 @@
       if (!pending && canRotate()) timer = setTimeout(function () {
         timer = null;
         if (canRotate()) select(adjacent(current, 1), "auto", 1, slides.length);
-      }, 6000);
+      }, interval);
     }
     function announce(message) { if (status) status.textContent = message; }
     function syncControls() {
       if (count) count.textContent = String(current + 1).padStart(2, "0") + " / " + String(slides.length).padStart(2, "0");
       dots.forEach(function (button, i) {
-        var index = Number(button.getAttribute("data-carousel-go"));
+        var index = Number(button.getAttribute(attr("go")));
         var valid = Number.isInteger(index) && index >= 0 && index < slides.length;
         var failed = valid && records[index].state === "error";
         button.setAttribute("aria-pressed", index === current ? "true" : "false");
@@ -1990,7 +1996,7 @@
     on(previous, "click", function () { move(-1); });
     on(next, "click", function () { move(1); });
     dots.forEach(function (button) { on(button, "click", function () {
-      if (!button.disabled) select(Number(button.getAttribute("data-carousel-go")), "manual", 0, 1);
+      if (!button.disabled) select(Number(button.getAttribute(attr("go"))), "manual", 0, 1);
     }); });
     on(toggle, "click", function () {
       userIntent = !wantsPlay();
@@ -1998,6 +2004,7 @@
       announce(wantsPlay() ? "自动播放已开启；移出鼠标并离开轮播焦点后继续。" : "自动播放已暂停。");
     });
     on(region, "keydown", function (event) {
+      if (event.target.closest("[data-home-carousel], [data-inset-carousel]") !== region) return;
       if (event.defaultPrevented || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey || event.isComposing ||
           event.target.closest("input, textarea, select, [contenteditable='true']")) return;
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
@@ -2073,13 +2080,13 @@
     }
     if (reduced.addEventListener) on(reduced, "change", preference);
     else if (reduced.addListener) reduced.addListener(preference);
-    region.setAttribute("data-carousel-enhanced", "");
+    region.setAttribute(attr("enhanced"), "");
     if (!region.hasAttribute("aria-roledescription")) region.setAttribute("aria-roledescription", "轮播");
     if (controls) controls.hidden = false;
     syncControls();
     select(current, "initial", 1, slides.length);
   }
-  function boot() { all("[data-home-carousel]", doc).forEach(enhance); }
+  function boot() { all("[data-home-carousel], [data-inset-carousel]", doc).forEach(enhance); }
   if (doc.readyState === "loading") on(doc, "DOMContentLoaded", boot, { once: true });
   else boot();
 })();

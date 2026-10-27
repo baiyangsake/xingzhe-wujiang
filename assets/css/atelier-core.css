@@ -166,3 +166,26 @@
 }
 @media(max-width:360px){.field-manifesto__photos{height:200px}.field-manifesto__snapshot--3{top:90px}.home-carousel__controls{gap-inline:5px}}
 @media(prefers-reduced-motion:reduce){.field-manifesto__snapshot{transition:none}.field-manifesto__snapshot:hover{transform:none}}
+
+/* A second, independent album inside the tilted photographic print. */
+.field-cover__inset.inset-carousel{width:clamp(148px,14vw,198px)}
+.inset-carousel__stage{position:relative;height:clamp(80px,9vw,125px);overflow:hidden;touch-action:pan-y}
+.inset-carousel [data-inset-slide]{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}
+.inset-carousel [data-inset-slide][hidden],.inset-carousel__controls[hidden]{display:none!important}
+.field-cover__inset.inset-carousel figcaption{height:34px;padding:5px 2px;display:grid;place-items:center;line-height:1.5;font-size:9px}
+.inset-carousel__controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--atelier-line)}
+.inset-carousel__controls button{display:grid;place-items:center;min-width:44px;min-height:36px;padding:0;border:0;background:transparent;color:var(--ink);font:10px/1 var(--font-sans);cursor:pointer}
+.inset-carousel__controls button+button{border-left:1px solid var(--atelier-line)}
+.inset-carousel__controls button:hover{background:var(--ink);color:var(--paper)}
+.inset-carousel__controls button:disabled{opacity:.35;cursor:default}
+.inset-carousel:focus-visible,.inset-carousel__controls button:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.inset-carousel__count{position:absolute;right:12px;top:12px;z-index:3;padding:4px 6px;background:var(--paper);color:var(--ink);font:8px/1.3 var(--font-sans);font-variant-numeric:tabular-nums;letter-spacing:.04em;pointer-events:none}
+.field-cover__visual:hover .field-cover__inset.inset-carousel{transform:rotate(6deg)}
+.home-carousel .field-cover__photo figcaption{right:clamp(160px,14vw,210px)}
+@media(max-width:930px){.field-cover__inset.inset-carousel{width:148px}.inset-carousel__stage{height:90px}}
+@media(max-width:600px){
+ .inset-carousel__stage{height:75px}.field-cover__inset.inset-carousel figcaption{font-size:8px}
+ .field-cover__visual:hover .field-cover__inset.inset-carousel{transform:rotate(7deg)}
+ .home-carousel .field-cover__photo figcaption{right:160px}
+}
+@media(pointer:coarse){.inset-carousel__controls button{min-height:44px}}
