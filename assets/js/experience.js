@@ -2425,7 +2425,6 @@
     return { island: island, light: light, x: 0, y: 0, tx: 0, ty: 0, on: 0, ton: 0 };
   });
   var lightFrame = 0;
-  var LIGHT_REACH = 26; // px a pointer may stray outside an island and still light it
 
   function lightAllowed() {
     return !document.hidden &&
@@ -2433,19 +2432,24 @@
       !!(pointerPreference && pointerPreference.matches);
   }
 
+  function paintLight(item) {
+    item.island.style.setProperty("--plx", item.x.toFixed(1) + "px");
+    item.island.style.setProperty("--ply", item.y.toFixed(1) + "px");
+    item.island.style.setProperty("--pl-on", item.on.toFixed(3));
+  }
+
   function lightTick() {
     lightFrame = 0;
     var busy = false;
     lights.forEach(function (item) {
-      item.on += (item.ton - item.on) * (item.ton > item.on ? 0.16 : 0.09);
+      // fade in gently, snap away quickly, so two islands are never lit together
+      item.on += (item.ton - item.on) * (item.ton > item.on ? 0.18 : 0.4);
       item.x += (item.tx - item.x) * 0.2;
       item.y += (item.ty - item.y) * 0.2;
       if (Math.abs(item.ton - item.on) < 0.004) item.on = item.ton;
       if (Math.abs(item.tx - item.x) < 0.25) item.x = item.tx;
       if (Math.abs(item.ty - item.y) < 0.25) item.y = item.ty;
-      item.island.style.setProperty("--plx", item.x.toFixed(1) + "px");
-      item.island.style.setProperty("--ply", item.y.toFixed(1) + "px");
-      item.island.style.setProperty("--pl-on", item.on.toFixed(3));
+      paintLight(item);
       if (item.on !== item.ton || item.x !== item.tx || item.y !== item.ty) busy = true;
     });
     if (busy) lightFrame = window.requestAnimationFrame(lightTick);
@@ -2455,20 +2459,30 @@
     if (!lightFrame) lightFrame = window.requestAnimationFrame(lightTick);
   }
 
-  function fadeLights() {
-    lights.forEach(function (item) { item.ton = 0; });
+  function clearLights() {
+    lights.forEach(function (item) {
+      item.ton = 0;
+      item.on = 0;
+      paintLight(item);
+    });
     scheduleLight();
   }
 
   function trackLights(e) {
     lights.forEach(function (item) {
       var r = item.island.getBoundingClientRect();
-      if (!r.width) { item.ton = 0; return; }
-      var inside = e.clientX >= r.left - LIGHT_REACH && e.clientX <= r.right + LIGHT_REACH &&
-        e.clientY >= r.top - LIGHT_REACH && e.clientY <= r.bottom + LIGHT_REACH;
-      if (!inside) { item.ton = 0; return; }
-      item.tx = Math.max(-6, Math.min(r.width + 6, e.clientX - r.left));
-      item.ty = Math.max(-6, Math.min(r.height + 6, e.clientY - r.top));
+      var inside = r.width > 0 &&
+        e.clientX >= r.left && e.clientX <= r.right &&
+        e.clientY >= r.top && e.clientY <= r.bottom;
+      if (!inside) {
+        // hard cut: an island that is not under the pointer never keeps a glow
+        item.ton = 0;
+        item.on = 0;
+        paintLight(item);
+        return;
+      }
+      item.tx = Math.max(0, Math.min(r.width, e.clientX - r.left));
+      item.ty = Math.max(0, Math.min(r.height, e.clientY - r.top));
       item.ton = 1;
     });
     scheduleLight();
@@ -2479,19 +2493,19 @@
     if (e.pointerType && e.pointerType !== "mouse") return;
     trackLights(e);
   });
-  inner.addEventListener("pointerleave", fadeLights);
-  window.addEventListener("blur", fadeLights);
+  inner.addEventListener("pointerleave", clearLights);
+  window.addEventListener("blur", clearLights);
   document.addEventListener("visibilitychange", function () {
-    if (document.hidden) fadeLights();
+    if (document.hidden) clearLights();
   });
   if (motionPreference && motionPreference.addEventListener) {
     motionPreference.addEventListener("change", function () {
-      if (!lightAllowed()) fadeLights();
+      if (!lightAllowed()) clearLights();
     });
   }
   if (pointerPreference && pointerPreference.addEventListener) {
     pointerPreference.addEventListener("change", function () {
-      if (!lightAllowed()) fadeLights();
+      if (!lightAllowed()) clearLights();
     });
   }
 

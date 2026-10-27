@@ -1480,12 +1480,13 @@ header.nav[data-nav].is-condensed .nav__now {
 }
 
 /* ==========================================================================
-   16. Pointer light — a soft specular that follows the pointer
+   16. Pointer light — a small specular that follows the pointer
    ==========================================================================
-   Each island carries a small specular that tracks the cursor with a little
-   lag: a tight glint plus a warm halo, so the glass reads as a wet surface
-   catching the light rather than a static white card. Decoration only:
-   pointer events pass through, and touch / reduced-motion readers skip it. */
+   Only the island under the cursor carries a light: a tight glint with a
+   short warm halo, both centred on the pointer. There is deliberately no
+   panel-wide sheen, so a lit island never washes light across its middle.
+   Decoration only: pointer events pass through; touch / reduced motion /
+   print skip it. */
 
 header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) {
   --plx: 50%;
@@ -1502,17 +1503,16 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) .nav__light {
   opacity: var(--pl-on, 0);
   background:
     radial-gradient(
-      96px circle at var(--plx, 50%) var(--ply, 40%),
-      rgba(255, 255, 255, 0.68),
-      rgba(255, 250, 238, 0.3) 42%,
-      transparent 72%
+      78px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 255, 255, 0.7),
+      rgba(255, 250, 238, 0.28) 46%,
+      transparent 74%
     ),
     radial-gradient(
-      230px circle at var(--plx, 50%) var(--ply, 40%),
-      rgba(255, 241, 214, 0.22),
-      transparent 68%
-    ),
-    linear-gradient(118deg, transparent 34%, rgba(255, 255, 255, 0.12) 48%, transparent 60%);
+      150px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 241, 214, 0.2),
+      transparent 70%
+    );
   mix-blend-mode: screen;
 }
 
@@ -1526,17 +1526,16 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > :not(.nav__light) {
 header.nav[data-nav].is-over-dark :is(.brand, .nav__links, .nav__tools) .nav__light {
   background:
     radial-gradient(
-      110px circle at var(--plx, 50%) var(--ply, 40%),
-      rgba(255, 244, 224, 0.34),
-      rgba(255, 226, 182, 0.14) 44%,
-      transparent 74%
+      86px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 244, 224, 0.36),
+      rgba(255, 226, 182, 0.14) 48%,
+      transparent 76%
     ),
     radial-gradient(
-      240px circle at var(--plx, 50%) var(--ply, 40%),
-      rgba(255, 214, 156, 0.16),
+      160px circle at var(--plx, 50%) var(--ply, 40%),
+      rgba(255, 214, 156, 0.14),
       transparent 70%
-    ),
-    linear-gradient(118deg, transparent 32%, rgba(255, 255, 255, 0.08) 48%, transparent 60%);
+    );
 }
 
 @media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
