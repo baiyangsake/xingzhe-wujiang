@@ -1299,6 +1299,7 @@
     boot();
   }
 })();
+
 ;
 /* field-design.js */
 /* Small, native enhancements. The photographs and stories remain usable without JS. */
@@ -1450,6 +1451,7 @@
     });
   }
 })();
+
 ;
 /* motion-system.js */
 /* Shared, optional motion. All links, images and native scrolling work without it. */
@@ -1739,6 +1741,7 @@
   if (doc.readyState === "loading") on(doc, "DOMContentLoaded", boot, { once: true });
   else boot();
 })();
+
 ;
 /* atelier-home.js */
 /* Open a real entry from the historical archive. */
@@ -1821,6 +1824,7 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
+
 ;
 /* home-carousel.js */
 /* Each photograph keeps its static first frame unless enhancement succeeds. */
@@ -2112,6 +2116,7 @@
   if (doc.readyState === "loading") on(doc, "DOMContentLoaded", boot, { once: true });
   else boot();
 })();
+
 ;
 /* slider-system.js */
 /* Optional inline slider: arrows, drag, keyboard and a progress line.
@@ -2274,6 +2279,7 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
 })();
+
 ;
 /* nav-island.js */
 /* ------------------------------------------------------------------------
@@ -2425,6 +2431,20 @@
     return { island: island, light: light, x: 0, y: 0, tx: 0, ty: 0, on: 0, ton: 0 };
   });
   var lightFrame = 0;
+
+  /* ------------------------------------- smoked glass, island by island */
+  var layers = islands.map(function (island) {
+    var frost = document.createElement("span");
+    frost.className = "nav__frost";
+    frost.setAttribute("aria-hidden", "true");
+    island.insertBefore(frost, island.firstChild);
+    var shade = document.createElement("span");
+    shade.className = "nav__shade";
+    shade.setAttribute("aria-hidden", "true");
+    island.insertBefore(shade, frost.nextSibling);
+    return { island: island, frost: frost, shade: shade, dark: 0, goal: 0 };
+  });
+  var darkFrame = 0;
 
   function lightAllowed() {
     return !document.hidden &&
@@ -2599,34 +2619,91 @@
     var now = Date.now();
     if (now - lastDetect < 120) return;
     lastDetect = now;
-    /* The bar is split into separate floating islands with gaps between them,
-       so each island is sampled on its own instead of one common width. */
-    var islands = [brand, links, tools].filter(function (el) {
-      return el && el.getBoundingClientRect().width > 4;
-    });
-    if (!islands.length) {
-      nav.classList.remove("is-over-dark");
-      return;
-    }
-    var dark = 0;
-    var tested = 0;
-    for (var i = 0; i < islands.length; i += 1) {
-      var r = islands[i].getBoundingClientRect();
-      if (!r.width || r.bottom < 0 || r.top > window.innerHeight) continue;
+    /* Each island is sampled on its own and fades on its own, so a bar that
+       spans paper and a photograph turns dark only where the picture is. */
+    layers.forEach(function (layer) {
+      var island = layer.island;
+      var r = island.getBoundingClientRect();
+      if (!r.width || r.bottom < 0 || r.top > window.innerHeight) {
+        layer.goal = 0;
+        return;
+      }
       var y = r.top + r.height * 0.55;
       var xs = [
         r.left + r.width * 0.24,
         r.left + r.width * 0.5,
         r.left + r.width * 0.76
       ];
-      var hit = false;
+      var hits = 0;
       for (var j = 0; j < xs.length; j += 1) {
-        if (backdropProbe(Math.round(xs[j]), Math.round(y))) { hit = true; break; }
+        if (backdropProbe(Math.round(xs[j]), Math.round(y))) hits += 1;
       }
-      tested += 1;
-      if (hit) dark += 1;
-    }
-    nav.classList.toggle("is-over-dark", tested > 0 && dark >= Math.min(2, tested));
+      layer.goal = Math.min(1, (hits / xs.length) * 1.35);
+    });
+    scheduleDark();
+  }
+
+  function paintLayer(layer) {
+    var t = layer.dark;
+    var eInk = Math.min(1, t * 1.65);
+    var r = Math.round(21 + (247 - 21) * eInk);
+    var g = Math.round(26 + (243 - 26) * eInk);
+    var b = Math.round(23 + (234 - 23) * eInk);
+    var island = layer.island;
+    island.style.setProperty("--nav-dark", t.toFixed(3));
+    island.style.setProperty(
+      "--nav-ink",
+      "rgba(" + r + ", " + g + ", " + b + ", " + (0.88 + 0.08 * eInk).toFixed(3) + ")"
+    );
+    island.style.setProperty("--nav-edge", "rgba(255, 255, 255, " + (0.5 - 0.30 * eInk).toFixed(3) + ")");
+    island.style.setProperty("--nav-hover", "rgba(255, 255, 255, " + (0.4 - 0.28 * eInk).toFixed(3) + ")");
+    island.style.setProperty(
+      "--nav-active-bg",
+      "rgba(" + Math.round(255 - 8 * eInk) + ", " + Math.round(255 - 12 * eInk) + ", " +
+        Math.round(255 - 21 * eInk) + ", " + (0.66 + 0.28 * eInk).toFixed(3) + ")"
+    );
+    island.style.setProperty("--nav-seal-invert", eInk.toFixed(3));
+  }
+
+  function paintRoot() {
+    var centre = layers.length > 1 ? layers[1].dark : 0;
+    var top = layers.reduce(function (m, layer) { return Math.max(m, layer.dark); }, 0);
+    var eInk = Math.min(1, centre * 1.65);
+    var r = Math.round(21 + (247 - 21) * eInk);
+    var g = Math.round(26 + (243 - 26) * eInk);
+    var b = Math.round(23 + (234 - 23) * eInk);
+    nav.style.setProperty("--nav-dark", top.toFixed(3));
+    nav.style.setProperty(
+      "--nav-ink",
+      "rgba(" + r + ", " + g + ", " + b + ", " + (0.88 + 0.08 * eInk).toFixed(3) + ")"
+    );
+    nav.style.setProperty("--nav-edge", "rgba(255, 255, 255, " + (0.5 - 0.30 * eInk).toFixed(3) + ")");
+    nav.style.setProperty("--nav-hover", "rgba(255, 255, 255, " + (0.4 - 0.28 * eInk).toFixed(3) + ")");
+    nav.style.setProperty(
+      "--nav-active-bg",
+      "rgba(" + Math.round(255 - 8 * eInk) + ", " + Math.round(255 - 12 * eInk) + ", " +
+        Math.round(255 - 21 * eInk) + ", " + (0.66 + 0.28 * eInk).toFixed(3) + ")"
+    );
+    nav.style.setProperty("--nav-seal-invert", eInk.toFixed(3));
+    nav.classList.toggle("is-over-dark", top > 0.5);
+  }
+
+  function tickDark() {
+    darkFrame = 0;
+    var busy = false;
+    layers.forEach(function (layer) {
+      layer.dark += (layer.goal - layer.dark) * 0.14;
+      if (Math.abs(layer.goal - layer.dark) < 0.004) layer.dark = layer.goal;
+      paintLayer(layer);
+      if (layer.dark !== layer.goal) busy = true;
+    });
+    paintRoot();
+    if (busy) darkFrame = window.requestAnimationFrame(tickDark);
+  }
+
+  function scheduleDark() {
+    if (darkFrame) return;
+    darkFrame = window.requestAnimationFrame(tickDark);
   }
 
   function schedule() {
