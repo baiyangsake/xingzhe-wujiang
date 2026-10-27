@@ -9,6 +9,11 @@
 @keyframes archive-page-out { to { opacity: 0; } }
 @keyframes archive-page-in { from { opacity: 0; } to { opacity: 1; } }
 .motion-is-revealing { will-change: clip-path, opacity; }
+/* Reveal targets stay visible until the motion system arms, then wait hidden
+   for their own reveal. Without this the observer can start the clip animation
+   one frame after a lazy image was already painted, which read as a blink. */
+.motion-pending { opacity: 0; }
+@media print { .motion-pending { opacity: 1 !important; } }
 [data-tilt].motion-pointer-active { perspective: 1100px; }
 .motion-pointer-active [data-magnetic-inner],
 .motion-pointer-active [data-tilt-inner] { will-change: translate, rotate; }

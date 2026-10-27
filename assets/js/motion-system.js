@@ -30,12 +30,19 @@
       if (animation) animation.cancel();
       animations.delete(el);
       el.classList.remove("motion-is-revealing");
+      el.classList.remove("motion-pending");
+      el.classList.add("motion-done");
       if (observer) observer.unobserve(el);
     }
     function reveal(el) {
       if (seen.has(el)) return;
       seen.add(el);
-      if (reduced.matches || doc.hidden || !el.animate) { if (observer) observer.unobserve(el); return; }
+      if (reduced.matches || doc.hidden || !el.animate) {
+        if (observer) observer.unobserve(el);
+        el.classList.remove("motion-pending");
+        el.classList.add("motion-done");
+        return;
+      }
       var type = el.getAttribute("data-motion") ||
         (el.hasAttribute("data-text-reveal") ? "text" : el.hasAttribute("data-image-reveal") || el.matches(".masonry figure, .prow__media") ? "image" : "fade");
       var from = type === "text" ? { clipPath: "inset(100% 0 0 0)", opacity: 0.25 } :
@@ -48,6 +55,7 @@
       animations.set(el, animation);
       animation.finished.then(function () { stopReveal(el); }, function () {
         animations.delete(el); el.classList.remove("motion-is-revealing");
+        el.classList.remove("motion-pending"); el.classList.add("motion-done");
       });
     }
     // Existing reveal systems retain ownership of their own elements and trees.
@@ -56,19 +64,33 @@
         !el.querySelector("[data-reveal], [data-field-reveal]") && !el.closest("[aria-hidden='true']");
     });
     var revealSet = new WeakSet(revealItems);
+    // Arm the hidden state only where a reveal can actually run, so the page
+    // never renders blank content for a browser that cannot animate it.
+    var canReveal = !reduced.matches && "IntersectionObserver" in window && !!window.Element.prototype.animate;
+    if (canReveal) {
+      revealItems.forEach(function (el) { el.classList.add("motion-pending"); });
+    }
     on(doc, "focusin", function (event) {
       for (var el = event.target; el && el !== doc.body; el = el.parentElement) {
         if (revealSet.has(el)) { seen.add(el); stopReveal(el); }
       }
     });
     if ("IntersectionObserver" in window) {
-      observer = new IntersectionObserver(function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) reveal(entry.target);
-          else if (animations.has(entry.target)) stopReveal(entry.target);
+      try {
+        observer = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) reveal(entry.target);
+            else if (animations.has(entry.target)) stopReveal(entry.target);
+          });
+        }, { threshold: 0.08, rootMargin: "0px 0px -4% 0px" });
+        revealItems.forEach(function (el) { observer.observe(el); });
+      } catch (error) {
+        // A motion failure must never leave content hidden.
+        revealItems.forEach(function (el) {
+          el.classList.remove("motion-pending");
+          el.classList.add("motion-done");
         });
-      }, { threshold: 0.08, rootMargin: "0px 0px -4% 0px" });
-      revealItems.forEach(function (el) { observer.observe(el); });
+      }
     }
 
     function resetRecord(record) {
