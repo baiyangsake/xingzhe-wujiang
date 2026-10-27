@@ -17,7 +17,8 @@
   var links = nav.querySelector(".nav__links");
   var tools = nav.querySelector(".nav__tools");
   var brand = nav.querySelector(".brand");
-  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var motionPreference = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+  var pointerPreference = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)");
 
   /* ---------------------------------------------------------- scaffolding */
   var glow = document.createElement("span");
@@ -82,7 +83,8 @@
       var a = e.target.closest ? e.target.closest("a") : null;
       if (a) placeDrop(a);
     });
-    links.addEventListener("focusout", function () {
+    links.addEventListener("focusout", function (e) {
+      if (e.relatedTarget && links.contains(e.relatedTarget)) return;
       placeDrop(hoverLink || activeLink);
     });
   }
@@ -90,18 +92,50 @@
   var glowX = 0;
   var glowY = 0;
   var glowRaf = 0;
+  function canGlow() {
+    return !document.hidden && motionPreference && !motionPreference.matches &&
+      pointerPreference && pointerPreference.matches;
+  }
+  function cancelGlow(clear) {
+    if (glowRaf) window.cancelAnimationFrame(glowRaf);
+    glowRaf = 0;
+    if (clear) {
+      inner.style.removeProperty("--island-x");
+      inner.style.removeProperty("--island-y");
+      inner.style.removeProperty("--island-glow");
+    }
+  }
+  function syncGlowPreference() {
+    cancelGlow(true);
+    glow.hidden = !canGlow();
+  }
   inner.addEventListener("pointermove", function (e) {
-    var r = inner.getBoundingClientRect();
-    glowX = e.clientX - r.left;
-    glowY = e.clientY - r.top;
+    if (!canGlow() || (e.pointerType && e.pointerType !== "mouse")) return;
+    // Save only the latest input. Geometry is read once in the display frame,
+    // so high-rate mouse events never repeatedly force a layout measurement.
+    glowX = e.clientX;
+    glowY = e.clientY;
     if (glowRaf) return;
     glowRaf = window.requestAnimationFrame(function () {
       glowRaf = 0;
-      inner.style.setProperty("--island-x", glowX + "px");
-      inner.style.setProperty("--island-y", glowY + "px");
+      if (!canGlow()) { glow.hidden = true; return; }
+      var r = inner.getBoundingClientRect();
+      inner.style.setProperty("--island-x", (glowX - r.left) + "px");
+      inner.style.setProperty("--island-y", (glowY - r.top) + "px");
       inner.style.setProperty("--island-glow", Math.max(120, Math.min(260, r.width * 0.35)) + "px");
     });
   });
+  function watchPreference(media) {
+    if (!media) return;
+    if (media.addEventListener) media.addEventListener("change", syncGlowPreference);
+    else if (media.addListener) media.addListener(syncGlowPreference);
+  }
+  watchPreference(motionPreference);
+  watchPreference(pointerPreference);
+  document.addEventListener("visibilitychange", syncGlowPreference);
+  window.addEventListener("pagehide", function () { cancelGlow(true); glow.hidden = true; });
+  window.addEventListener("pageshow", syncGlowPreference);
+  syncGlowPreference();
 
   /* --------------------------------------------------- condensed / expand */
   var condensed = false;
@@ -193,22 +227,34 @@
     var now = Date.now();
     if (now - lastDetect < 120) return;
     lastDetect = now;
-    var r = inner.getBoundingClientRect();
-    if (!r.width || r.bottom < 0) {
+    /* The bar is split into separate floating islands with gaps between them,
+       so each island is sampled on its own instead of one common width. */
+    var islands = [brand, links, tools].filter(function (el) {
+      return el && el.getBoundingClientRect().width > 4;
+    });
+    if (!islands.length) {
       nav.classList.remove("is-over-dark");
       return;
     }
-    var y = Math.min(window.innerHeight - 1, Math.max(1, r.top + r.height * 0.55));
-    var xs = [
-      r.left + r.width * 0.22,
-      r.left + r.width * 0.5,
-      r.left + r.width * 0.78
-    ];
     var dark = 0;
-    for (var i = 0; i < xs.length; i += 1) {
-      if (backdropProbe(Math.round(xs[i]), Math.round(y))) dark += 1;
+    var tested = 0;
+    for (var i = 0; i < islands.length; i += 1) {
+      var r = islands[i].getBoundingClientRect();
+      if (!r.width || r.bottom < 0 || r.top > window.innerHeight) continue;
+      var y = r.top + r.height * 0.55;
+      var xs = [
+        r.left + r.width * 0.24,
+        r.left + r.width * 0.5,
+        r.left + r.width * 0.76
+      ];
+      var hit = false;
+      for (var j = 0; j < xs.length; j += 1) {
+        if (backdropProbe(Math.round(xs[j]), Math.round(y))) { hit = true; break; }
+      }
+      tested += 1;
+      if (hit) dark += 1;
     }
-    nav.classList.toggle("is-over-dark", dark >= 2);
+    nav.classList.toggle("is-over-dark", tested > 0 && dark >= Math.min(2, tested));
   }
 
   function schedule() {
@@ -227,6 +273,7 @@
     setCondensed(false);
   });
   inner.addEventListener("pointerleave", function () {
+    cancelGlow(false);
     hovering = false;
     setCondensed(shouldCondense());
   });
@@ -234,7 +281,8 @@
     focusInside = true;
     setCondensed(false);
   });
-  nav.addEventListener("focusout", function () {
+  nav.addEventListener("focusout", function (e) {
+    if (e.relatedTarget && nav.contains(e.relatedTarget)) return;
     focusInside = false;
     setCondensed(shouldCondense());
   });
