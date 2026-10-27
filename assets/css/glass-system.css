@@ -1549,3 +1549,81 @@ header.nav[data-nav].is-over-dark :is(.brand, .nav__links, .nav__tools) .nav__li
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   17. Edition labels — text fit inside the small glass pills
+   ==========================================================================
+   The two hero labels ("青年文化调研 / 始于 2016" and "FIELD NOTES — VOL.
+   018") became glass pills, but their base rule only set flex alignment: the
+   text touched the rounded corners. Give the pills a vertical rhythm and
+   horizontal air that scales with the viewport. */
+
+body.atelier-home .field-cover__edition {
+  align-items: center;
+  gap: clamp(10px, 1.8vw, 24px);
+}
+
+body.atelier-home .field-cover__edition > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-height: 28px;
+  padding: 7px 14px;
+  line-height: 1;
+  white-space: nowrap;
+  letter-spacing: 0.09em;
+  border-radius: var(--g-r-pill);
+}
+
+body.atelier-home .field-cover__edition > span:first-child {
+  gap: 8px;
+  padding-left: 13px;
+}
+
+body.atelier-home .field-cover__edition > span:last-child {
+  padding: 7px 15px;
+  letter-spacing: 0.12em;
+}
+
+body.atelier-home .field-cover__edition .live-dot {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  body.atelier-home .field-cover__edition {
+    gap: 8px;
+  }
+
+  body.atelier-home .field-cover__edition > span {
+    min-height: 24px;
+    padding: 5px 10px;
+    gap: 6px;
+    font-size: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  body.atelier-home .field-cover__edition > span:first-child {
+    padding-left: 9px;
+  }
+
+  body.atelier-home .field-cover__edition > span:last-child {
+    padding: 5px 10px;
+    font-size: 7.5px;
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (max-width: 420px) {
+  body.atelier-home .field-cover__edition > span {
+    min-height: 22px;
+    padding: 4px 8px;
+    font-size: 7.5px;
+  }
+
+  body.atelier-home .field-cover__edition > span:last-child {
+    font-size: 7px;
+    padding: 4px 8px;
+  }
+}
