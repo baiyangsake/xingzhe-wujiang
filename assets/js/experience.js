@@ -2382,6 +2382,76 @@
     var doc = document.documentElement;
     var max = Math.max(1, doc.scrollHeight - window.innerHeight);
     inner.style.setProperty("--island-progress", Math.min(1, Math.max(0, y / max)).toFixed(4));
+    detectBackdrop();
+  }
+
+  /* ------------------------------------------ live backdrop reading (v2)
+     Sample the stack behind the capsule and flip the material to its dark
+     state when photographs or dark sections slide underneath it. Three
+     probes is enough and it runs at most every 120ms.                      */
+  var lastDetect = 0;
+
+  function glassLuma(color) {
+    var m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,\/]\s*([\d.]+))?\s*\)/.exec(
+      color || ""
+    );
+    if (!m) return null;
+    return {
+      a: m[4] === undefined ? 1 : parseFloat(m[4]),
+      l:
+        (0.2126 * parseFloat(m[1]) +
+          0.7152 * parseFloat(m[2]) +
+          0.0722 * parseFloat(m[3])) /
+        255
+    };
+  }
+
+  function backdropProbe(x, y) {
+    var stack = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+    var content = null;
+    for (var i = 0; i < stack.length; i += 1) {
+      var node = stack[i];
+      if (node === nav || nav.contains(node)) continue;
+      content = node;
+      break;
+    }
+    if (!content) return false;
+    var photoSelector =
+      ".field-cover__visual, .field-cover__photo, .home-carousel__stage, .phero, .field-atlas, .masonry, .field-film, .exp-detail__image, .field-cover__inset, .field-manifesto__snapshot, .namecloud, .lb";
+    var probe = content;
+    for (var depth = 0; depth < 6 && probe && probe.nodeType === 1; depth += 1) {
+      if (probe.tagName === "IMG") return true;
+      var cs = window.getComputedStyle(probe);
+      if (probe.matches && probe.matches(photoSelector)) {
+        if (cs.backgroundImage && cs.backgroundImage !== "none") return true;
+      }
+      var luma = glassLuma(cs.backgroundColor);
+      if (luma && luma.a > 0.35) return luma.l < 0.5;
+      probe = probe.parentElement;
+    }
+    return false;
+  }
+
+  function detectBackdrop() {
+    var now = Date.now();
+    if (now - lastDetect < 120) return;
+    lastDetect = now;
+    var r = inner.getBoundingClientRect();
+    if (!r.width || r.bottom < 0) {
+      nav.classList.remove("is-over-dark");
+      return;
+    }
+    var y = Math.min(window.innerHeight - 1, Math.max(1, r.top + r.height * 0.55));
+    var xs = [
+      r.left + r.width * 0.22,
+      r.left + r.width * 0.5,
+      r.left + r.width * 0.78
+    ];
+    var dark = 0;
+    for (var i = 0; i < xs.length; i += 1) {
+      if (backdropProbe(Math.round(xs[i]), Math.round(y))) dark += 1;
+    }
+    nav.classList.toggle("is-over-dark", dark >= 2);
   }
 
   function schedule() {

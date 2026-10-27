@@ -6975,611 +6975,850 @@ header.nav[data-nav].is-condensed .nav__inner {
 
 /* glass-system.css */
 /* ==========================================================================
-   Liquid Glass design layer
+   Liquid Glass · material pass v2
    --------------------------------------------------------------------------
-   Apple Liquid Glass flavour for the field-journal site: translucent milk
-   glass, soft specular rims, layered shadows and restrained motion. Loaded
-   last in the experience bundle so it refines every page without touching
-   the existing layouts, routes or content.
+   A restrained Apple-style glass layer for the field journal. v2 keeps every
+   layout, route and interaction as it was and only re-authors the material:
+
+     · navigation is real front/back glass (JS tags .is-over-dark when photos
+       or dark sections pass underneath, so tint and type flip together)
+     · every glass surface gets a specular rim, a top reflection and a darker
+       inner bottom edge, so it reads as a thick sheet rather than a sticker
+     · five material tiers keep the page quiet:
+         1 controls      thin bright glass, no backdrop blur (cheap)
+         2 toolbars      blur 16, floating over content
+         3 captions      blur 14 dark glass, tied to the photo underneath
+         4 cards         warm milk glass, no blur (paper-only surfaces)
+         5 modals        blur 26-30 deep glass, strongest rim and shadow
+     · warm amber light and a trace of jade live inside the gradients so the
+       glass sits naturally beside ink, indigo and lamp photographs
+     · no rainbow fringes: rims are white / ink only, shadows are neutral
+
+   Loaded last in the experience bundle. No HTML or JS behaviour depends on it.
+   ========================================================================== */
+
+/* ==========================================================================
+   0. Tokens
    ========================================================================== */
 
 :root {
-  /* glass material tokens */
-  --glass-tint: 250 247 240;
-  --glass-tint-deep: 243 239 230;
-  --glass-ink: #151a17;
-  --glass-ink-soft: rgba(21, 26, 23, 0.72);
-  --glass-line: rgba(255, 255, 255, 0.66);
-  --glass-line-ink: rgba(21, 26, 23, 0.14);
-  --glass-edge-ink: rgba(21, 26, 23, 0.06);
-  --glass-sheen: linear-gradient(
-    118deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(255, 255, 255, 0.06) 26%,
-    rgba(255, 255, 255, 0) 46%,
-    rgba(255, 255, 255, 0.16) 62%,
-    rgba(255, 255, 255, 0) 78%
-  );
-  --glass-radius-xs: 10px;
-  --glass-radius-sm: 14px;
-  --glass-radius: 20px;
-  --glass-radius-lg: 28px;
-  --glass-radius-xl: 36px;
-  --glass-radius-pill: 999px;
-  --glass-blur-sm: 10px;
-  --glass-blur: 18px;
-  --glass-blur-lg: 26px;
-  --glass-sat: 1.75;
-  --glass-shadow-sm: 0 1px 2px rgba(21, 26, 23, 0.05),
-    0 10px 24px -18px rgba(21, 26, 23, 0.4);
-  --glass-shadow: 0 1px 2px rgba(21, 26, 23, 0.05),
-    0 18px 42px -26px rgba(21, 26, 23, 0.48);
-  --glass-shadow-lg: 0 2px 6px rgba(21, 26, 23, 0.06),
-    0 40px 90px -50px rgba(21, 26, 23, 0.62);
-  --glass-ease: cubic-bezier(0.32, 0.72, 0, 1);
-  --glass-dur: 0.5s;
-}
+  --g-tint: 251 248 241;
+  --g-tint-2: 244 240 231;
+  --g-warm: 255 247 233;
+  --g-amber: 214 171 112;
+  --g-jade: 150 172 148;
+  --g-ink: 21 26 23;
+  --g-paper: 243 240 232;
 
-/* ---------------------------------------------------------------- helpers */
-.atelier-site :is(.chip, .btn, .tag, .yb-nav, .lb__nav, .lb__close, .icon-btn,
-  .field-round-link, .field-cover__scroll, .home-carousel__source,
-  .filterbar, .search-modal__panel, .prow__no, .prow__body::after,
-  .field-film-toolbar, .field-rail, .contact-card, .pillar, .stats__item,
-  .pcard, .yb-year, .entry__cover, .qr-block, .proj-lead, .award,
-  .article__tags .tag) {
-  --glass-x: 0;
+  --g-rim: inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.3),
+    inset 0 -1px 0 rgba(21, 26, 23, 0.07);
+  --g-rim-soft: inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+  --g-rim-dark: inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.13),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.24);
+
+  --g-sheen: linear-gradient(
+    112deg,
+    rgba(255, 255, 255, 0.46) 0%,
+    rgba(255, 255, 255, 0.1) 20%,
+    rgba(255, 255, 255, 0) 42%,
+    rgba(255, 255, 255, 0.12) 63%,
+    rgba(255, 255, 255, 0) 82%
+  );
+  --g-warmth: radial-gradient(
+    130% 170% at 14% 4%,
+    rgba(255, 241, 217, 0.42),
+    rgba(255, 241, 217, 0) 58%
+  );
+  --g-cool: radial-gradient(
+    120% 150% at 90% 104%,
+    rgba(198, 210, 198, 0.26),
+    rgba(198, 210, 198, 0) 62%
+  );
+
+  --g-r-xs: 10px;
+  --g-r-sm: 14px;
+  --g-r-md: 20px;
+  --g-r-lg: 28px;
+  --g-r-xl: 36px;
+  --g-r-pill: 999px;
+
+  --g-blur-sm: 8px;
+  --g-blur: 16px;
+  --g-blur-lg: 24px;
+  --g-blur-xl: 30px;
+  --g-sat: 1.7;
+
+  --g-shadow-1: 0 1px 1px rgba(21, 26, 23, 0.05),
+    0 8px 18px -14px rgba(21, 26, 23, 0.35);
+  --g-shadow-2: 0 1px 2px rgba(21, 26, 23, 0.05),
+    0 18px 38px -24px rgba(21, 26, 23, 0.42);
+  --g-shadow-3: 0 2px 5px rgba(21, 26, 23, 0.06),
+    0 36px 72px -46px rgba(21, 26, 23, 0.55);
+
+  --g-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  --g-dur: 0.5s;
 }
 
 /* ==========================================================================
-   1. Small controls — the classic Apple glass pill
+   1. Tier 1 — controls: thin, bright, cheap (no backdrop blur)
    ========================================================================== */
-body.atelier-site :is(.chip, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-  .icon-btn, .field-round-link, .field-cover__scroll) {
+
+body.atelier-site :is(.chip, .tag, .btn, .icon-btn, .yb-nav,
+  .field-cover__scroll, .home-carousel__source, .atelier-random) {
   position: relative;
-  isolation: isolate;
-  border: 1px solid var(--glass-line);
+  color: var(--g-ink);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: var(--g-r-pill);
   background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.82),
-      rgb(var(--glass-tint-deep) / 0.62));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    inset 0 -1px 0 rgba(21, 26, 23, 0.06),
-    var(--glass-shadow-sm);
-  color: var(--glass-ink);
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease),
-    background-color var(--glass-dur) var(--glass-ease),
-    border-color var(--glass-dur) var(--glass-ease);
+    var(--g-warmth), var(--g-cool), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.72), rgb(var(--g-tint-2) / 0.58));
+  background-size: 100% 100%, 100% 100%, 190% 100%, 100% 100%;
+  background-position: 0 0, 0 0, 0% 0, 0 0;
+  box-shadow: var(--g-rim), var(--g-shadow-1);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: background-position 0.55s var(--g-ease),
+    box-shadow 0.3s var(--g-ease), transform 0.22s var(--g-ease),
+    border-color 0.3s var(--g-ease), color 0.3s var(--g-ease);
 }
 
-body.atelier-site :is(.chip, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-  .icon-btn, .field-round-link, .field-cover__scroll):hover {
-  border-color: rgba(255, 255, 255, 0.92);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(21, 26, 23, 0.06),
-    0 2px 4px rgba(21, 26, 23, 0.07),
-    0 18px 34px -20px rgba(21, 26, 23, 0.5);
+body.atelier-site :is(.chip, .tag, .btn, .icon-btn, .yb-nav,
+  .field-cover__scroll, .home-carousel__source, .atelier-random):hover {
+  background-position: 0 0, 0 0, 100% 0, 0 0;
+  box-shadow: var(--g-rim), var(--g-shadow-2);
   transform: translateY(-1px);
 }
 
-body.atelier-site :is(.chip, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-  .icon-btn, .field-round-link, .field-cover__scroll):active {
+body.atelier-site :is(.chip, .tag, .btn, .icon-btn, .yb-nav,
+  .field-cover__scroll, .home-carousel__source, .atelier-random):active {
+  background-position: 0 0, 0 0, 55% 0, 0 0;
+  box-shadow: inset 0 2px 6px rgba(21, 26, 23, 0.13), var(--g-rim-soft);
   transform: translateY(0) scale(0.985);
 }
 
-/* pressed / active states keep the brand accent inside the glass */
 body.atelier-site .chip.is-active,
 body.atelier-site .chip[aria-pressed="true"] {
-  border-color: rgba(255, 255, 255, 0.42);
+  color: #fff6ef;
+  border-color: rgba(255, 255, 255, 0.36);
   background:
-    linear-gradient(180deg, rgba(21, 26, 23, 0.86), rgba(21, 26, 23, 0.72)),
-    var(--glass-sheen);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  color: var(--paper);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 2px 5px rgba(21, 26, 23, 0.18),
-    0 16px 30px -20px rgba(21, 26, 23, 0.6);
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(207, 62, 39, 0.94), rgba(176, 48, 30, 0.86));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.36),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 14px 30px -22px rgba(140, 47, 39, 0.7);
 }
 
-body.atelier-site .chip.is-active i,
-body.atelier-site .chip.is-active small,
-body.atelier-site .chip[aria-pressed="true"] i,
-body.atelier-site .chip[aria-pressed="true"] small {
-  color: var(--acid, #dceab3);
+body.atelier-site .chip.is-active :is(i, span, small),
+body.atelier-site .chip[aria-pressed="true"] :is(i, span, small) {
+  color: rgba(255, 246, 239, 0.82);
 }
 
 body.atelier-site .tag--gold {
-  border-color: rgba(194, 69, 45, 0.28);
+  color: #7a2318;
+  border-color: rgba(255, 255, 255, 0.5);
   background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(194, 69, 45, 0.14), rgba(194, 69, 45, 0.06));
-  color: var(--seal, #8c2f27);
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgba(207, 62, 39, 0.14), rgba(207, 62, 39, 0.06));
 }
 
 body.atelier-site .tag--ink {
+  color: var(--g-paper);
+  border-color: rgba(255, 255, 255, 0.16);
   background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(21, 26, 23, 0.84), rgba(21, 26, 23, 0.7));
-  color: var(--paper);
-  border-color: rgba(255, 255, 255, 0.22);
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(21, 26, 23, 0.88), rgba(21, 26, 23, 0.76));
+  box-shadow: var(--g-rim-dark), var(--g-shadow-1);
 }
 
-/* ==========================================================================
-   2. Hero — glass information layers over the photography
-   ========================================================================== */
-.atelier-home .field-cover__edition {
-  align-items: center;
+body.atelier-site .field-round-link {
+  color: inherit;
+  border: 0;
+  background: none;
+  box-shadow: none;
 }
 
-.atelier-home .field-cover__edition > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  padding: 7px 13px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
+body.atelier-site .field-round-link i {
+  display: inline-grid;
+  place-items: center;
+  color: var(--g-ink);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 50%;
   background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.78),
-      rgb(var(--glass-tint-deep) / 0.55));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 1px 2px rgba(21, 26, 23, 0.05),
-    0 12px 26px -20px rgba(21, 26, 23, 0.45);
-  letter-spacing: 0.12em;
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.7), rgb(var(--g-tint-2) / 0.56));
+  box-shadow: var(--g-rim), var(--g-shadow-1);
+  transition: box-shadow 0.3s var(--g-ease), transform 0.25s var(--g-ease);
 }
 
-.atelier-home .field-cover__visual {
-  border-radius: var(--glass-radius-lg);
-}
-
-.atelier-home .home-carousel__stage,
-.atelier-home .field-cover__photo {
-  border-radius: var(--glass-radius-lg);
-}
-
-.atelier-home .field-cover__photo {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    0 2px 6px rgba(21, 26, 23, 0.09),
-    0 40px 90px -50px rgba(21, 26, 23, 0.6);
-}
-
-.atelier-home .field-cover__photo figcaption {
-  display: inline-flex;
-  flex-direction: column;
-  gap: 3px;
-  inset: auto auto 16px 16px;
-  padding: 10px 15px;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.32);
-  background:
-    linear-gradient(180deg, rgba(16, 20, 16, 0.45), rgba(16, 20, 16, 0.3));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.4);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    0 12px 26px -18px rgba(0, 0, 0, 0.7);
-  color: #fff;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.45);
-}
-
-.atelier-home .home-carousel__source {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  width: fit-content;
-  margin-top: 14px;
-  padding: 8px 15px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.8),
-      rgb(var(--glass-tint-deep) / 0.55));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-  color: var(--glass-ink-soft);
-}
-
-.atelier-home .home-carousel__source:hover {
-  color: var(--gold);
+body.atelier-site .field-round-link:hover i {
+  box-shadow: var(--g-rim), var(--g-shadow-2);
   transform: translateY(-1px);
 }
 
-.atelier-home .field-cover__scroll {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  width: fit-content;
-  padding: 10px 18px;
-  border-radius: var(--glass-radius-pill);
-  font-size: 10px;
-  letter-spacing: 0.14em;
+/* ==========================================================================
+   2. Filter systems — pill chips + a floating glass capsule
+   ========================================================================== */
+
+body[data-page="gallery"] .gallery-filters .filterbar .chip,
+body[data-page="archive"] .filterbar .chip,
+body[data-page="chronicle"] .yearnav .chip {
+  border-radius: var(--g-r-pill);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  background:
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.66), rgb(var(--g-tint-2) / 0.5));
+  box-shadow: var(--g-rim-soft), var(--g-shadow-1);
+  transition: background-position 0.55s var(--g-ease),
+    box-shadow 0.3s var(--g-ease), transform 0.22s var(--g-ease),
+    border-color 0.3s var(--g-ease);
 }
 
-.atelier-home .field-cover__inset {
-  border-radius: var(--glass-radius-sm);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
-    0 2px 6px rgba(21, 26, 23, 0.1),
-    0 24px 50px -30px rgba(21, 26, 23, 0.6);
+body[data-page="gallery"] .gallery-filters .filterbar .chip:hover,
+body[data-page="archive"] .filterbar .chip:hover,
+body[data-page="chronicle"] .yearnav .chip:hover {
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--g-rim-soft), var(--g-shadow-2);
 }
 
-.atelier-home .field-manifesto__snapshot {
-  border-radius: var(--glass-radius-sm);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.36),
-    0 2px 5px rgba(21, 26, 23, 0.08),
-    0 26px 54px -34px rgba(21, 26, 23, 0.55);
+body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active,
+body[data-page="archive"] .filterbar .chip.is-active,
+body[data-page="chronicle"] .yearnav .chip.is-active {
+  color: #fff6ef;
+  border-color: rgba(255, 255, 255, 0.34);
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(207, 62, 39, 0.95), rgba(174, 47, 29, 0.87));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.34),
+    0 16px 32px -24px rgba(140, 47, 39, 0.75);
+}
+
+body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active :is(i, span, small),
+body[data-page="archive"] .filterbar .chip.is-active :is(i, span, small),
+body[data-page="chronicle"] .yearnav .chip.is-active :is(i, span, small) {
+  color: rgba(255, 246, 239, 0.8);
 }
 
 /* ==========================================================================
-   3. Home sections — glass on the dark atlas, film toolbar, journal rows
+   3. Tier 2 — floating toolbars: real blur over whatever scrolls beneath
    ========================================================================== */
-.atelier-home .field-atlas {
-  --atlas-ink: #151a17;
-}
 
-.atelier-home .exp-tab {
-  border-radius: 0 var(--glass-radius-sm) var(--glass-radius-sm) 0;
-  transition:
-    background var(--glass-dur) var(--glass-ease),
-    color var(--glass-dur) var(--glass-ease),
-    padding var(--glass-dur) var(--glass-ease),
-    border-color var(--glass-dur) var(--glass-ease);
-}
-
-.atelier-home .exp-tab:hover {
-  background: rgba(255, 255, 255, 0.045);
-}
-
-.atelier-home .exp-tab.is-selected {
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid rgba(220, 234, 179, 0.18);
+body[data-page="gallery"] .gallery-filters .filterbar,
+body[data-page="archive"] .filterbar,
+body[data-page="chronicle"] .yearnav,
+body.atelier-site .field-film-toolbar,
+body[data-page="team"] .yb-bar {
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: var(--g-r-pill);
   background:
-    linear-gradient(180deg, rgba(220, 234, 179, 0.14), rgba(220, 234, 179, 0.06));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.3);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.3);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 14px 30px -22px rgba(0, 0, 0, 0.8);
+    var(--g-warmth), var(--g-cool), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.6), rgb(var(--g-tint-2) / 0.46));
+  box-shadow: var(--g-rim), var(--g-shadow-2);
+  -webkit-backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat));
+  backdrop-filter: blur(var(--g-blur)) saturate(var(--g-sat));
 }
 
-.atelier-home .exp-detail__image {
-  border-radius: var(--glass-radius);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
-    0 34px 70px -46px rgba(0, 0, 0, 0.85);
-}
-
-.atelier-home .exp-detail__archive,
-.atelier-home .field-atlas__foot .field-text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 14px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(255, 255, 255, 0.05);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
-  backdrop-filter: blur(var(--glass-blur-sm));
-  color: var(--acid, #dceab3);
-}
-
-.atelier-home .field-film-toolbar {
-  padding: 10px 16px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
+body.atelier-site .field-film-toolbar button,
+body.atelier-site .field-rail {
+  border: 1px solid rgba(255, 255, 255, 0.5);
   background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.78),
-      rgb(var(--glass-tint-deep) / 0.55));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  box-shadow: var(--glass-shadow-sm);
-}
-
-.atelier-home .field-film-toolbar button {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 1px solid var(--glass-line);
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.atelier-home .field-film-toolbar button:hover {
-  background: rgba(21, 26, 23, 0.86);
-  color: var(--paper);
-}
-
-.atelier-home .field-film-toolbar__progress {
-  height: 3px;
-  border-radius: 999px;
-  background: rgba(21, 26, 23, 0.14);
-}
-
-.atelier-home .field-frame {
-  border-radius: var(--glass-radius-sm);
-  transition:
-    transform 0.55s var(--glass-ease),
-    box-shadow 0.55s var(--glass-ease);
-}
-
-.atelier-home .field-frame:hover {
-  box-shadow:
-    0 2px 6px rgba(21, 26, 23, 0.07),
-    0 34px 60px -36px rgba(21, 26, 23, 0.55);
-}
-
-.atelier-home .field-story {
-  border-radius: var(--glass-radius-sm);
-  transition:
-    background var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease),
-    padding var(--glass-dur) var(--glass-ease);
-}
-
-.atelier-home .field-story:hover {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.34));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 20px 40px -30px rgba(21, 26, 23, 0.5);
-  padding-inline: 18px;
-}
-
-.atelier-home .field-rail {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.86),
-      rgb(var(--glass-tint-deep) / 0.66));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  box-shadow: var(--glass-shadow-sm);
-}
-
-.atelier-home .field-rail a {
-  border-radius: 50%;
+    var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.5), rgb(var(--g-tint-2) / 0.36));
+  box-shadow: var(--g-rim-soft), var(--g-shadow-1);
+  -webkit-backdrop-filter: blur(var(--g-blur-sm)) saturate(1.5);
+  backdrop-filter: blur(var(--g-blur-sm)) saturate(1.5);
 }
 
 /* ==========================================================================
-   4. Interior page heros (phero) — glass crumbs & lead
+   4. Tier 3 — captions: smoked glass that samples the photograph beneath
    ========================================================================== */
-body:not([data-page="index"]) .phero__crumbs {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  width: fit-content;
-  padding: 8px 14px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(16, 20, 16, 0.3);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.3);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.16),
-    0 14px 30px -22px rgba(0, 0, 0, 0.7);
+
+/* The crumb line is a rule, not a panel: a full-width glass bar would read as
+   a gray stripe on the paper pages. */
+body.atelier-site .phero__crumbs {
+  color: inherit;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
-body:not([data-page="index"]) .phero__lead {
-  padding: 16px 20px;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(16, 20, 16, 0.26);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
-  backdrop-filter: blur(var(--glass-blur)) saturate(1.25);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    0 24px 60px -40px rgba(0, 0, 0, 0.8);
-  max-width: 62ch;
+/* On paper and acid heroes the lead reads as milky glass with ink text; on the
+   ink / red / photographic heroes it flips to smoked glass with paper ink. */
+body.atelier-site .phero__lead {
+  color: #3a4538;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: var(--g-r-md);
+  padding: 13px 17px;
+  background:
+    radial-gradient(150% 210% at 6% 0%, rgba(255, 240, 210, 0.6), transparent 58%),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.62), rgb(var(--g-tint-2) / 0.46));
+  box-shadow: var(--g-rim), var(--g-shadow-1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45);
+  backdrop-filter: blur(14px) saturate(1.45);
+}
+
+body[data-page="gallery"] .phero__lead,
+body[data-page="projects"] .phero__lead,
+body[data-page="chronicle"] .phero__lead,
+body[data-page="contact"] .phero__lead {
+  color: rgba(247, 243, 234, 0.94);
+  border-color: rgba(255, 255, 255, 0.22);
+  background:
+    radial-gradient(140% 180% at 12% 0%, rgba(255, 233, 200, 0.16), transparent 56%),
+    linear-gradient(180deg, rgba(28, 31, 26, 0.52), rgba(17, 20, 17, 0.4));
+  box-shadow: var(--g-rim-dark),
+    inset 0 0 30px rgba(0, 0, 0, 0.12),
+    0 18px 40px -30px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45) contrast(1.04);
+  backdrop-filter: blur(14px) saturate(1.45) contrast(1.04);
+}
+
+body.atelier-site .lb__top,
+body.atelier-site .lb__cap {
+  color: rgba(247, 243, 234, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background:
+    radial-gradient(140% 180% at 12% 0%, rgba(255, 233, 200, 0.16), transparent 56%),
+    linear-gradient(180deg, rgba(28, 31, 26, 0.52), rgba(17, 20, 17, 0.4));
+  box-shadow: var(--g-rim-dark),
+    inset 0 0 30px rgba(0, 0, 0, 0.12),
+    0 18px 40px -30px rgba(0, 0, 0, 0.6);
+  -webkit-backdrop-filter: blur(14px) saturate(1.45) contrast(1.04);
+  backdrop-filter: blur(14px) saturate(1.45) contrast(1.04);
+}
+
+/* Photograph captions: the index cover and the gallery contact sheet. They sit
+   on pictures, so they take smoked glass with paper ink; the blur is switched
+   on only for the photograph under the pointer so 101 idle figures stay cheap. */
+body.atelier-home .field-cover__photo figcaption,
+body[data-page="gallery"] .masonry figure figcaption {
+  color: rgba(247, 243, 234, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: var(--g-r-sm);
+  background: linear-gradient(180deg, rgba(26, 29, 25, 0.66), rgba(16, 19, 16, 0.54));
+  box-shadow: var(--g-rim-dark);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+body.atelier-home .field-cover__photo:hover figcaption,
+body[data-page="gallery"] .masonry figure:hover figcaption,
+body[data-page="gallery"] .masonry figure:focus-visible figcaption {
+  -webkit-backdrop-filter: blur(14px) saturate(1.45) contrast(1.04);
+  backdrop-filter: blur(14px) saturate(1.45) contrast(1.04);
+}
+
+
+body.atelier-site .lb__top,
+body.atelier-site .lb__cap {
+  border-radius: var(--g-r-pill);
+}
+
+/* the light glass plate carried by project badges over photographs */
+body[data-page="projects"] .prow__no {
+  color: var(--g-ink);
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  border-radius: var(--g-r-sm);
+  background:
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.88), rgb(var(--g-tint-2) / 0.76));
+  box-shadow: var(--g-rim), var(--g-shadow-1);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+body[data-page="projects"] .prow__body::after {
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: var(--g-r-pill);
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(21, 26, 23, 0.42), rgba(21, 26, 23, 0.3));
+  box-shadow: var(--g-rim-dark);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* ==========================================================================
-   5. Cards & panels
+   5. Tier 4 — cards: warm milk glass, no blur (they sit on flat paper)
    ========================================================================== */
-body:not([data-page="index"]) .pcard {
-  position: relative;
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-line-ink);
+
+body.atelier-site .pcard,
+body.atelier-site .contact-card,
+body.atelier-site .pillar,
+body.atelier-site .stats__item,
+body.atelier-site .yb-year,
+body.atelier-site .qr-block,
+body.atelier-site .proj-lead {
+  border: 1px solid rgba(255, 255, 255, 0.68);
   background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.7),
-      rgb(var(--glass-tint-deep) / 0.42));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    var(--glass-shadow-sm);
+    var(--g-warmth), var(--g-cool),
+    linear-gradient(180deg, rgba(255, 252, 246, 0.72), rgba(246, 242, 232, 0.54));
+  box-shadow: var(--g-rim), var(--g-shadow-1);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+body.atelier-site .pcard,
+body.atelier-site .contact-card,
+body.atelier-site .pillar,
+body.atelier-site .qr-block {
+  border-radius: var(--g-r-md);
+}
+
+body.atelier-site .stats__item,
+body.atelier-site .proj-lead {
+  border-radius: var(--g-r-lg);
+}
+
+body[data-page="team"] .yb-rail .yb-year {
+  border-radius: var(--g-r-lg);
+}
+
+body[data-page="team"] .yb-rail .yb-year.is-current {
+  background:
+    var(--g-warmth),
+    linear-gradient(180deg, rgba(255, 254, 250, 0.9), rgba(249, 246, 238, 0.78));
+  box-shadow: var(--g-rim), 0 22px 46px -30px rgba(21, 26, 23, 0.5);
+}
+
+body.atelier-site .pcard__cover,
+body[data-page="archive"] .entry__cover {
+  border-radius: var(--g-r-md);
   overflow: hidden;
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease),
-    border-color var(--glass-dur) var(--glass-ease);
+  box-shadow: var(--g-rim-soft), inset 0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
-body:not([data-page="index"]) .pcard__cover {
-  border-radius: calc(var(--glass-radius) - 1px);
-  overflow: hidden;
+body.atelier-site .pcard {
+  transition: transform 0.45s var(--g-ease), box-shadow 0.45s var(--g-ease),
+    border-color 0.3s var(--g-ease);
 }
 
-body:not([data-page="index"]) .pcard:hover {
-  transform: translateY(-4px);
-  border-color: rgba(255, 255, 255, 0.7);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 4px 10px rgba(21, 26, 23, 0.07),
-    var(--glass-shadow-lg);
+body.atelier-site .pcard:hover,
+body.atelier-site .contact-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--g-rim), var(--g-shadow-2);
 }
 
-body:not([data-page="index"]) .pcard__cover img {
-  transition: transform 0.9s var(--glass-ease);
+body.atelier-site .pcard__cover img {
+  transition: transform 0.8s var(--g-ease);
 }
 
-body:not([data-page="index"]) .pcard:hover .pcard__cover img {
+body.atelier-site .pcard:hover .pcard__cover img {
   transform: scale(1.04);
+}
+
+body[data-page="archive"] .entry {
+  border-radius: var(--g-r-md);
+  transition: background 0.35s var(--g-ease), box-shadow 0.35s var(--g-ease),
+    transform 0.35s var(--g-ease);
+}
+
+body[data-page="archive"] .entry:hover {
+  background:
+    var(--g-warmth),
+    linear-gradient(180deg, rgba(255, 252, 246, 0.66), rgba(246, 242, 232, 0.44));
+  box-shadow: var(--g-rim-soft), var(--g-shadow-1);
+}
+
+body[data-page="archive"] .entry__cat,
+body[data-page="team"] .yb-chip,
+body.atelier-site .article__meta {
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: var(--g-r-pill);
+  background:
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.62), rgb(var(--g-tint-2) / 0.46));
+  box-shadow: var(--g-rim-soft);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+body[data-page="team"] .award,
+body[data-page="team"] .media-item,
+body[data-page="chronicle"] .tl__item {
+  border-radius: var(--g-r-sm);
+  transition: background 0.35s var(--g-ease), box-shadow 0.35s var(--g-ease);
+}
+
+body.atelier-home .field-story {
+  border-radius: var(--g-r-sm);
+  transition: background 0.35s var(--g-ease), box-shadow 0.35s var(--g-ease);
+}
+
+body.atelier-home .field-story:hover,
+body[data-page="team"] .award:hover,
+body[data-page="team"] .media-item:hover,
+body[data-page="chronicle"] .tl__item:hover {
+  background:
+    var(--g-warmth),
+    linear-gradient(180deg, rgba(255, 252, 246, 0.6), rgba(246, 242, 232, 0.4));
+  box-shadow: var(--g-rim-soft), var(--g-shadow-1);
+}
+
+/* ==========================================================================
+   6. Photographic surfaces: soft corners, specular rim, inner depth
+   ========================================================================== */
+
+body.atelier-home .field-cover__photo,
+body.atelier-home .field-cover__inset,
+body.atelier-home .field-manifesto__snapshot,
+body.atelier-home .home-carousel__stage,
+body.atelier-home .exp-detail__image,
+body[data-page="gallery"] .masonry figure,
+body[data-page="gallery"] .masonry figure img {
+  border-radius: var(--g-r-lg);
+  overflow: hidden;
+}
+
+body.atelier-home .field-cover__photo,
+body.atelier-home .field-cover__inset,
+body.atelier-home .field-manifesto__snapshot,
+body.atelier-home .home-carousel__stage,
+body[data-page="gallery"] .masonry figure,
+body.atelier-home .exp-detail__image {
+  box-shadow: var(--g-rim-soft), inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 30px 60px -46px rgba(21, 26, 23, 0.55);
+}
+
+body[data-page="gallery"] .masonry figure:focus-visible,
+body[data-page="gallery"] .masonry figure:hover {
+  box-shadow: var(--g-rim), 0 22px 44px -32px rgba(21, 26, 23, 0.6);
+}
+
+body.atelier-home .field-cover__edition > span {
+  color: var(--g-ink);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: var(--g-r-pill);
+  background:
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.7), rgb(var(--g-tint-2) / 0.55));
+  box-shadow: var(--g-rim-soft), var(--g-shadow-1);
+}
+
+body.atelier-home .exp-tab {
+  border-radius: var(--g-r-pill);
+  transition: background 0.35s var(--g-ease), box-shadow 0.35s var(--g-ease),
+    color 0.35s var(--g-ease);
+}
+
+body.atelier-home .exp-tab.is-selected {
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: var(--g-r-pill);
+  background:
+    radial-gradient(120% 160% at 12% 0%, rgba(220, 234, 179, 0.16), transparent 58%),
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.04));
+  box-shadow: var(--g-rim-dark), var(--g-shadow-1);
+  -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--g-blur)) saturate(1.5);
+}
+
+body.atelier-home .field-atlas__foot .field-text-link,
+body.atelier-home .exp-detail__archive {
+  border-radius: var(--g-r-pill);
+}
+
+/* ==========================================================================
+   7. Tier 5 — search overlay and lightbox
+   ========================================================================== */
+
+body.atelier-site .search-modal {
+  background: rgba(14, 17, 14, 0.4);
+}
+
+body.atelier-site .search-modal__panel {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--g-r-lg);
+  background:
+    var(--g-warmth), var(--g-cool), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.72), rgb(var(--g-tint-2) / 0.58));
+  box-shadow: var(--g-rim), inset 0 0 60px rgba(255, 255, 255, 0.16),
+    var(--g-shadow-3);
+  -webkit-backdrop-filter: blur(var(--g-blur-xl)) saturate(var(--g-sat))
+    brightness(1.06);
+  backdrop-filter: blur(var(--g-blur-xl)) saturate(var(--g-sat)) brightness(1.06);
+}
+
+body.atelier-site .search-modal__field {
+  border-bottom-color: rgba(21, 26, 23, 0.16);
+}
+
+body.atelier-site .search-modal__field:focus-within {
+  border-bottom-color: rgba(207, 62, 39, 0.5);
+}
+
+body.atelier-site .search-modal__close,
+body.atelier-site .drawer__close {
+  color: var(--g-paper);
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 50%;
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(28, 31, 26, 0.5), rgba(17, 20, 17, 0.38));
+  box-shadow: var(--g-rim-dark), var(--g-shadow-1);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
+body.atelier-site .sresult {
+  border-radius: var(--g-r-sm);
+  transition: background 0.3s var(--g-ease), box-shadow 0.3s var(--g-ease);
+}
+
+body.atelier-site .sresult:hover,
+body.atelier-site .sresult.is-cur {
+  background:
+    var(--g-warmth),
+    linear-gradient(180deg, rgba(255, 252, 246, 0.6), rgba(246, 242, 232, 0.4));
+  box-shadow: var(--g-rim-soft);
+}
+
+body.atelier-site .sresult time {
+  white-space: nowrap;
+}
+
+body.atelier-site .lb {
+  background: rgba(10, 12, 10, 0.82);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+  backdrop-filter: blur(6px) saturate(1.2);
+}
+
+body.atelier-site .lb__nav,
+body.atelier-site .lb__zoom,
+body.atelier-site .lb__close {
+  color: var(--g-paper);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 50%;
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(28, 31, 26, 0.48), rgba(17, 20, 17, 0.36));
+  box-shadow: var(--g-rim-dark);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
+/* ==========================================================================
+   8. Navigation — true front/back glass with a live backdrop reading
+   ========================================================================== */
+
+header.nav[data-nav] .nav__inner {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--g-r-pill);
+  background:
+    var(--g-warmth), var(--g-cool), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.62), rgb(var(--g-tint-2) / 0.48));
+  box-shadow: var(--g-rim), 0 2px 3px rgba(21, 26, 23, 0.05),
+    0 22px 44px -30px rgba(21, 26, 23, 0.5);
+  -webkit-backdrop-filter: blur(var(--g-blur-lg)) saturate(1.85)
+    brightness(1.05);
+  backdrop-filter: blur(var(--g-blur-lg)) saturate(1.85) brightness(1.05);
+  transition: background 0.55s var(--g-ease), box-shadow 0.45s var(--g-ease),
+    border-color 0.45s var(--g-ease), color 0.45s var(--g-ease);
+}
+
+header.nav[data-nav] .nav__inner::before {
+  background:
+    radial-gradient(
+      220px circle at var(--island-x, 50%) var(--island-y, 34%),
+      rgba(255, 255, 255, 0.42),
+      rgba(255, 255, 255, 0) 70%
+    ),
+    linear-gradient(
+      105deg,
+      rgba(255, 255, 255, 0) 30%,
+      rgba(255, 255, 255, 0.22) 46%,
+      rgba(255, 255, 255, 0) 62%
+    );
+  animation: island-sheen 12s var(--g-ease) infinite alternate;
+}
+
+header.nav[data-nav].is-scrolled .nav__inner {
+  background:
+    var(--g-warmth), var(--g-cool), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.7), rgb(var(--g-tint-2) / 0.56));
+  box-shadow: var(--g-rim), 0 3px 6px rgba(21, 26, 23, 0.06),
+    0 26px 52px -34px rgba(21, 26, 23, 0.52);
+}
+
+header.nav[data-nav].is-condensed .nav__inner {
+  background:
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.9), rgb(var(--g-tint-2) / 0.8));
+  box-shadow: var(--g-rim), 0 20px 44px -26px rgba(21, 26, 23, 0.55);
+}
+
+/* live dark-backdrop state — set by nav-island.js */
+header.nav[data-nav].is-over-dark .nav__inner {
+  color: rgba(247, 243, 234, 0.94);
+  border-color: rgba(255, 255, 255, 0.2);
+  background:
+    radial-gradient(130% 180% at 14% 0%, rgba(255, 232, 198, 0.12), transparent 56%),
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(30, 33, 28, 0.6), rgba(18, 21, 18, 0.48));
+  box-shadow: var(--g-rim-dark), 0 24px 52px -30px rgba(0, 0, 0, 0.65);
+}
+
+header.nav[data-nav].is-over-dark.is-condensed .nav__inner {
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(30, 33, 28, 0.78), rgba(18, 21, 18, 0.68));
+}
+
+header.nav[data-nav].is-over-dark :is(.nav__links a, .brand__name,
+  .brand__latin, .nav__now) {
+  color: rgba(244, 240, 232, 0.82);
+}
+
+header.nav[data-nav].is-over-dark :is(.icon-btn, .nav__burger) {
+  color: rgba(244, 240, 232, 0.86);
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+header.nav[data-nav].is-over-dark .nav__drop {
+  background: rgba(247, 243, 234, 0.92);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.4),
+    0 10px 20px -14px rgba(0, 0, 0, 0.6);
+}
+
+header.nav[data-nav].is-over-dark .nav__links a.is-active {
+  color: var(--g-ink);
+}
+
+header.nav[data-nav] .nav__progress {
+  background: linear-gradient(90deg, var(--g-amber), rgba(207, 62, 39, 0.7));
+  opacity: 0.6;
+}
+
+/* ==========================================================================
+   9. Footer — quiet ambient glass, no cardification
+   ========================================================================== */
+
+body.atelier-site .footer {
+  background:
+    radial-gradient(90% 120% at 8% 0%, rgba(214, 171, 112, 0.12), transparent 58%),
+    radial-gradient(80% 100% at 92% 100%, rgba(150, 172, 148, 0.1), transparent 60%),
+    #0d100d;
+}
+
+body.atelier-site .footer__col a {
+  transition: color 0.3s var(--g-ease), opacity 0.3s var(--g-ease);
+}
+
+body.atelier-site .footer__wordmark {
+  opacity: 0.1;
+}
+
+body.atelier-site .totop {
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: var(--g-paper);
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(38, 42, 36, 0.72), rgba(20, 24, 20, 0.6));
+  box-shadow: var(--g-rim-dark), 0 18px 38px -26px rgba(0, 0, 0, 0.7);
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
+/* ==========================================================================
+   10. Drawer + article surfaces
+   ========================================================================== */
+
+body.atelier-site .drawer__links a {
+  border-radius: var(--g-r-sm);
+  transition: background 0.3s var(--g-ease), box-shadow 0.3s var(--g-ease);
+}
+
+body.atelier-site .drawer__links a:hover,
+body.atelier-site .drawer__links a:focus-visible {
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+body[data-page="post"] .article__tags .tag {
+  border-radius: var(--g-r-pill);
+}
+
+body[data-page="post"] .prose img,
+body[data-page="post"] .prose .content-img {
+  border-radius: var(--g-r-sm);
+  box-shadow: var(--g-rim-soft), 0 18px 36px -30px rgba(21, 26, 23, 0.45);
+}
+
+/* ==========================================================================
+   11. Reserved inset for hover tints (text must never shift)
+   ========================================================================== */
+
+body.atelier-home .field-story {
+  padding-inline: 18px;
+  margin-inline: -18px;
+}
+
+body[data-page="team"] .media-item,
+body[data-page="team"] .award {
+  padding-inline: 18px;
+  margin-inline: -18px;
+}
+
+body[data-page="chronicle"] .tl__item {
+  padding-inline: 16px;
+  margin-inline: -16px;
+}
+
+/* ==========================================================================
+   12. Focus
+   ========================================================================== */
+
+body.atelier-site :is(.chip, .tag, .btn, .icon-btn, .yb-nav, .lb__nav,
+  .lb__close, .lb__zoom, .field-cover__scroll, .home-carousel__source,
+  .atelier-random, .pcard, .contact-card, .yb-year, .entry, .prow__no,
+  .search-modal__close, .drawer__close):focus-visible {
+  outline: 2px solid rgba(207, 62, 39, 0.45);
+  outline-offset: 3px;
+}
+
+body.atelier-site .search-modal input:focus-visible {
+  outline: 2px solid rgba(207, 62, 39, 0.28);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ==========================================================================
+   12b. Component touch-ups carried over from v1
+   ========================================================================== */
+
+body.atelier-home .field-cover__visual {
+  border-radius: var(--g-r-lg);
+}
+
+body.atelier-home .exp-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body.atelier-home .field-rail a {
+  border-radius: 50%;
 }
 
 body:not([data-page="index"]) .pcard__body {
   padding: 22px 22px 24px;
 }
 
-/* contact / team cards */
-body[data-page="contact"] .contact-card,
-body[data-page="team"] .contact-card {
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-line-ink);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.72),
-      rgb(var(--glass-tint-deep) / 0.42));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    var(--glass-shadow-sm);
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body[data-page="contact"] .contact-card:hover,
-body[data-page="team"] .contact-card:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow);
-}
-
 body[data-page="contact"] .contact-card > p,
 body[data-page="team"] .contact-card > p {
-  color: var(--glass-ink-soft);
+  color: rgba(21, 26, 23, 0.72);
 }
 
-body[data-page="team"] .pillar {
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-line-ink);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.7),
-      rgb(var(--glass-tint-deep) / 0.4));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.35);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.35);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    var(--glass-shadow-sm);
-  padding: 26px 24px;
-}
-
-body[data-page="team"] .media-item,
-body[data-page="team"] .award {
-  border-radius: var(--glass-radius-sm);
-  transition:
-    background var(--glass-dur) var(--glass-ease),
-    padding var(--glass-dur) var(--glass-ease);
-}
-
-body[data-page="team"] .media-item:hover,
-body[data-page="team"] .award:hover {
-  background: rgba(255, 255, 255, 0.55);
-  padding-inline: 18px;
-}
-
-/* year slider cards get the glass treatment too */
-body[data-page="team"] .yb-year {
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-line-ink);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.82),
-      rgb(var(--glass-tint-deep) / 0.58));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    var(--glass-shadow-sm);
-}
-
-body[data-page="team"] .yb-bar {
-  padding: 10px 16px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.78),
-      rgb(var(--glass-tint-deep) / 0.55));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow: var(--glass-shadow-sm);
-}
-
-/* stats blocks */
-body[data-page="projects"] .stats__item {
-  border-radius: var(--glass-radius);
-  border: 1px solid var(--glass-line-ink);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.68),
-      rgb(var(--glass-tint-deep) / 0.4));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.35);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.35);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    var(--glass-shadow-sm);
-  padding: 18px 20px;
-}
-
-/* ==========================================================================
-   6. Projects catalogue — glass badge, glass sheen on hover
-   ========================================================================== */
-body[data-page="projects"] .prow__no {
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.78),
-      rgb(var(--glass-tint-deep) / 0.55));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-}
-
-body[data-page="projects"] .prow__body::after {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.28);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm));
-  backdrop-filter: blur(var(--glass-blur-sm));
-  padding: 5px 12px;
+body[data-page="archive"] .arch-group__head {
+  border-radius: var(--g-r-md) var(--g-r-md) 0 0;
 }
 
 body[data-page="projects"] .prow::after {
@@ -7590,179 +7829,74 @@ body[data-page="projects"] .prow::after {
   opacity: 0;
   background: radial-gradient(
     120% 160% at 12% 0%,
-    rgba(255, 255, 255, 0.22),
-    rgba(255, 255, 255, 0) 55%);
-  transition: opacity 0.6s var(--glass-ease);
+    rgba(255, 246, 228, 0.24),
+    rgba(255, 246, 228, 0) 55%
+  );
+  transition: opacity 0.6s var(--g-ease);
 }
 
 body[data-page="projects"] .prow:hover::after {
   opacity: 1;
 }
 
-/* project detail lead + buttons */
-body[data-page="project"] .proj-lead {
-  padding: 18px 22px;
-  border-radius: var(--glass-radius-sm);
-  border: 1px solid var(--glass-line-ink);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.7),
-      rgb(var(--glass-tint-deep) / 0.4));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    var(--glass-shadow-sm);
+body.atelier-site .lb__nav:hover,
+body.atelier-site .lb__zoom:hover,
+body.atelier-site .lb__close:hover {
+  box-shadow: var(--g-rim-dark), 0 14px 30px -20px rgba(0, 0, 0, 0.7);
 }
 
-body.atelier-site .btn {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.78),
-      rgb(var(--glass-tint-deep) / 0.5));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease),
-    background-color var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .btn:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 4px rgba(21, 26, 23, 0.07),
-    0 18px 34px -20px rgba(21, 26, 23, 0.5);
-}
+/* ==========================================================================
+   12c. Details carried over from v1 (gold action, captions, chromatics)
+   ========================================================================== */
 
 body.atelier-site .btn--gold {
-  border-color: rgba(255, 255, 255, 0.24);
+  color: #2a2418;
+  border-color: rgba(214, 171, 112, 0.6);
   background:
-    linear-gradient(180deg, rgba(21, 26, 23, 0.86), rgba(21, 26, 23, 0.7)),
-    var(--glass-sheen);
-  color: var(--paper);
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgba(214, 171, 112, 0.85), rgba(188, 148, 94, 0.74));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16), var(--g-shadow-1);
 }
 
 body.atelier-site .btn--gold:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2), var(--g-shadow-2);
+}
+
+body.atelier-site .gallery-filters,
+body[data-page="gallery"] .filterbar__inner {
+  background: transparent;
+}
+
+body.atelier-site .field-film-toolbar__progress {
+  background: transparent;
+}
+
+body.atelier-home .field-film-toolbar button:hover {
+  border-color: rgba(255, 255, 255, 0.82);
+  box-shadow: var(--g-rim), var(--g-shadow-2);
+}
+
+body.atelier-home .field-frame {
+  transition: box-shadow 0.5s var(--g-ease), transform 0.5s var(--g-ease);
+}
+
+body.atelier-home .field-frame:hover {
+  box-shadow: var(--g-rim-soft), 0 26px 56px -36px rgba(21, 26, 23, 0.55);
+}
+
+body.atelier-home .field-atlas {
   background:
-    linear-gradient(180deg, rgba(176, 138, 62, 0.9), rgba(176, 138, 62, 0.72)),
-    var(--glass-sheen);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* ==========================================================================
-   7. Archive — glass search field, entries, chips
-   ========================================================================== */
-body[data-page="archive"] .filterbar,
-body[data-page="gallery"] .filterbar,
-body[data-page="chronicle"] .yearnav {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.8),
-      rgb(var(--glass-tint-deep) / 0.56));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  box-shadow: var(--glass-shadow-sm);
-  padding: 8px 12px;
-}
-
-body[data-page="archive"] .arch-group__head {
-  border-radius: var(--glass-radius) var(--glass-radius) 0 0;
-}
-
-body[data-page="archive"] .entry {
-  border-radius: var(--glass-radius-sm);
-  transition:
-    background var(--glass-dur) var(--glass-ease),
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body[data-page="archive"] .entry:hover {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.32));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 18px 40px -30px rgba(21, 26, 23, 0.5);
-  transform: translateY(-2px);
-}
-
-body[data-page="archive"] .entry__cover {
-  border-radius: var(--glass-radius-sm);
-  overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 10px 24px -18px rgba(21, 26, 23, 0.5);
-}
-
-body[data-page="archive"] .entry__cat {
-  border-radius: var(--glass-radius-pill);
-  padding: 3px 10px;
-  border: 1px solid rgba(21, 26, 23, 0.12);
-  background: rgba(255, 255, 255, 0.55);
-}
-
-/* ==========================================================================
-   8. Gallery — glass filter capsule, glass captions, glass lightbox chrome
-   ========================================================================== */
-body[data-page="gallery"] .gallery-filters {
-  position: relative;
-  z-index: 2;
-}
-
-body[data-page="gallery"] .masonry figure {
-  border-radius: var(--glass-radius-sm);
-  overflow: hidden;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
-    0 26px 60px -44px rgba(0, 0, 0, 0.9);
-  transition:
-    transform 0.6s var(--glass-ease),
-    box-shadow 0.6s var(--glass-ease);
-}
-
-body[data-page="gallery"] .masonry figure:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
-    0 36px 70px -40px rgba(0, 0, 0, 0.85);
+    radial-gradient(80% 120% at 12% 0%, rgba(214, 171, 112, 0.05), transparent 55%),
+    radial-gradient(70% 90% at 92% 100%, rgba(150, 172, 148, 0.05), transparent 60%),
+    #0d100d;
 }
 
 body[data-page="gallery"] .masonry figure figcaption {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 12px;
-  z-index: 2;
-  padding: 8px 12px;
-  border-radius: var(--glass-radius-xs);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(14, 18, 14, 0.42);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.4);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    0 10px 24px -16px rgba(0, 0, 0, 0.8);
-  color: #f4f1e8;
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  line-height: 1.6;
   opacity: 0;
   transform: translateY(6px);
-  transition:
-    opacity 0.4s var(--glass-ease),
-    transform 0.4s var(--glass-ease);
+  transition: opacity 0.4s var(--g-ease), transform 0.4s var(--g-ease);
 }
 
 body[data-page="gallery"] .masonry figure:hover figcaption,
@@ -7771,795 +7905,148 @@ body[data-page="gallery"] .masonry figure:focus-visible figcaption {
   transform: translateY(0);
 }
 
-body[data-page="gallery"] .masonry figure img {
-  border-radius: var(--glass-radius-sm);
-}
-
-body[data-page="gallery"] .filterbar__inner {
-  width: 100%;
-}
-
-/* lightbox */
-body.atelier-site .lb {
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  backdrop-filter: blur(18px) saturate(1.2);
-  background: rgba(9, 12, 9, 0.82);
-}
-
-body.atelier-site .lb__top {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.07);
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  backdrop-filter: blur(var(--glass-blur));
-  padding: 8px 12px;
-}
-
-body.atelier-site .lb__cap {
-  padding: 4px 10px;
-  border-radius: var(--glass-radius-pill);
-  background: rgba(255, 255, 255, 0.09);
-  color: #f4f1e8;
-}
-
-body.atelier-site :is(.lb__nav, .lb__close, .lb__zoom) {
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.08);
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.3);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.3);
-  color: #f4f1e8;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    0 12px 26px -16px rgba(0, 0, 0, 0.8);
-}
-
-body.atelier-site :is(.lb__nav, .lb__close, .lb__zoom):hover {
-  background: rgba(255, 255, 255, 0.16);
-}
-
-body.atelier-site .lb__zoom {
-  border-radius: var(--glass-radius-pill);
-}
-
-/* ==========================================================================
-   9. Search overlay
-   ========================================================================== */
-body.atelier-site .search-modal {
-  -webkit-backdrop-filter: blur(20px) saturate(1.15);
-  backdrop-filter: blur(20px) saturate(1.15);
-  background: rgba(12, 15, 12, 0.62);
-}
-
-body.atelier-site .search-modal__panel {
-  border-radius: var(--glass-radius-lg);
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.9),
-      rgb(var(--glass-tint-deep) / 0.72));
-  -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-lg)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(21, 26, 23, 0.06),
-    0 4px 10px rgba(21, 26, 23, 0.08),
-    0 60px 120px -50px rgba(0, 0, 0, 0.6);
-}
-
-body.atelier-site .search-modal__field {
-  border-color: rgba(21, 26, 23, 0.14);
-}
-
-body.atelier-site .sresult {
-  border-radius: var(--glass-radius-sm);
-  border-bottom-color: rgba(21, 26, 23, 0.08);
-  transition:
-    background var(--glass-dur) var(--glass-ease),
-    padding var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .sresult:hover,
-body.atelier-site .sresult.is-cur {
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
-}
-
-/* ==========================================================================
-   10. Chronicle timeline
-   ========================================================================== */
-body[data-page="chronicle"] .tl__item {
-  border-radius: var(--glass-radius-sm);
-  transition:
-    background var(--glass-dur) var(--glass-ease),
-    padding var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body[data-page="chronicle"] .tl__item:hover {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.3));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 18px 40px -30px rgba(21, 26, 23, 0.45);
-  padding-inline: 16px;
-}
-
 body[data-page="chronicle"] .tl__item .cat {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid rgba(21, 26, 23, 0.14);
-  background: rgba(255, 255, 255, 0.55);
-  padding: 3px 10px;
-}
-
-/* ==========================================================================
-   11. Footer — quiet glass wash, no heavy blur on a large area
-   ========================================================================== */
-body.atelier-site .footer {
+  border: 1px solid rgba(255, 255, 255, 0.56);
+  border-radius: var(--g-r-pill);
   background:
-    radial-gradient(120% 90% at 18% 0%, rgba(220, 234, 179, 0.1), transparent 60%),
-    radial-gradient(90% 80% at 90% 10%, rgba(207, 62, 39, 0.08), transparent 55%),
-    #111612;
+    var(--g-warmth), var(--g-sheen),
+    linear-gradient(180deg, rgb(var(--g-tint) / 0.62), rgb(var(--g-tint-2) / 0.46));
+  box-shadow: var(--g-rim-soft);
 }
 
-body.atelier-site .footer__top {
-  border-top-color: rgba(243, 240, 232, 0.12);
-}
-
-body.atelier-site .footer__col a {
-  border-radius: 6px;
-}
-
-body.atelier-site .footer__wordmark {
-  opacity: 0.1;
-}
-
-/* back-to-top launcher */
 body.atelier-site .totop {
-  border-radius: 50%;
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.82),
-      rgb(var(--glass-tint-deep) / 0.6));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  color: var(--glass-ink);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    var(--glass-shadow);
+  transition: box-shadow 0.35s var(--g-ease), transform 0.25s var(--g-ease);
 }
 
 body.atelier-site .totop:hover {
-  transform: translateY(-2px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    var(--glass-shadow-lg);
-}
-
-/* ==========================================================================
-   12. Article pages — light glass tagging, keep the prose quiet
-   ========================================================================== */
-body[data-page="post"] .article__tags .tag {
-  border-radius: var(--glass-radius-pill);
-  padding: 5px 12px;
-}
-
-body[data-page="post"] .article__meta {
-  padding: 8px 14px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line-ink);
-  background: rgba(255, 255, 255, 0.5);
-  width: fit-content;
-}
-
-body[data-page="post"] .prose .content-img {
-  border-radius: var(--glass-radius-sm);
-}
-
-/* ==========================================================================
-   13. Focus rings tuned for glass
-   ========================================================================== */
-body.atelier-site :is(.chip, .btn, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-  .icon-btn, .field-round-link, .field-cover__scroll, .home-carousel__source,
-  .entry, .tl__item, .media-item, .pcard, .contact-card):focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
-}
-
-/* ==========================================================================
-   16. Circle-link fix, page-scoped filter chips, quieter focus rings
-   ========================================================================== */
-/* the "翻开我们的行走档案" link keeps its text plain; only the circle is glass */
-body.atelier-site .field-round-link {
-  border: 0;
-  background: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-body.atelier-site .field-round-link:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-body.atelier-site .field-round-link i {
-  border-radius: 50%;
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.84),
-      rgb(var(--glass-tint-deep) / 0.6));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    var(--glass-shadow-sm);
-  color: var(--glass-ink);
-  transition:
-    background-color var(--glass-dur) var(--glass-ease),
-    color var(--glass-dur) var(--glass-ease),
-    transform var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .field-round-link:hover i {
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(21, 26, 23, 0.9), rgba(21, 26, 23, 0.76));
-  color: var(--paper);
-  transform: translateY(2px);
-}
-
-/* page-scoped filter chips: pill glass, brand-red active, no inner acid clash */
-body[data-page="gallery"] .gallery-filters .filterbar .chip,
-body[data-page="archive"] .filterbar .chip,
-body[data-page="chronicle"] .yearnav .chip {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.84),
-      rgb(var(--glass-tint-deep) / 0.62));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-}
-
-body[data-page="gallery"] .gallery-filters .filterbar .chip:hover,
-body[data-page="archive"] .filterbar .chip:hover,
-body[data-page="chronicle"] .yearnav .chip:hover {
-  border-color: rgba(255, 255, 255, 0.94);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 4px rgba(21, 26, 23, 0.06),
-    0 16px 30px -20px rgba(21, 26, 23, 0.45);
-}
-
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active,
-body[data-page="archive"] .filterbar .chip.is-active,
-body[data-page="archive"] .filterbar .chip[aria-pressed="true"],
-body[data-page="chronicle"] .yearnav .chip.is-active {
-  border-color: rgba(255, 255, 255, 0.34);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(207, 62, 39, 0.94), rgba(178, 50, 30, 0.86));
-  color: #fff7f0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 2px 5px rgba(21, 26, 23, 0.16),
-    0 16px 30px -20px rgba(120, 24, 10, 0.65);
-}
-
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active i,
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active span,
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active small,
-body[data-page="archive"] .filterbar .chip.is-active i,
-body[data-page="archive"] .filterbar .chip.is-active span,
-body[data-page="archive"] .filterbar .chip.is-active small,
-body[data-page="chronicle"] .yearnav .chip.is-active i,
-body[data-page="chronicle"] .yearnav .chip.is-active span,
-body[data-page="chronicle"] .yearnav .chip.is-active small {
-  color: rgba(255, 247, 240, 0.8);
-}
-
-/* quiet focus ring on the search input */
-body.atelier-site .search-modal input:focus-visible {
-  outline: 2px solid rgba(207, 62, 39, 0.26);
-  outline-offset: 4px;
-  border-radius: 6px;
-}
-
-body.atelier-site .search-modal__field:focus-within {
-  border-bottom-color: rgba(21, 26, 23, 0.42);
-}
-/* ==========================================================================
-   15. Refinements — pill chips, glass close button, no layout shift on hover
-   ========================================================================== */
-body.atelier-site .chip {
-  border-radius: var(--glass-radius-pill);
-}
-
-body.atelier-site .chip.is-active,
-body.atelier-site .chip[aria-pressed="true"] {
-  border-color: rgba(255, 255, 255, 0.34);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(207, 62, 39, 0.94), rgba(178, 50, 30, 0.86));
-  color: #fff7f0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 2px 5px rgba(21, 26, 23, 0.18),
-    0 16px 30px -20px rgba(120, 24, 10, 0.7);
-}
-
-body.atelier-site .chip.is-active i,
-body.atelier-site .chip.is-active span,
-body.atelier-site .chip[aria-pressed="true"] i,
-body.atelier-site .chip[aria-pressed="true"] span {
-  color: rgba(255, 247, 240, 0.78);
-}
-
-/* glass close button for the search overlay */
-body.atelier-site .search-modal__close {
-  border-radius: 50%;
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.86),
-      rgb(var(--glass-tint-deep) / 0.66));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  color: var(--glass-ink);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 2px 6px rgba(21, 26, 23, 0.12),
-    0 22px 44px -26px rgba(21, 26, 23, 0.5);
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .search-modal__close:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 6px rgba(21, 26, 23, 0.12),
-    0 26px 50px -28px rgba(21, 26, 23, 0.55);
-}
-
-body.atelier-site .sresult time {
-  white-space: nowrap;
-}
-
-/* the "random story" trigger on the home journal */
-body.atelier-site .atelier-random {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.8),
-      rgb(var(--glass-tint-deep) / 0.56));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-  color: var(--glass-ink);
-  padding: 10px 18px;
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .atelier-random:hover {
+  box-shadow: var(--g-rim-dark), 0 22px 44px -26px rgba(0, 0, 0, 0.75);
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 4px rgba(21, 26, 23, 0.07),
-    0 18px 34px -20px rgba(21, 26, 23, 0.5);
 }
 
-/* hover treatments should never move text: reserve the inset up front */
-.atelier-home .field-story {
-  padding-inline: 18px;
-  margin-inline: -18px;
-}
-
-.atelier-home .field-story:hover {
-  padding-inline: 18px;
-}
-
-body[data-page="team"] .media-item,
-body[data-page="team"] .award {
-  padding-inline: 18px;
-  margin-inline: -18px;
-}
-
-body[data-page="team"] .media-item:hover,
-body[data-page="team"] .award:hover {
-  padding-inline: 18px;
-}
-
-body[data-page="chronicle"] .tl__item {
-  padding-inline: 16px;
-  margin-inline: -16px;
-}
-
-body[data-page="chronicle"] .tl__item:hover {
-  padding-inline: 16px;
-}
-
-
-
-/* ==========================================================================
-   17. Drawer chrome, article media, mobile filter tuning
-   ========================================================================== */
-body.atelier-site .drawer__close {
-  border-radius: 50%;
-  border: 1px solid rgba(243, 240, 232, 0.26);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(243, 240, 232, 0.14), rgba(243, 240, 232, 0.06));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.25);
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(1.25);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    0 16px 32px -22px rgba(0, 0, 0, 0.8);
-  transition:
-    background-color var(--glass-dur) var(--glass-ease),
-    transform var(--glass-dur) var(--glass-ease);
-}
-
+body.atelier-site .search-modal__close:hover,
 body.atelier-site .drawer__close:hover {
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(243, 240, 232, 0.24), rgba(243, 240, 232, 0.1));
-  transform: translateY(-1px);
+  box-shadow: var(--g-rim-dark), var(--g-shadow-2);
 }
 
-body.atelier-site .drawer__links a {
-  border-radius: 14px;
-  padding-inline: 14px;
-  margin-inline: -14px;
-  transition: background var(--glass-dur) var(--glass-ease);
+@media (prefers-reduced-motion: reduce) {
+  body[data-page="gallery"] .masonry figure figcaption {
+    transition: none;
+    transform: none;
+  }
+
+  body.atelier-home .field-frame:hover,
+  body.atelier-site .totop:hover {
+    transform: none;
+  }
 }
 
-body.atelier-site .drawer__links a:hover,
-body.atelier-site .drawer__links a:focus-visible {
-  background: rgba(255, 255, 255, 0.06);
-}
+/* ==========================================================================
+   13. Responsive
+   ========================================================================== */
 
-body[data-page="post"] .prose img {
-  border-radius: var(--glass-radius-sm);
+@media (max-width: 930px) {
+  header.nav[data-nav] .nav__inner {
+    -webkit-backdrop-filter: blur(var(--g-blur)) saturate(1.7) brightness(1.04);
+    backdrop-filter: blur(var(--g-blur)) saturate(1.7) brightness(1.04);
+  }
 }
 
 @media (max-width: 700px) {
+  body[data-page="gallery"] .gallery-filters .filterbar,
   body[data-page="archive"] .filterbar,
-  body[data-page="gallery"] .gallery-filters .filterbar {
+  body[data-page="chronicle"] .yearnav {
     padding: 6px 10px;
     border-radius: 24px;
   }
 
-  body:not([data-page="index"]) .phero__lead {
-    padding: 13px 16px;
+  body.atelier-site .phero__lead,
+  body.atelier-site .phero__crumbs {
+    -webkit-backdrop-filter: blur(10px) saturate(1.4);
+    backdrop-filter: blur(10px) saturate(1.4);
+  }
+}
+
+@media (max-width: 480px) {
+  body.atelier-site .pcard,
+  body.atelier-site .contact-card,
+  body.atelier-site .pillar,
+  body.atelier-site .stats__item,
+  body.atelier-site .proj-lead {
+    box-shadow: var(--g-rim-soft), var(--g-shadow-1);
   }
 }
 
 /* ==========================================================================
-   14. Fallbacks & accessibility
+   14. Fallbacks last so they win where needed
    ========================================================================== */
+
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  body.atelier-site :is(.chip, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-    .icon-btn, .field-round-link, .field-cover__scroll),
-  .atelier-home .field-film-toolbar,
-  body[data-page="team"] .yb-bar,
-  body[data-page="archive"] .filterbar,
-  body[data-page="gallery"] .filterbar,
-  body[data-page="chronicle"] .yearnav {
-    background: rgb(var(--glass-tint) / 0.96);
-  }
-
-  body.atelier-site .search-modal__panel {
-    background: rgb(var(--glass-tint) / 0.98);
-  }
-
-  body.atelier-site .lb,
-  body.atelier-site .search-modal {
-    background: rgba(9, 12, 9, 0.94);
-  }
-
-  body[data-page="projects"] .prow__no,
-  body[data-page="projects"] .prow__body::after {
-    background: rgb(var(--glass-tint) / 0.96);
-  }
-
+  header.nav[data-nav] .nav__inner,
+  body.atelier-site .search-modal__panel,
+  body.atelier-site .lb__top,
+  body.atelier-site .lb__cap,
+  body.atelier-site .phero__lead,
+  body.atelier-site .phero__crumbs,
+  body.atelier-home .field-cover__photo figcaption,
   body[data-page="gallery"] .masonry figure figcaption {
-    background: rgba(14, 18, 14, 0.9);
+    background:
+      var(--g-warmth),
+      linear-gradient(180deg, rgb(var(--g-tint) / 0.92), rgb(var(--g-tint-2) / 0.86));
   }
 
-  body:not([data-page="index"]) .pcard,
-  body[data-page="contact"] .contact-card,
-  body[data-page="team"] .contact-card,
-  body[data-page="team"] .pillar,
-  body[data-page="team"] .yb-year {
-    background: rgb(var(--glass-tint) / 0.97);
+  header.nav[data-nav].is-over-dark .nav__inner,
+  body.atelier-site .lb__top,
+  body.atelier-site .lb__cap,
+  body.atelier-site .phero__lead,
+  body.atelier-site .phero__crumbs,
+  body.atelier-home .field-cover__photo figcaption,
+  body[data-page="gallery"] .masonry figure figcaption {
+    background: linear-gradient(180deg, rgba(24, 27, 23, 0.92), rgba(16, 19, 16, 0.88));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  body.atelier-site :is(.chip, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-    .icon-btn, .field-round-link, .field-cover__scroll, .totop),
-  .atelier-home .home-carousel__source,
-  .atelier-home .field-frame,
-  .atelier-home .field-story,
-  body:not([data-page="index"]) .pcard,
-  body[data-page="contact"] .contact-card,
-  body[data-page="team"] .contact-card,
-  body[data-page="projects"] .prow::after {
+  body.atelier-site :is(.chip, .tag, .btn, .icon-btn, .yb-nav,
+    .field-cover__scroll, .home-carousel__source, .atelier-random) {
     transition: none;
   }
 
-  body.atelier-site :is(.chip, .tag, .yb-nav, .lb__nav, .lb__close, .lb__zoom,
-    .icon-btn, .field-round-link, .field-cover__scroll, .totop):hover,
-  body:not([data-page="index"]) .pcard:hover,
-  body[data-page="contact"] .contact-card:hover,
-  body[data-page="team"] .contact-card:hover {
+  body.atelier-site :is(.chip, .tag, .btn, .icon-btn, .yb-nav,
+    .field-cover__scroll, .home-carousel__source, .atelier-random):hover {
     transform: none;
   }
 
-  body[data-page="gallery"] .masonry figure:hover {
-    transform: none;
+  header.nav[data-nav] .nav__inner::before {
+    animation: none;
   }
 
-  body[data-page="gallery"] .masonry figure figcaption {
+  body.atelier-site .pcard,
+  body.atelier-site .pcard__cover img,
+  body[data-page="archive"] .entry {
     transition: none;
   }
 }
 
-/* ==========================================================================
-   15. Refinements — pill chips, glass close button, no layout shift on hover
-   ========================================================================== */
-body.atelier-site .chip {
-  border-radius: var(--glass-radius-pill);
+@media print {
+  header.nav[data-nav] .nav__inner,
+  body.atelier-site .search-modal__panel,
+  body.atelier-site .footer,
+  body.atelier-site .totop {
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: #fff;
+    color: #111;
+  }
 }
 
-body.atelier-site .chip.is-active,
-body.atelier-site .chip[aria-pressed="true"] {
-  border-color: rgba(255, 255, 255, 0.34);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(207, 62, 39, 0.94), rgba(178, 50, 30, 0.86));
-  color: #fff7f0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 2px 5px rgba(21, 26, 23, 0.18),
-    0 16px 30px -20px rgba(120, 24, 10, 0.7);
-}
-
-body.atelier-site .chip.is-active i,
-body.atelier-site .chip.is-active span,
-body.atelier-site .chip[aria-pressed="true"] i,
-body.atelier-site .chip[aria-pressed="true"] span {
-  color: rgba(255, 247, 240, 0.78);
-}
-
-/* glass close button for the search overlay */
-body.atelier-site .search-modal__close {
-  border-radius: 50%;
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.86),
-      rgb(var(--glass-tint-deep) / 0.66));
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-sat));
-  color: var(--glass-ink);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    0 2px 6px rgba(21, 26, 23, 0.12),
-    0 22px 44px -26px rgba(21, 26, 23, 0.5);
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .search-modal__close:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 6px rgba(21, 26, 23, 0.12),
-    0 26px 50px -28px rgba(21, 26, 23, 0.55);
-}
-
-body.atelier-site .sresult time {
-  white-space: nowrap;
-}
-
-/* the "random story" trigger on the home journal */
-body.atelier-site .atelier-random {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.8),
-      rgb(var(--glass-tint-deep) / 0.56));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-  color: var(--glass-ink);
-  padding: 10px 18px;
-  transition:
-    transform var(--glass-dur) var(--glass-ease),
-    box-shadow var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .atelier-random:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 4px rgba(21, 26, 23, 0.07),
-    0 18px 34px -20px rgba(21, 26, 23, 0.5);
-}
-
-/* hover treatments should never move text: reserve the inset up front */
-.atelier-home .field-story {
-  padding-inline: 18px;
-  margin-inline: -18px;
-}
-
-.atelier-home .field-story:hover {
-  padding-inline: 18px;
-}
-
-body[data-page="team"] .media-item,
-body[data-page="team"] .award {
-  padding-inline: 18px;
-  margin-inline: -18px;
-}
-
-body[data-page="team"] .media-item:hover,
-body[data-page="team"] .award:hover {
-  padding-inline: 18px;
-}
-
-body[data-page="chronicle"] .tl__item {
-  padding-inline: 16px;
-  margin-inline: -16px;
-}
-
-body[data-page="chronicle"] .tl__item:hover {
-  padding-inline: 16px;
-}
-
-
-/* ==========================================================================
-   16. Circle-link fix, page-scoped filter chips, quieter focus rings
-   ========================================================================== */
-/* the "翻开我们的行走档案" link keeps its text plain; only the circle is glass */
-body.atelier-site .field-round-link {
-  border: 0;
-  background: none;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  box-shadow: none;
-  padding: 0;
-}
-
-body.atelier-site .field-round-link:hover {
-  transform: none;
-  box-shadow: none;
-}
-
-body.atelier-site .field-round-link i {
-  border-radius: 50%;
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.84),
-      rgb(var(--glass-tint-deep) / 0.6));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.92),
-    var(--glass-shadow-sm);
-  color: var(--glass-ink);
-  transition:
-    background-color var(--glass-dur) var(--glass-ease),
-    color var(--glass-dur) var(--glass-ease),
-    transform var(--glass-dur) var(--glass-ease);
-}
-
-body.atelier-site .field-round-link:hover i {
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(21, 26, 23, 0.9), rgba(21, 26, 23, 0.76));
-  color: var(--paper);
-  transform: translateY(2px);
-}
-
-/* page-scoped filter chips: pill glass, brand-red active, no inner acid clash */
-body[data-page="gallery"] .gallery-filters .filterbar .chip,
-body[data-page="archive"] .filterbar .chip,
-body[data-page="chronicle"] .yearnav .chip {
-  border-radius: var(--glass-radius-pill);
-  border: 1px solid var(--glass-line);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg,
-      rgb(var(--glass-tint) / 0.84),
-      rgb(var(--glass-tint-deep) / 0.62));
-  -webkit-backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  backdrop-filter: blur(var(--glass-blur-sm)) saturate(var(--glass-sat));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    var(--glass-shadow-sm);
-}
-
-body[data-page="gallery"] .gallery-filters .filterbar .chip:hover,
-body[data-page="archive"] .filterbar .chip:hover,
-body[data-page="chronicle"] .yearnav .chip:hover {
-  border-color: rgba(255, 255, 255, 0.94);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 2px 4px rgba(21, 26, 23, 0.06),
-    0 16px 30px -20px rgba(21, 26, 23, 0.45);
-}
-
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active,
-body[data-page="archive"] .filterbar .chip.is-active,
-body[data-page="archive"] .filterbar .chip[aria-pressed="true"],
-body[data-page="chronicle"] .yearnav .chip.is-active {
-  border-color: rgba(255, 255, 255, 0.34);
-  background:
-    var(--glass-sheen),
-    linear-gradient(180deg, rgba(207, 62, 39, 0.94), rgba(178, 50, 30, 0.86));
-  color: #fff7f0;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 2px 5px rgba(21, 26, 23, 0.16),
-    0 16px 30px -20px rgba(120, 24, 10, 0.65);
-}
-
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active i,
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active span,
-body[data-page="gallery"] .gallery-filters .filterbar .chip.is-active small,
-body[data-page="archive"] .filterbar .chip.is-active i,
-body[data-page="archive"] .filterbar .chip.is-active span,
-body[data-page="archive"] .filterbar .chip.is-active small,
-body[data-page="chronicle"] .yearnav .chip.is-active i,
-body[data-page="chronicle"] .yearnav .chip.is-active span,
-body[data-page="chronicle"] .yearnav .chip.is-active small {
-  color: rgba(255, 247, 240, 0.8);
-}
-
-/* quiet focus ring on the search input */
-body.atelier-site .search-modal input:focus-visible {
-  outline: 2px solid rgba(207, 62, 39, 0.26);
-  outline-offset: 4px;
-  border-radius: 6px;
-}
-
-body.atelier-site .search-modal__field:focus-within {
-  border-bottom-color: rgba(21, 26, 23, 0.42);
+@keyframes island-sheen {
+  0% {
+    transform: translateX(-12%);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(12%);
+    opacity: 0.85;
+  }
 }
