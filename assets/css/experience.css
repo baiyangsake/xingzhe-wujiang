@@ -6267,6 +6267,253 @@ body:not([data-page="index"]) :is(.filterbar__tools, .gallery-filters__tools) .f
 body:not([data-page="index"]) [data-filter-item].is-hidden,
 body:not([data-page="index"]) [data-group-section].is-hidden,
 body:not([data-page="index"]) [data-year-group].is-hidden { display: none; }
+/* ---- team: milestones as an inline yearly slider ------------------------ */
+body[data-page="team"] .yb--slider {
+  border-top: 0;
+  margin-top: clamp(22px, 2.6vw, 40px);
+  --yb-card: clamp(292px, 30vw, 404px);
+}
+body[data-page="team"] .yb-bar {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 2vw, 26px);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+body[data-page="team"] .yb-bar__label {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--muted-2);
+  white-space: nowrap;
+}
+body[data-page="team"] .yb-bar__label span { color: var(--line); }
+body[data-page="team"] .yb-bar__track {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  overflow: hidden;
+}
+body[data-page="team"] .yb-bar__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s var(--ease);
+}
+body[data-page="team"] .yb-bar__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  color: var(--muted-2);
+  font-variant-numeric: lining-nums;
+}
+body[data-page="team"] .yb-bar__count b {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+body[data-page="team"] .yb-bar__count span[aria-hidden="true"] { color: var(--line); }
+body[data-page="team"] .yb-bar__nav { display: flex; gap: 6px; }
+body[data-page="team"] .yb-nav {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line-2);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.35s var(--ease), color 0.35s var(--ease),
+    border-color 0.35s var(--ease), opacity 0.35s var(--ease);
+}
+body[data-page="team"] .yb-nav:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--paper);
+}
+body[data-page="team"] .yb-nav[disabled] { opacity: 0.26; cursor: default; }
+body[data-page="team"] .yb-nav[disabled]:hover {
+  background: transparent;
+  border-color: var(--line-2);
+  color: var(--ink);
+}
+body[data-page="team"] .yb-rail {
+  display: flex;
+  gap: clamp(12px, 1.5vw, 18px);
+  margin: 0 calc(-1 * clamp(4px, 1vw, 14px));
+  padding: clamp(18px, 2vw, 26px) clamp(4px, 1vw, 14px) clamp(20px, 2.2vw, 28px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-padding-inline: clamp(4px, 1vw, 14px);
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  cursor: grab;
+  outline: none;
+}
+body[data-page="team"] .yb-rail::-webkit-scrollbar { display: none; }
+body[data-page="team"] .yb-rail.is-dragging { scroll-snap-type: none; cursor: grabbing; }
+body[data-page="team"] .yb-rail:focus-visible { box-shadow: inset 0 0 0 1px var(--gold); }
+body[data-page="team"] .yb-year {
+  flex: 0 0 var(--yb-card);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: clamp(20px, 1.9vw, 26px) clamp(20px, 1.9vw, 26px) clamp(22px, 2vw, 27px);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  position: relative;
+  transition: transform 0.5s var(--ease), border-color 0.5s var(--ease),
+    box-shadow 0.5s var(--ease), background 0.5s var(--ease);
+}
+body[data-page="team"] .yb-year::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.6s var(--ease);
+}
+body[data-page="team"] .yb-year:hover,
+body[data-page="team"] .yb-year:focus-within {
+  transform: translateY(-4px);
+  border-color: rgba(16, 26, 23, 0.32);
+  box-shadow: 0 28px 44px -36px rgba(16, 26, 23, 0.55);
+  background: var(--white);
+}
+body[data-page="team"] .yb-year:hover::after,
+body[data-page="team"] .yb-year:focus-within::after { transform: scaleX(1); }
+body[data-page="team"] .yb-year.is-current { background: var(--white); }
+body[data-page="team"] .yb-year__left {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--line-soft);
+}
+body[data-page="team"] .yb-year__num {
+  font-size: clamp(40px, 3.2vw, 52px);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  transition: color 0.5s var(--ease);
+}
+body[data-page="team"] .yb-year:hover .yb-year__num,
+body[data-page="team"] .yb-year:focus-within .yb-year__num { color: var(--gold); }
+body[data-page="team"] .yb-year__title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+body[data-page="team"] .yb-year__meta {
+  margin: 0 0 0 auto;
+  font-family: var(--font-sans);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  color: var(--muted-2);
+  white-space: nowrap;
+}
+body[data-page="team"] .yb-year__meta b {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0 1px;
+}
+body[data-page="team"] .yb-year__right {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  padding-top: 13px;
+}
+body[data-page="team"] .yb-year__desc {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.78;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  max-width: none;
+}
+body[data-page="team"] .yb-year__periods {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+body[data-page="team"] .yb-chip {
+  min-width: 0;
+  padding: 2px 0 3px 12px;
+  border: 0;
+  border-left: 2px solid var(--gold);
+  background: transparent;
+  transition: border-color 0.35s var(--ease), padding-left 0.35s var(--ease);
+}
+body[data-page="team"] .yb-chip:hover {
+  transform: none;
+  box-shadow: none;
+  background: transparent;
+  border-left-color: var(--ink);
+  padding-left: 16px;
+}
+body[data-page="team"] .yb-chip__no {
+  font-size: 8px;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+}
+body[data-page="team"] .yb-chip__name {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+body[data-page="team"] .yb-chip__term {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: var(--muted-2);
+}
+
+@media (max-width: 900px) {
+  body[data-page="team"] .yb--slider { --yb-card: min(76vw, 360px); }
+  body[data-page="team"] .yb-bar { flex-wrap: wrap; gap: 10px 18px; }
+  body[data-page="team"] .yb-bar__label { order: 1; }
+  body[data-page="team"] .yb-bar__track { order: 3; flex: 1 1 100%; }
+  body[data-page="team"] .yb-bar__count { order: 2; margin-left: auto; }
+  body[data-page="team"] .yb-bar__nav { order: 2; }
+  body[data-page="team"] .yb-year { padding: 20px 20px 22px; }
+  body[data-page="team"] .yb-year__num { font-size: 42px; }
+}
+@media (max-width: 480px) {
+  body[data-page="team"] .yb--slider { --yb-card: 82vw; }
+  body[data-page="team"] .yb-year__title { font-size: 13px; letter-spacing: 0.1em; }
+  body[data-page="team"] .yb-year__desc { font-size: 12.5px; line-height: 1.7; }
+  body[data-page="team"] .yb-nav { width: 32px; height: 32px; }
+}
 
 /* motion-system.css */
 /* Progressive motion: no selector hides content before JavaScript runs. */
