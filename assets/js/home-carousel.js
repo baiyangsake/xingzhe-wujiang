@@ -24,7 +24,8 @@
     var captionLeft = find("caption-left");
     var captionRight = find("caption-right");
     var captionLink = find("caption-link");
-    var photo = find("photo") || region.querySelector(".field-cover__photo") || slides[0].parentElement;
+    // The inset print moves inside a stationary interaction area.
+    var photo = prefix === "inset" ? region : find("photo") || region.querySelector(".field-cover__photo") || slides[0].parentElement;
     var interval = Math.max(3000, Math.min(30000, Number(region.getAttribute(attr("interval"))) || 6000));
     var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
     var current = Math.max(0, slides.findIndex(function (image) { return !image.hidden; }));
