@@ -951,10 +951,9 @@
     var motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
     var glyphs = items.map(function (el) { return el.querySelector(".nw__t"); });
     var centres = items.map(function () { return { cx: 0, cy: 0 }; });
-    var translations = items.map(function () { return ""; });
-    var dirtyGlyphs = new Set();
-    var seeds = [];
-    var rippleFrame = 0, lastPaint = 0, lastSeed = -Infinity;
+    var offsets = items.map(function () { return { x: 0, y: 0, vx: 0, vy: 0, value: "" }; });
+    var pointer = { active: false, x: 0, y: 0 };
+    var pointerFrame = 0, lastStep = 0;
     var inView = false, scrolling = false, touching = false, motionOn = false;
     var scrollTimer = 0;
     var boundsDirty = true, documentLeft = 0, documentTop = 0;
@@ -1009,7 +1008,7 @@
       signature = nextSignature;
       lastWidth = width;
       var result = place(measured, width);
-      cancelRipple();
+      stopPointer(true);
       result.cells.forEach(function (cell, i) {
         cell.el.style.left = cell.x + "px";
         cell.el.style.top = cell.y + "px";
@@ -1024,6 +1023,7 @@
       if (!frame) frame = raf(layout);
     }
     function show(el) {
+      if (selected === el) return;
       if (selected) selected.classList.remove("is-current");
       selected = el;
       el.classList.add("is-current");
@@ -1037,6 +1037,8 @@
         source.setAttribute("aria-label", "阅读" + name + "的相关推文");
         source.hidden = false;
       }
+      // A wrapped record can move the wall on narrow desktop windows.
+      boundsDirty = true;
     }
     function instructions() {
       if (hint) hint.textContent = touch.matches ?
@@ -1120,19 +1122,25 @@
       glyph.style.animationDirection = "alternate";
     });
 
-    function cancelRipple() {
-      if (rippleFrame) window.cancelAnimationFrame(rippleFrame);
-      rippleFrame = 0;
-      seeds = [];
-      lastPaint = 0;
-      dirtyGlyphs.forEach(function (i) {
-        if (glyphs[i]) glyphs[i].style.translate = "";
-        translations[i] = "";
+    // Mouse events only replace the latest target. A single display-synced
+    // spring owns the displacement; no live wave is discarded mid-motion.
+    function stopPointer(reset) {
+      if (pointerFrame) window.cancelAnimationFrame(pointerFrame);
+      pointerFrame = 0;
+      lastStep = 0;
+      pointer.active = false;
+      if (!reset) return;
+      offsets.forEach(function (offset, i) {
+        if (offset.value && glyphs[i]) glyphs[i].style.translate = "";
+        offset.x = offset.y = offset.vx = offset.vy = 0;
+        offset.value = "";
       });
-      dirtyGlyphs.clear();
     }
-    function canRipple() {
+    function canFollowPointer() {
       return motionOn && !touch.matches && "translate" in doc.body.style;
+    }
+    function requestPointerFrame() {
+      if (canFollowPointer() && !pointerFrame) pointerFrame = raf(pointerStep);
     }
     function updateGate() {
       var active = inView && !scrolling && !touching && !doc.hidden && !motionPreference.matches;
@@ -1140,7 +1148,13 @@
         motionOn = active;
         stack.classList.toggle("is-motile", active);
       }
-      if (!canRipple()) cancelRipple();
+      if (!canFollowPointer()) {
+        // Freeze during scroll; removing an offset here would visibly snap it
+        // back. Offscreen, hidden and accessibility changes can reset safely.
+        stopPointer(!inView || doc.hidden || motionPreference.matches || touch.matches);
+      } else if (offsets.some(function (offset) { return offset.x || offset.y || offset.vx || offset.vy; })) {
+        requestPointerFrame();
+      }
     }
     function refreshBounds() {
       var rect = stack.getBoundingClientRect();
@@ -1167,68 +1181,63 @@
         if (!("IntersectionObserver" in window)) measureVisibility();
         else {
           updateGate();
-          if (canRipple() && boundsDirty) refreshBounds();
+          if (canFollowPointer() && boundsDirty) refreshBounds();
         }
       }, 180);
     }
 
-    function rippleStep(now) {
-      rippleFrame = 0;
-      if (!canRipple()) { cancelRipple(); return; }
-      if (lastPaint && now - lastPaint < 1000 / 30 - 0.1) {
-        rippleFrame = raf(rippleStep);
-        return;
-      }
-      lastPaint = now;
-      seeds = seeds.filter(function (seed) { return now - seed.t0 <= 1500; });
-      if (!seeds.length) { cancelRipple(); return; }
-      seeds.forEach(function (seed) {
-        var age = Math.max(0, (now - seed.t0) / 1000);
-        seed.radius = 540 * age;
-        seed.fade = age > 0.45 ? Math.max(0, 1 - (age - 0.45) / 1.05) : 1;
-      });
+    function pointerStep(now) {
+      pointerFrame = 0;
+      if (!canFollowPointer()) { stopPointer(false); return; }
+      if (boundsDirty) refreshBounds();
+      var x = pointer.x + (window.scrollX || 0) - documentLeft;
+      var y = pointer.y + (window.scrollY || 0) - documentTop;
+      var dt = lastStep ? Math.min(0.032, Math.max(0, (now - lastStep) / 1000)) : 1 / 60;
+      lastStep = now;
+      var omega = 22, decay = Math.exp(-omega * dt), moving = false;
       for (var i = 0; i < glyphs.length; i++) {
         if (!glyphs[i]) continue;
-        var x = 0, y = 0;
-        for (var r = 0; r < seeds.length; r++) {
-          var seed = seeds[r], metric = seed.metrics[i];
-          var ring = metric.dist - seed.radius;
-          var bump = Math.exp(-ring * ring / 15000) * 22;
-          var tail = Math.sin(ring / 120) * Math.exp(-Math.abs(ring) / 220) * 7;
-          var wave = (bump + tail) * metric.reach * seed.fade;
-          x += wave * metric.ux;
-          y += wave * metric.uy;
+        var offset = offsets[i], tx = 0, ty = 0;
+        if (pointer.active) {
+          var dx = centres[i].cx - x, dy = centres[i].cy - y;
+          var falloff = Math.max(0, 1 - (dx * dx + dy * dy) / 40000);
+          var force = 0.14 * falloff * falloff;
+          tx = dx * force;
+          ty = dy * force;
         }
-        var value = Math.abs(x) > 0.06 || Math.abs(y) > 0.06 ? x.toFixed(1) + "px " + y.toFixed(1) + "px" : "";
-        if (value === translations[i]) continue;
-        glyphs[i].style.translate = value;
-        translations[i] = value;
-        if (value) dirtyGlyphs.add(i);
-        else dirtyGlyphs.delete(i);
+        // Exact critically damped solution: both position and velocity carry
+        // across every new target, including abrupt reversals and pointerleave.
+        var ex = offset.x - tx, ey = offset.y - ty;
+        var sx = (offset.vx + omega * ex) * dt;
+        var sy = (offset.vy + omega * ey) * dt;
+        offset.x = tx + (ex + sx) * decay;
+        offset.y = ty + (ey + sy) * decay;
+        offset.vx = (offset.vx - omega * sx) * decay;
+        offset.vy = (offset.vy - omega * sy) * decay;
+        var unsettled = Math.abs(offset.x - tx) > 0.005 || Math.abs(offset.y - ty) > 0.005 ||
+          Math.abs(offset.vx) > 0.05 || Math.abs(offset.vy) > 0.05;
+        if (unsettled) moving = true;
+        else { offset.x = tx; offset.y = ty; offset.vx = offset.vy = 0; }
+        var value = Math.abs(offset.x) > 0.005 || Math.abs(offset.y) > 0.005 ?
+          offset.x.toFixed(2) + "px " + offset.y.toFixed(2) + "px" : "";
+        if (value !== offset.value) {
+          glyphs[i].style.translate = value;
+          offset.value = value;
+        }
       }
-      rippleFrame = raf(rippleStep);
-    }
-    function seed(clientX, clientY, now) {
-      if (boundsDirty) refreshBounds();
-      var x = clientX + (window.scrollX || 0) - documentLeft;
-      var y = clientY + (window.scrollY || 0) - documentTop;
-      // Distance, unit direction and reach are constant for a seed and cell.
-      var metrics = centres.map(function (centre) {
-        var dx = centre.cx - x, dy = centre.cy - y;
-        var dist = Math.sqrt(dx * dx + dy * dy) || 1;
-        return { dist: dist, ux: dx / dist, uy: dy / dist, reach: Math.exp(-dist / 560) };
-      });
-      seeds.push({ t0: now, metrics: metrics, radius: 0, fade: 1 });
-      if (seeds.length > 2) seeds.shift();
-      if (!rippleFrame) rippleFrame = raf(rippleStep);
+      if (moving) requestPointerFrame();
+      else lastStep = 0;
     }
     on(stack, "pointermove", function (event) {
-      if (!canRipple() || (event.pointerType && event.pointerType !== "mouse")) return;
-      var now = performance.now();
-      if (now - lastSeed < 100) return;
-      lastSeed = now;
-      seed(event.clientX, event.clientY, now);
+      if (!canFollowPointer() || (event.pointerType && event.pointerType !== "mouse")) return;
+      if (pointer.active && pointer.x === event.clientX && pointer.y === event.clientY) return;
+      pointer.active = true;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      requestPointerFrame();
     }, { passive: true });
+    on(stack, "pointerleave", function () { pointer.active = false; requestPointerFrame(); });
+    on(stack, "pointercancel", function () { pointer.active = false; requestPointerFrame(); });
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
         inView = !!entries[0].isIntersecting;
