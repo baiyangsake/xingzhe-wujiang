@@ -8424,11 +8424,13 @@ header.nav[data-nav].is-condensed .nav__links {
   pointer-events: auto;
 }
 
+/* The shell is sized by its padding instead of a hard width: the seal stays
+   anchored while the text folds away, so it never slides left before settling. */
 header.nav[data-nav].is-condensed .brand {
-  width: 52px;
-  padding: 0;
+  padding: 0 9px;
   gap: 0;
-  justify-content: center;
+  overflow: hidden;
+  justify-content: flex-start;
 }
 
 header.nav[data-nav].is-condensed .brand__text {
@@ -8443,12 +8445,12 @@ header.nav[data-nav].is-condensed .nav__now {
 
 @media (max-width: 930px) {
   header.nav[data-nav].is-condensed .brand {
-    width: 50px;
+    padding: 0 8px;
   }
 }
 
 @media (max-width: 560px) {
   header.nav[data-nav].is-condensed .brand {
-    width: 46px;
+    padding: 0 6px;
   }
 }
