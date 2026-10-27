@@ -8403,3 +8403,52 @@ header.nav[data-nav].is-over-dark.is-condensed .nav__inner {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/* ------------------------------------------------- keep the centre open */
+/* Scrolling only folds the name island down to its seal. The section links
+   keep their place, and the current-section pill is retired. */
+header.nav[data-nav].is-condensed .nav__inner {
+  gap: 10px;
+  padding: 0 var(--pad);
+}
+
+header.nav[data-nav].is-condensed .nav__links {
+  width: auto;
+  max-width: none;
+  margin: 0;
+  padding: 5px;
+  border-width: 1px;
+  opacity: 1;
+  overflow: visible;
+  transform: none;
+  pointer-events: auto;
+}
+
+header.nav[data-nav].is-condensed .brand {
+  width: 52px;
+  padding: 0;
+  gap: 0;
+  justify-content: center;
+}
+
+header.nav[data-nav].is-condensed .brand__text {
+  max-width: 0;
+  opacity: 0;
+  transform: translateX(-4px);
+}
+
+header.nav[data-nav].is-condensed .nav__now {
+  display: none;
+}
+
+@media (max-width: 930px) {
+  header.nav[data-nav].is-condensed .brand {
+    width: 50px;
+  }
+}
+
+@media (max-width: 560px) {
+  header.nav[data-nav].is-condensed .brand {
+    width: 46px;
+  }
+}
