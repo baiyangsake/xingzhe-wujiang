@@ -1627,3 +1627,44 @@ body.atelier-home .field-cover__edition .live-dot {
     padding: 4px 8px;
   }
 }
+
+/* ==========================================================================
+   18. Hero photograph — round the picture, not its stage
+   ==========================================================================
+   The rounding pass had added `overflow: hidden` + a 28px radius to
+   `.home-carousel__stage`. The stage is a layout wrapper that also carries the
+   circular "在场" stamp (which intentionally overhangs the photo's top-left
+   corner) and the vertical gutter label, so clipping the stage chopped the
+   stamp and crowded the label into the corner curve. Keep the soft corner on
+   the photo itself; let the stage stay an unclipped canvas. */
+
+body.atelier-home .home-carousel__stage {
+  border-radius: 0;
+  overflow: visible;
+}
+
+body.atelier-home .field-cover__visual {
+  border-radius: 0;
+}
+
+body.atelier-home .field-cover__photo {
+  border-radius: var(--g-r-lg);
+  overflow: hidden;
+}
+
+body.atelier-home .field-cover__stamp {
+  z-index: 6;
+}
+
+body.atelier-home .field-cover__vertical {
+  top: 9px;
+  right: 3px;
+  z-index: 6;
+}
+
+@media (max-width: 760px) {
+  body.atelier-home .field-cover__vertical {
+    top: 7px;
+    right: 2px;
+  }
+}
