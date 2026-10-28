@@ -78,3 +78,47 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot, { once: true });
   else boot();
 })();
+
+/* 27. 期次索引：跟随鼠标的玻璃光 */
+(function () {
+  "use strict";
+  var lists = document.querySelectorAll(".exp-tabs");
+  if (!lists.length) return;
+  var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+  function bind(list) {
+    var lit = null;
+
+    function glow(el) {
+      if (lit === el) return;
+      if (lit) lit.classList.remove("is-glinting");
+      lit = el;
+      if (lit) lit.classList.add("is-glinting");
+    }
+
+    list.addEventListener("pointermove", function (event) {
+      if (event.pointerType && event.pointerType !== "mouse") return;
+      if (!fine.matches || reduced.matches) return;
+      var tab = event.target && event.target.closest ? event.target.closest(".exp-tab") : null;
+      var box = list.getBoundingClientRect();
+      list.style.setProperty("--gx", (event.clientX - box.left).toFixed(1) + "px");
+      list.style.setProperty("--gy", (event.clientY - box.top).toFixed(1) + "px");
+      list.classList.add("is-lit");
+      glow(tab);
+      if (!tab) return;
+      var r = tab.getBoundingClientRect();
+      var x = Math.max(0, Math.min(1, (event.clientX - r.left) / (r.width || 1)));
+      var y = Math.max(0, Math.min(1, (event.clientY - r.top) / (r.height || 1)));
+      tab.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+      tab.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+    }, { passive: true });
+
+    list.addEventListener("pointerleave", function () {
+      list.classList.remove("is-lit");
+      glow(null);
+    });
+  }
+
+  Array.prototype.forEach.call(lists, bind);
+})();
