@@ -2287,53 +2287,6 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
 }
 
 
-/* ==========================================================================
-   28. 全站指针光斑：每一页跟随鼠标的小光源（screen 混合，纸面/墨面都可见）
-   ========================================================================== */
-
-.cursor-glow {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 360px;
-  height: 360px;
-  margin: 0;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 2147483000;
-  mix-blend-mode: var(--cg-blend, normal);
-  background:
-    radial-gradient(closest-side, var(--cg-core, rgba(255, 248, 228, 0.34)) 0%, rgba(255, 248, 228, 0) 52%),
-    radial-gradient(closest-side, var(--cg-glow, rgba(225, 238, 194, 0.24)) 0%, rgba(225, 238, 194, 0) 74%);
-  opacity: 0;
-  transform: translate3d(calc(var(--cgx, -999px) - 180px), calc(var(--cgy, -999px) - 180px), 0);
-  transition: opacity 0.45s var(--g-ease);
-  will-change: transform;
-}
-
-.cursor-glow::before {
-  content: "";
-  position: absolute;
-  inset: -120px;
-  border-radius: 50%;
-  pointer-events: none;
-  -webkit-backdrop-filter: brightness(1.05) saturate(1.06);
-  backdrop-filter: brightness(1.05) saturate(1.06);
-  -webkit-mask-image: radial-gradient(closest-side, #000 4%, rgba(0, 0, 0, 0.5) 44%, transparent 88%);
-  mask-image: radial-gradient(closest-side, #000 4%, rgba(0, 0, 0, 0.5) 44%, transparent 88%);
-}
-
-.cursor-glow.is-on { opacity: 1; }
-
-@media (max-width: 800px), (hover: none), (pointer: coarse) {
-  .cursor-glow { display: none; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .cursor-glow { display: none; }
-}
-
-
 /* ============================================================
    29. Atlas: a China map of where the walk has been
    ============================================================ */
@@ -2374,18 +2327,15 @@ body.atelier-home .cn-map__svg path.is-visited {
   stroke: rgba(220, 234, 179, 0.5);
 }
 
-body.atelier-home .cn-map:hover .cn-map__svg path {
-  fill: rgba(243, 240, 232, 0.06);
-  stroke: rgba(243, 240, 232, 0.36);
-}
-
-body.atelier-home .cn-map:hover .cn-map__svg path.is-visited {
-  fill: rgba(220, 234, 179, 0.32);
-  stroke: #dceab3;
+body.atelier-home .cn-map__svg path:hover {
+  fill: rgba(243, 240, 232, 0.16);
+  stroke: rgba(243, 240, 232, 0.78);
+  stroke-width: 1.1;
 }
 
 body.atelier-home .cn-map__svg path.is-visited:hover {
-  fill: rgba(220, 234, 179, 0.52);
+  fill: rgba(220, 234, 179, 0.42);
+  stroke: #dceab3;
 }
 
 @media (max-width: 800px) {
