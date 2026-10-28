@@ -9069,7 +9069,7 @@ body.atelier-home .field-cover__copy > .field-cover__bottom {
   grid-template-columns: auto auto 1fr;
   grid-template-areas:
     "one two empty"
-    "range range scroll";
+    "range range empty";
   align-items: baseline;
   column-gap: 26px;
   row-gap: 8px;
@@ -9118,13 +9118,6 @@ body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__range 
 body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__range small {
   font-size: 8.2px;
   letter-spacing: 0.12em;
-}
-
-body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__scroll {
-  grid-area: scroll;
-  justify-self: end;
-  align-self: end;
-  font-size: 9.5px;
 }
 
 @media (max-width: 700px) {
