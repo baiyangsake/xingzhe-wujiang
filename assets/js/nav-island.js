@@ -331,95 +331,209 @@
     return false;
   }
 
-  function detectBackdrop() {
+  /* ---------------------------------- smoked glass, sampled point by point
+     The bar is read as a strip: every ~22px the backdrop is measured, each
+     island draws a horizontal smoke gradient from those readings, and every
+     word takes its ink from the spot it sits on. One island can therefore be
+     half cream and half smoked, depending on what is behind it. */
+  var PROFILE_STEP = 22;
+  var profile = [];
+  var lastDetect = 0;
+  var inkEls = null;
+
+  function lumaAt(x, y) {
+    var stack = document.elementsFromPoint ? document.elementsFromPoint(x, y) : [];
+    var content = null;
+    for (var i = 0; i < stack.length; i += 1) {
+      var node = stack[i];
+      if (node === nav || nav.contains(node)) continue;
+      content = node;
+      break;
+    }
+    if (!content) return null;
+    var photoSelector =
+      ".field-cover__visual, .field-cover__photo, .home-carousel__stage, .phero, .field-atlas, .masonry, .field-film, .exp-detail__image, .field-cover__inset, .field-manifesto__snapshot, .namecloud, .lb";
+    var probe = content;
+    for (var depth = 0; depth < 6 && probe && probe.nodeType === 1; depth += 1) {
+      if (probe.tagName === "IMG") return 0.12;
+      var cs = window.getComputedStyle(probe);
+      if (probe.matches && probe.matches(photoSelector)) {
+        if (cs.backgroundImage && cs.backgroundImage !== "none") return 0.18;
+      }
+      var luma = glassLuma(cs.backgroundColor);
+      if (luma && luma.a > 0.35) return luma.l;
+      probe = probe.parentElement;
+    }
+    return null;
+  }
+
+  function darknessAt(x, y) {
+    var l = lumaAt(x, y);
+    if (l === null) return 0;
+    return Math.max(0, Math.min(1, (0.62 - l) * 2.4 + 0.12));
+  }
+
+  function detectProfile() {
     var now = Date.now();
-    if (now - lastDetect < 120) return;
+    if (now - lastDetect < 110) return;
     lastDetect = now;
-    /* Each island is sampled on its own and fades on its own, so a bar that
-       spans paper and a photograph turns dark only where the picture is. */
+    var rects = [];
     layers.forEach(function (layer) {
-      var island = layer.island;
-      var r = island.getBoundingClientRect();
-      if (!r.width || r.bottom < 0 || r.top > window.innerHeight) {
-        layer.goal = 0;
-        return;
-      }
-      var y = r.top + r.height * 0.55;
-      var xs = [
-        r.left + r.width * 0.24,
-        r.left + r.width * 0.5,
-        r.left + r.width * 0.76
-      ];
-      var hits = 0;
-      for (var j = 0; j < xs.length; j += 1) {
-        if (backdropProbe(Math.round(xs[j]), Math.round(y))) hits += 1;
-      }
-      layer.goal = Math.min(1, (hits / xs.length) * 1.35);
+      var r = layer.island.getBoundingClientRect();
+      if (r.width > 4 && r.bottom > 0 && r.top < window.innerHeight) rects.push(r);
     });
+    if (!rects.length) {
+      profile.forEach(function (s) { s.goal = 0; });
+      scheduleDark();
+      return;
+    }
+    var left = rects[0].left;
+    var right = rects[0].right;
+    var y = rects[0].top + rects[0].height * 0.55;
+    for (var i = 1; i < rects.length; i += 1) {
+      left = Math.min(left, rects[i].left);
+      right = Math.max(right, rects[i].right);
+    }
+    var count = Math.max(4, Math.round((right - left) / PROFILE_STEP) + 1);
+    var goals = [];
+    for (var k = 0; k < count; k += 1) {
+      goals.push(darknessAt(Math.round(left + ((right - left) * k) / (count - 1)), Math.round(y)));
+    }
+    var smooth = goals.map(function (_, k) {
+      var sum = 0;
+      var n = 0;
+      for (var j = Math.max(0, k - 2); j <= Math.min(count - 1, k + 2); j += 1) {
+        sum += goals[j];
+        n += 1;
+      }
+      return Math.min(1, (sum / n) * 1.18);
+    });
+    if (profile.length !== count) {
+      profile = smooth.map(function (v, idx) {
+        return { x: left + ((right - left) * idx) / (count - 1), v: v, goal: v };
+      });
+    } else {
+      for (var m = 0; m < count; m += 1) {
+        profile[m].x = left + ((right - left) * m) / (count - 1);
+        profile[m].goal = smooth[m];
+      }
+    }
     scheduleDark();
   }
 
-  function paintLayer(layer) {
-    var t = layer.dark;
-    var eInk = Math.min(1, t * 1.65);
-    var r = Math.round(21 + (247 - 21) * eInk);
-    var g = Math.round(26 + (243 - 26) * eInk);
-    var b = Math.round(23 + (234 - 23) * eInk);
-    var island = layer.island;
-    island.style.setProperty("--nav-dark", t.toFixed(3));
-    island.style.setProperty(
-      "--nav-ink",
-      "rgba(" + r + ", " + g + ", " + b + ", " + (0.88 + 0.08 * eInk).toFixed(3) + ")"
-    );
-    island.style.setProperty("--nav-edge", "rgba(255, 255, 255, " + (0.5 - 0.30 * eInk).toFixed(3) + ")");
-    island.style.setProperty("--nav-hover", "rgba(255, 255, 255, " + (0.4 - 0.28 * eInk).toFixed(3) + ")");
-    island.style.setProperty(
-      "--nav-active-bg",
-      "rgba(" + Math.round(255 - 8 * eInk) + ", " + Math.round(255 - 12 * eInk) + ", " +
-        Math.round(255 - 21 * eInk) + ", " + (0.66 + 0.28 * eInk).toFixed(3) + ")"
-    );
-    island.style.setProperty("--nav-seal-invert", eInk.toFixed(3));
+  function valueAt(x) {
+    if (!profile.length) return 0;
+    if (x <= profile[0].x) return profile[0].v;
+    var last = profile.length - 1;
+    if (x >= profile[last].x) return profile[last].v;
+    for (var i = 1; i <= last; i += 1) {
+      if (profile[i].x >= x) {
+        var a = profile[i - 1];
+        var b = profile[i];
+        var t = (x - a.x) / Math.max(1, b.x - a.x);
+        return a.v + (b.v - a.v) * t;
+      }
+    }
+    return profile[last].v;
   }
 
-  function paintRoot() {
-    var centre = layers.length > 1 ? layers[1].dark : 0;
-    var top = layers.reduce(function (m, layer) { return Math.max(m, layer.dark); }, 0);
-    var eInk = Math.min(1, centre * 1.65);
-    var r = Math.round(21 + (247 - 21) * eInk);
-    var g = Math.round(26 + (243 - 26) * eInk);
-    var b = Math.round(23 + (234 - 23) * eInk);
+  function inkFor(d) {
+    var eInk = Math.min(1, d * 1.65);
+    return (
+      "rgba(" + Math.round(21 + (247 - 21) * eInk) + ", " + Math.round(26 + (243 - 26) * eInk) + ", " +
+      Math.round(23 + (234 - 23) * eInk) + ", " + (0.88 + 0.08 * eInk).toFixed(3) + ")"
+    );
+  }
+
+  function collectInkEls() {
+    inkEls = [];
+    if (brand) inkEls.push(brand);
+    if (links) {
+      Array.prototype.forEach.call(links.querySelectorAll("a"), function (a) { inkEls.push(a); });
+    }
+    if (tools) {
+      Array.prototype.forEach.call(tools.querySelectorAll("a,button"), function (el) { inkEls.push(el); });
+    }
+  }
+
+  function paintIslands() {
+    if (!inkEls) collectInkEls();
+    var top = 0;
+    var centre = 0;
+    layers.forEach(function (layer, idx) {
+      var r = layer.island.getBoundingClientRect();
+      var pts = [];
+      for (var i = 0; i < profile.length; i += 1) {
+        if (profile[i].x >= r.left - 2 && profile[i].x <= r.right + 2) pts.push(profile[i]);
+      }
+      if (!pts.length) pts = [{ x: r.left, v: 0 }, { x: r.left + r.width, v: 0 }];
+      var shades = [];
+      var frost = [];
+      var avg = 0;
+      for (var j = 0; j < pts.length; j += 1) {
+        var p = Math.max(0, Math.min(100, ((pts[j].x - r.left) / Math.max(1, r.width)) * 100));
+        var v = pts[j].v;
+        avg += v;
+        shades.push("rgba(15, 18, 15, " + (0.9 * v).toFixed(3) + ") " + p.toFixed(1) + "%");
+        frost.push("rgba(0, 0, 0, " + (1 - v).toFixed(3) + ") " + p.toFixed(1) + "%");
+      }
+      avg /= pts.length;
+      layer.shade.style.backgroundImage = "linear-gradient(90deg, " + shades.join(", ") + ")";
+      var mask = "linear-gradient(90deg, " + frost.join(", ") + ")";
+      layer.frost.style.webkitMaskImage = mask;
+      layer.frost.style.maskImage = mask;
+      if (idx === 1) centre = avg;
+      top = Math.max(top, avg);
+      var eInk = Math.min(1, avg * 1.65);
+      layer.island.style.setProperty("--nav-dark", avg.toFixed(3));
+      layer.island.style.setProperty("--nav-edge", "rgba(255, 255, 255, " + (0.5 - 0.3 * eInk).toFixed(3) + ")");
+      layer.island.style.setProperty("--nav-hover", "rgba(255, 255, 255, " + (0.4 - 0.28 * eInk).toFixed(3) + ")");
+      layer.island.style.setProperty("--nav-seal-invert", eInk.toFixed(3));
+      layer.island.style.setProperty(
+        "--nav-active-bg",
+        "rgba(" + Math.round(255 - 8 * eInk) + ", " + Math.round(255 - 12 * eInk) + ", " +
+          Math.round(255 - 21 * eInk) + ", " + (0.66 + 0.28 * eInk).toFixed(3) + ")"
+      );
+    });
+    inkEls.forEach(function (el) {
+      var box = el.getBoundingClientRect();
+      if (!box.width) return;
+      /* the active chip always keeps dark ink: its pill is paper-white */
+      if (el.classList && el.classList.contains("is-active")) {
+        el.style.color = inkFor(0);
+        return;
+      }
+      el.style.color = inkFor(valueAt(box.left + box.width / 2));
+    });
+    var eTop = Math.min(1, top * 1.65);
+    var tr = Math.round(21 + (247 - 21) * eTop);
+    var tg = Math.round(26 + (243 - 26) * eTop);
+    var tb = Math.round(23 + (234 - 23) * eTop);
     nav.style.setProperty("--nav-dark", top.toFixed(3));
-    nav.style.setProperty(
-      "--nav-ink",
-      "rgba(" + r + ", " + g + ", " + b + ", " + (0.88 + 0.08 * eInk).toFixed(3) + ")"
-    );
-    nav.style.setProperty("--nav-edge", "rgba(255, 255, 255, " + (0.5 - 0.30 * eInk).toFixed(3) + ")");
-    nav.style.setProperty("--nav-hover", "rgba(255, 255, 255, " + (0.4 - 0.28 * eInk).toFixed(3) + ")");
-    nav.style.setProperty(
-      "--nav-active-bg",
-      "rgba(" + Math.round(255 - 8 * eInk) + ", " + Math.round(255 - 12 * eInk) + ", " +
-        Math.round(255 - 21 * eInk) + ", " + (0.66 + 0.28 * eInk).toFixed(3) + ")"
-    );
-    nav.style.setProperty("--nav-seal-invert", eInk.toFixed(3));
+    nav.style.setProperty("--nav-ink", "rgba(" + tr + ", " + tg + ", " + tb + ", " + (0.88 + 0.08 * eTop).toFixed(3) + ")");
     nav.classList.toggle("is-over-dark", top > 0.5);
+    return centre;
   }
 
   function tickDark() {
     darkFrame = 0;
     var busy = false;
-    layers.forEach(function (layer) {
-      layer.dark += (layer.goal - layer.dark) * 0.14;
-      if (Math.abs(layer.goal - layer.dark) < 0.004) layer.dark = layer.goal;
-      paintLayer(layer);
-      if (layer.dark !== layer.goal) busy = true;
+    profile.forEach(function (s) {
+      s.v += (s.goal - s.v) * 0.16;
+      if (Math.abs(s.goal - s.v) < 0.004) s.v = s.goal;
+      if (s.v !== s.goal) busy = true;
     });
-    paintRoot();
+    paintIslands();
     if (busy) darkFrame = window.requestAnimationFrame(tickDark);
   }
 
   function scheduleDark() {
     if (darkFrame) return;
     darkFrame = window.requestAnimationFrame(tickDark);
+  }
+
+  function detectBackdrop() {
+    detectProfile();
   }
 
   function schedule() {

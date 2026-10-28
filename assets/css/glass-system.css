@@ -1863,12 +1863,8 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__shade {
   z-index: 1;
   border-radius: inherit;
   pointer-events: none;
-  opacity: calc(var(--nav-dark, 0) * 0.94);
-  background:
-    radial-gradient(130% 190% at 12% 0%, rgba(255, 232, 198, 0.16), transparent 56%),
-    radial-gradient(120% 180% at 94% 100%, rgba(122, 150, 120, 0.14), transparent 60%),
-    linear-gradient(180deg, rgba(30, 33, 28, 0.5), rgba(13, 16, 13, 0.42));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  opacity: 1;
+  background: rgba(16, 19, 16, 0);
 }
 
 /* the islands: same base material in both states, only the edges and ink move */
@@ -1880,11 +1876,6 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) {
 header.nav[data-nav].is-over-dark :is(.brand, .nav__links, .nav__tools) {
   border-color: var(--nav-edge, rgba(255, 255, 255, 0.22));
   color: var(--nav-ink, rgba(247, 243, 234, 0.94));
-  background:
-    radial-gradient(130% 190% at 12% 0%, rgba(255, 236, 205, 0.2), transparent 58%),
-    radial-gradient(120% 170% at 96% 100%, rgba(140, 165, 138, 0.1), transparent 60%),
-    var(--g-sheen),
-    linear-gradient(180deg, rgb(30 34 28 / 0.16), rgb(16 19 16 / 0.12));
   box-shadow:
     var(--g-rim),
     inset 0 1px 0 rgba(255, 255, 255, 0.34),
@@ -1979,7 +1970,7 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__frost {
   z-index: 0;
   border-radius: inherit;
   pointer-events: none;
-  opacity: calc(1 - var(--nav-dark, 0));
+  opacity: 1;
   background:
     radial-gradient(130% 190% at 12% 0%, rgba(255, 241, 217, 0.5), transparent 58%),
     radial-gradient(120% 160% at 96% 100%, rgba(150, 172, 148, 0.12), transparent 60%),
@@ -1993,12 +1984,8 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__shade {
   z-index: 1;
   border-radius: inherit;
   pointer-events: none;
-  opacity: calc(var(--nav-dark, 0) * 0.94);
-  background:
-    radial-gradient(130% 190% at 12% 0%, rgba(255, 232, 198, 0.16), transparent 56%),
-    radial-gradient(120% 180% at 94% 100%, rgba(122, 150, 120, 0.14), transparent 60%),
-    linear-gradient(180deg, rgba(30, 33, 28, 0.5), rgba(13, 16, 13, 0.42));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  opacity: 1;
+  background: rgba(16, 19, 16, 0);
 }
 
 header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > :is(.nav__frost, .nav__shade) {

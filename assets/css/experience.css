@@ -4484,7 +4484,6 @@ body.is-locked {
 .namecloud__stack.is-cloud .nw.is-in:focus-visible { transform: scale(1.07); }
 .namecloud__stack.is-cloud .nw__t { transition: color 0.35s var(--ease), letter-spacing 0.35s var(--ease), text-shadow 0.35s var(--ease); }
 
-
 /* field-design.css */
 /* 行者无疆 / a living field journal, 2026 edition. */
 :root {
@@ -4823,7 +4822,6 @@ body[data-page="chronicle"] .field-title-accent {color:var(--acid)}
  .exp-detail__archive{font-size:10px;margin-top:8px}
 }
 @media(prefers-reduced-motion:reduce){.field-people-invite i,.exp-detail__image img{transition:none}}
-
 
 /* field-interiors.css */
 /* Field Notes — interior editions. Loaded after site.css and field-design.css. */
@@ -5245,7 +5243,6 @@ body:not([data-page="index"]) :is(.chip, .entry, .prow, .pcard, .yb-chip, .tl__i
   body:not([data-page="index"]) :is(.prow, .pcard):hover img { transform: none; }
 }
 
-
 /* namecloud.css */
 /* The walkers: generous type, stable hit areas, and a quiet live record. */
 body[data-page="team"] .namecloud { margin-top: 12px; isolation: isolate; }
@@ -5542,7 +5539,6 @@ body[data-page="team"] .namecloud .namecloud__stack.is-cloud:not(.is-motile) .nw
   }
 }
 
-
 /* atelier-core.css */
 /* Paper field journal. Real photographs, open composition and restrained motion. */
 :root {--paper:#f3f0e8;--ink:#151a17;--gold:#cf3e27;--gold-2:#e95639;--acid:#dceab3;--nav-h:78px;--atelier-line:rgba(21,26,23,.17)}
@@ -5735,7 +5731,6 @@ body[data-page="team"] .namecloud .namecloud__stack.is-cloud:not(.is-motile) .nw
 @media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
  .inset-carousel:hover .inset-carousel__print,.inset-carousel:focus-visible .inset-carousel__print{transform:translateY(-4px) rotate(-4deg)}
 }
-
 
 /* atelier-interiors.css */
 /* ATELIER / 先锋田野档案馆 — interior edition, after the field layers. */
@@ -6520,7 +6515,6 @@ body[data-page="team"] .yb-chip__term {
   body[data-page="team"] .yb-nav { width: 32px; height: 32px; }
 }
 
-
 /* motion-system.css */
 /* Progressive motion: no selector hides content before JavaScript runs. */
 @view-transition { navigation: auto; }
@@ -6577,7 +6571,6 @@ body[data-page="team"] .yb-chip__term {
   .motion-cursor { display: none !important; }
   .motion-is-revealing { will-change: auto; }
 }
-
 
 /* nav-island.css */
 /* ------------------------------------------------------------------------
@@ -6979,7 +6972,6 @@ header.nav[data-nav].is-condensed .nav__inner {
     animation: none;
   }
 }
-
 
 /* glass-system.css */
 /* ==========================================================================
@@ -8847,12 +8839,8 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__shade {
   z-index: 1;
   border-radius: inherit;
   pointer-events: none;
-  opacity: calc(var(--nav-dark, 0) * 0.94);
-  background:
-    radial-gradient(130% 190% at 12% 0%, rgba(255, 232, 198, 0.16), transparent 56%),
-    radial-gradient(120% 180% at 94% 100%, rgba(122, 150, 120, 0.14), transparent 60%),
-    linear-gradient(180deg, rgba(30, 33, 28, 0.5), rgba(13, 16, 13, 0.42));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  opacity: 1;
+  background: rgba(16, 19, 16, 0);
 }
 
 /* the islands: same base material in both states, only the edges and ink move */
@@ -8864,11 +8852,6 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) {
 header.nav[data-nav].is-over-dark :is(.brand, .nav__links, .nav__tools) {
   border-color: var(--nav-edge, rgba(255, 255, 255, 0.22));
   color: var(--nav-ink, rgba(247, 243, 234, 0.94));
-  background:
-    radial-gradient(130% 190% at 12% 0%, rgba(255, 236, 205, 0.2), transparent 58%),
-    radial-gradient(120% 170% at 96% 100%, rgba(140, 165, 138, 0.1), transparent 60%),
-    var(--g-sheen),
-    linear-gradient(180deg, rgb(30 34 28 / 0.16), rgb(16 19 16 / 0.12));
   box-shadow:
     var(--g-rim),
     inset 0 1px 0 rgba(255, 255, 255, 0.34),
@@ -8963,7 +8946,7 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__frost {
   z-index: 0;
   border-radius: inherit;
   pointer-events: none;
-  opacity: calc(1 - var(--nav-dark, 0));
+  opacity: 1;
   background:
     radial-gradient(130% 190% at 12% 0%, rgba(255, 241, 217, 0.5), transparent 58%),
     radial-gradient(120% 160% at 96% 100%, rgba(150, 172, 148, 0.12), transparent 60%),
@@ -8977,12 +8960,8 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__shade {
   z-index: 1;
   border-radius: inherit;
   pointer-events: none;
-  opacity: calc(var(--nav-dark, 0) * 0.94);
-  background:
-    radial-gradient(130% 190% at 12% 0%, rgba(255, 232, 198, 0.16), transparent 56%),
-    radial-gradient(120% 180% at 94% 100%, rgba(122, 150, 120, 0.14), transparent 60%),
-    linear-gradient(180deg, rgba(30, 33, 28, 0.5), rgba(13, 16, 13, 0.42));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  opacity: 1;
+  background: rgba(16, 19, 16, 0);
 }
 
 header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > :is(.nav__frost, .nav__shade) {
