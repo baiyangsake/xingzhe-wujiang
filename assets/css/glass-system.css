@@ -2432,3 +2432,44 @@ body.atelier-home .cn-map {
     max-width: 360px;
   }
 }
+
+/* 31. Atlas: reveal the south, lift the map, centre the title against it */
+@media (min-width: 801px) {
+  body.atelier-home .field-atlas__heading {
+    grid-template-columns: 1.15fr 1.55fr 80px;
+    align-items: center;
+  }
+  body.atelier-home .field-atlas__heading > h2 {
+    align-self: center;
+    transform: translateY(-26px);
+  }
+  body.atelier-home .field-atlas__heading > .field-circle {
+    align-self: center;
+    transform: translateY(-26px);
+  }
+  body.atelier-home .cn-map {
+    justify-self: end;
+    transform: translate(-52px, -26px);
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1100px) {
+  body.atelier-home .field-atlas__heading {
+    grid-template-columns: 1.2fr 1.35fr 60px;
+  }
+  body.atelier-home .cn-map {
+    max-width: 520px;
+    transform: translate(-28px, -18px);
+  }
+  body.atelier-home .field-atlas__heading > h2,
+  body.atelier-home .field-atlas__heading > .field-circle {
+    transform: translateY(-18px);
+  }
+}
+
+@media (max-width: 800px) {
+  body.atelier-home .cn-map {
+    max-width: 360px;
+    transform: none;
+  }
+}
