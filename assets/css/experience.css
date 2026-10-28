@@ -9059,3 +9059,90 @@ body.atelier-home .home-carousel__story:hover {
     font-size: 11px;
   }
 }
+
+/* ============================================================
+   25. Hero: the tally strip takes the empty seat under the copy
+   ============================================================ */
+
+body.atelier-home .field-cover__copy > .field-cover__bottom {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  grid-template-areas:
+    "one two empty"
+    "range range scroll";
+  align-items: baseline;
+  column-gap: 26px;
+  row-gap: 8px;
+  width: 100%;
+  margin-top: 22px;
+  padding: 15px 0 0;
+  border-top: 1px solid var(--g-line-soft, rgba(21, 26, 23, 0.12));
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom > a:nth-child(1) {
+  grid-area: one;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom > a:nth-child(2) {
+  grid-area: two;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom b {
+  font-size: 30px;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom > a > span {
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__range {
+  grid-area: range;
+  align-self: end;
+  text-align: left;
+  font-size: 8.8px;
+  line-height: 1.55;
+  letter-spacing: 0.16em;
+  color: var(--g-ink-soft, rgba(21, 26, 23, 0.56));
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__range small {
+  font-size: 8.2px;
+  letter-spacing: 0.12em;
+}
+
+body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__scroll {
+  grid-area: scroll;
+  justify-self: end;
+  align-self: end;
+  font-size: 9.5px;
+}
+
+@media (max-width: 700px) {
+  body.atelier-home .field-cover__copy > .field-cover__bottom {
+    column-gap: 18px;
+    margin-top: 18px;
+    padding-top: 13px;
+  }
+  body.atelier-home .field-cover__copy > .field-cover__bottom b {
+    font-size: 26px;
+  }
+  body.atelier-home .field-cover__copy > .field-cover__bottom > a > span {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 430px) {
+  body.atelier-home .field-cover__copy > .field-cover__bottom b {
+    font-size: 23px;
+  }
+}
