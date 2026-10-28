@@ -9193,27 +9193,6 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
 }
 
 @media (min-width: 801px) {
-  body.atelier-home .field-atlas__tabs { position: relative; }
-  body.atelier-home .field-atlas__tabs::before {
-    content: "";
-    position: absolute;
-    left: var(--gx, 40%);
-    top: var(--gy, 20%);
-    width: 680px;
-    height: 680px;
-    margin-left: -340px;
-    margin-top: -340px;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: 50%;
-    background:
-      radial-gradient(closest-side, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 60%),
-      radial-gradient(closest-side, rgba(220, 234, 179, 0.30), rgba(220, 234, 179, 0) 100%);
-    opacity: 0;
-    transition: opacity 0.5s var(--g-ease);
-  }
-  body.atelier-home .exp-detail { position: relative; z-index: 1; }
-  body.atelier-home .field-atlas__tabs.is-lit::before { opacity: 1; }
 
   body.atelier-home .exp-tab {
     position: relative;
@@ -9281,4 +9260,50 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
     text-align: right;
     white-space: nowrap;
   }
+}
+
+
+/* ==========================================================================
+   28. 全站指针光斑：每一页跟随鼠标的小光源（screen 混合，纸面/墨面都可见）
+   ========================================================================== */
+
+.cursor-glow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 120px;
+  height: 120px;
+  margin: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 2147483000;
+  mix-blend-mode: var(--cg-blend, normal);
+  background: var(--cg-core, rgba(255, 248, 228, 0.30));
+  box-shadow: 0 0 100px 62px var(--cg-glow, rgba(225, 238, 194, 0.22));
+  opacity: 0;
+  transform: translate3d(calc(var(--cgx, -999px) - 60px), calc(var(--cgy, -999px) - 60px), 0);
+  transition: opacity 0.4s ease;
+  will-change: transform;
+}
+
+.cursor-glow::before {
+  content: "";
+  position: absolute;
+  inset: -160px;
+  border-radius: 50%;
+  pointer-events: none;
+  -webkit-backdrop-filter: brightness(1.06) saturate(1.08);
+  backdrop-filter: brightness(1.06) saturate(1.08);
+  -webkit-mask-image: radial-gradient(closest-side, #000 6%, rgba(0, 0, 0, 0.55) 46%, transparent 86%);
+  mask-image: radial-gradient(closest-side, #000 6%, rgba(0, 0, 0, 0.55) 46%, transparent 86%);
+}
+
+.cursor-glow.is-on { opacity: 1; }
+
+@media (max-width: 800px), (hover: none), (pointer: coarse) {
+  .cursor-glow { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-glow { display: none; }
 }

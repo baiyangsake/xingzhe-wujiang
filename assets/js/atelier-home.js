@@ -82,30 +82,4 @@
 /* 27. 期次索引：跟随鼠标的玻璃光 */
 (function () {
   "use strict";
-  var lists = document.querySelectorAll(".exp-tabs");
-  if (!lists.length) return;
-  var fine = window.matchMedia("(hover: hover) and (pointer: fine)");
-  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
-
-  function bind(list) {
-    var wrap = list.closest(".field-atlas__tabs") || list;
-
-    list.addEventListener("pointermove", function (event) {
-      if (event.pointerType && event.pointerType !== "mouse") return;
-      if (!fine.matches || reduced.matches) return;
-      var box = wrap.getBoundingClientRect();
-      wrap.style.setProperty("--gx", (event.clientX - box.left).toFixed(1) + "px");
-      wrap.style.setProperty("--gy", (event.clientY - box.top).toFixed(1) + "px");
-      wrap.classList.add("is-lit");
-    }, { passive: true });
-
-    list.addEventListener("pointerleave", function () {
-      wrap.classList.remove("is-lit");
-    });
-    list.addEventListener("scroll", function () {
-      wrap.classList.remove("is-lit");
-    }, { passive: true });
-  }
-
-  Array.prototype.forEach.call(lists, bind);
 })();
