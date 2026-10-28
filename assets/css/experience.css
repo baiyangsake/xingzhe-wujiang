@@ -9146,3 +9146,42 @@ body.atelier-home .field-cover__copy > .field-cover__bottom .field-cover__scroll
     font-size: 23px;
   }
 }
+
+/* ============================================================
+   26. Manifesto: the three snapshots get one quiet print frame
+   ============================================================ */
+
+body.atelier-home .field-manifesto__snapshot {
+  padding: 9px 9px 0;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  background: linear-gradient(180deg, rgba(252, 250, 245, 0.93), rgba(247, 243, 234, 0.87));
+  -webkit-backdrop-filter: blur(10px) saturate(1.5);
+  backdrop-filter: blur(10px) saturate(1.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+    0 12px 32px -20px rgba(21, 26, 23, 0.5),
+    0 0 28px -16px rgba(240, 246, 226, 0.55);
+}
+
+body.atelier-home .field-manifesto__snapshot img {
+  border-radius: 9px;
+}
+
+body.atelier-home .field-manifesto__snapshot figcaption {
+  padding: 10px 3px 12px;
+}
+
+@media (max-width: 700px) {
+  body.atelier-home .field-manifesto__snapshot {
+    padding: 6px 6px 0;
+    border-radius: 14px;
+  }
+  body.atelier-home .field-manifesto__snapshot img {
+    border-radius: 8px;
+  }
+  body.atelier-home .field-manifesto__snapshot figcaption {
+    padding: 7px 2px 9px;
+  }
+}
