@@ -2221,18 +2221,22 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
   body.atelier-home .field-atlas__tabs::before {
     content: "";
     position: absolute;
-    inset: -34px;
+    left: var(--gx, 40%);
+    top: var(--gy, 20%);
+    width: 680px;
+    height: 680px;
+    margin-left: -340px;
+    margin-top: -340px;
     z-index: 0;
     pointer-events: none;
-    border-radius: 60px;
+    border-radius: 50%;
     background:
-      radial-gradient(170px circle at calc(var(--gx, 50%) + 34px) calc(var(--gy, 12%) + 34px),
-        rgba(255, 255, 255, 0.13), transparent 70%),
-      radial-gradient(360px circle at calc(var(--gx, 50%) + 34px) calc(var(--gy, 12%) + 34px),
-        rgba(220, 234, 179, 0.30), transparent 72%);
+      radial-gradient(closest-side, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0) 60%),
+      radial-gradient(closest-side, rgba(220, 234, 179, 0.30), rgba(220, 234, 179, 0) 100%);
     opacity: 0;
     transition: opacity 0.5s var(--g-ease);
   }
+  body.atelier-home .exp-detail { position: relative; z-index: 1; }
   body.atelier-home .field-atlas__tabs.is-lit::before { opacity: 1; }
 
   body.atelier-home .exp-tab {
