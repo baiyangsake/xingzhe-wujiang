@@ -490,7 +490,6 @@ body[data-page="chronicle"] .tl__item:hover {
    ========================================================================== */
 
 body.atelier-home .field-cover__photo,
-body.atelier-home .field-cover__inset,
 body.atelier-home .field-manifesto__snapshot,
 body.atelier-home .home-carousel__stage,
 body.atelier-home .exp-detail__image,
@@ -501,13 +500,19 @@ body[data-page="gallery"] .masonry figure img {
 }
 
 body.atelier-home .field-cover__photo,
-body.atelier-home .field-cover__inset,
 body.atelier-home .field-manifesto__snapshot,
 body.atelier-home .home-carousel__stage,
 body[data-page="gallery"] .masonry figure,
 body.atelier-home .exp-detail__image {
   box-shadow: var(--g-rim-soft), inset 0 0 0 1px rgba(255, 255, 255, 0.12),
     0 30px 60px -46px rgba(21, 26, 23, 0.55);
+}
+
+/* the small print owns its own rounded edge, so the edge tilts with the card */
+body.atelier-home .field-cover__inset.inset-carousel .inset-carousel__print {
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: var(--g-rim-soft), 0 16px 32px -20px rgba(21, 26, 23, 0.5);
 }
 
 body[data-page="gallery"] .masonry figure:focus-visible,
