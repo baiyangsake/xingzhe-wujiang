@@ -9007,3 +9007,55 @@ header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > :is(.nav__frost, .n
 header.nav[data-nav] :is(.brand, .nav__links, .nav__tools) > .nav__shade {
   z-index: 1;
 }
+
+/* ==========================================================================
+   24. The story link rides in the photograph's top-right corner
+   ========================================================================== */
+
+body.atelier-home .home-carousel__story {
+  position: absolute;
+  top: 18px;
+  right: calc(28px + 18px);
+  z-index: 8;
+  margin-top: 0;
+  flex-basis: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 15px;
+  border-radius: var(--g-r-pill);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background:
+    var(--g-sheen),
+    linear-gradient(180deg, rgba(250, 247, 240, 0.66), rgba(240, 236, 225, 0.44));
+  -webkit-backdrop-filter: blur(16px) saturate(1.7) brightness(1.04);
+  backdrop-filter: blur(16px) saturate(1.7) brightness(1.04);
+  color: var(--g-ink);
+  font-size: 11px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 14px 30px -22px rgba(21, 26, 23, 0.6);
+  transition: color 0.35s var(--ease), background-color 0.35s var(--ease);
+}
+
+body.atelier-home .home-carousel__story span {
+  font-size: 13px;
+}
+
+body.atelier-home .home-carousel__story:hover {
+  color: rgb(var(--g-ink));
+}
+
+@media (max-width: 930px) {
+  body.atelier-home .home-carousel__story {
+    top: 11px;
+    right: calc(17px + 11px);
+    padding: 6px 11px;
+    gap: 8px;
+    font-size: 9px;
+  }
+
+  body.atelier-home .home-carousel__story span {
+    font-size: 11px;
+  }
+}
