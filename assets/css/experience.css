@@ -9376,3 +9376,35 @@ body.atelier-home .cn-map__svg path.is-visited:hover {
     text-align: left;
   }
 }
+
+
+/* ============================================================
+   30. Atlas: no XVIII watermark, a bigger map
+   ============================================================ */
+body.atelier-home .field-atlas::before {
+  content: none;
+}
+
+body.atelier-home .field-atlas__heading {
+  grid-template-columns: 1.15fr 1.55fr 80px;
+}
+
+body.atelier-home .cn-map {
+  max-width: 640px;
+}
+
+@media (max-width: 1100px) {
+  body.atelier-home .field-atlas__heading {
+    grid-template-columns: 1.2fr 1.35fr 60px;
+  }
+
+  body.atelier-home .cn-map {
+    max-width: 520px;
+  }
+}
+
+@media (max-width: 800px) {
+  body.atelier-home .cn-map {
+    max-width: 360px;
+  }
+}
