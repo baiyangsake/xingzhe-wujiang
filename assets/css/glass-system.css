@@ -2295,31 +2295,32 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
   position: fixed;
   left: 0;
   top: 0;
-  width: 120px;
-  height: 120px;
+  width: 360px;
+  height: 360px;
   margin: 0;
   border-radius: 50%;
   pointer-events: none;
   z-index: 2147483000;
   mix-blend-mode: var(--cg-blend, normal);
-  background: var(--cg-core, rgba(255, 248, 228, 0.30));
-  box-shadow: 0 0 100px 62px var(--cg-glow, rgba(225, 238, 194, 0.22));
+  background:
+    radial-gradient(closest-side, var(--cg-core, rgba(255, 248, 228, 0.34)) 0%, rgba(255, 248, 228, 0) 52%),
+    radial-gradient(closest-side, var(--cg-glow, rgba(225, 238, 194, 0.24)) 0%, rgba(225, 238, 194, 0) 74%);
   opacity: 0;
-  transform: translate3d(calc(var(--cgx, -999px) - 60px), calc(var(--cgy, -999px) - 60px), 0);
-  transition: opacity 0.4s ease;
+  transform: translate3d(calc(var(--cgx, -999px) - 180px), calc(var(--cgy, -999px) - 180px), 0);
+  transition: opacity 0.45s var(--g-ease);
   will-change: transform;
 }
 
 .cursor-glow::before {
   content: "";
   position: absolute;
-  inset: -160px;
+  inset: -120px;
   border-radius: 50%;
   pointer-events: none;
-  -webkit-backdrop-filter: brightness(1.06) saturate(1.08);
-  backdrop-filter: brightness(1.06) saturate(1.08);
-  -webkit-mask-image: radial-gradient(closest-side, #000 6%, rgba(0, 0, 0, 0.55) 46%, transparent 86%);
-  mask-image: radial-gradient(closest-side, #000 6%, rgba(0, 0, 0, 0.55) 46%, transparent 86%);
+  -webkit-backdrop-filter: brightness(1.05) saturate(1.06);
+  backdrop-filter: brightness(1.05) saturate(1.06);
+  -webkit-mask-image: radial-gradient(closest-side, #000 4%, rgba(0, 0, 0, 0.5) 44%, transparent 88%);
+  mask-image: radial-gradient(closest-side, #000 4%, rgba(0, 0, 0, 0.5) 44%, transparent 88%);
 }
 
 .cursor-glow.is-on { opacity: 1; }
@@ -2330,4 +2331,72 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
 
 @media (prefers-reduced-motion: reduce) {
   .cursor-glow { display: none; }
+}
+
+
+/* ============================================================
+   29. Atlas: a China map of where the walk has been
+   ============================================================ */
+body.atelier-home .cn-map {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  justify-self: end;
+  align-self: end;
+  margin-bottom: 4px;
+}
+
+body.atelier-home .cn-map__label {
+  display: block;
+  text-align: right;
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  color: rgba(243, 240, 232, 0.42);
+  margin-bottom: 6px;
+}
+
+body.atelier-home .cn-map__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+body.atelier-home .cn-map__svg path {
+  fill: transparent;
+  stroke: rgba(243, 240, 232, 0.2);
+  stroke-width: 0.9;
+  vector-effect: non-scaling-stroke;
+  transition: fill 0.5s var(--g-ease), stroke 0.5s var(--g-ease), stroke-width 0.5s var(--g-ease);
+}
+
+body.atelier-home .cn-map__svg path.is-visited {
+  stroke: rgba(220, 234, 179, 0.5);
+}
+
+body.atelier-home .cn-map:hover .cn-map__svg path {
+  fill: rgba(243, 240, 232, 0.06);
+  stroke: rgba(243, 240, 232, 0.36);
+}
+
+body.atelier-home .cn-map:hover .cn-map__svg path.is-visited {
+  fill: rgba(220, 234, 179, 0.32);
+  stroke: #dceab3;
+}
+
+body.atelier-home .cn-map__svg path.is-visited:hover {
+  fill: rgba(220, 234, 179, 0.52);
+}
+
+@media (max-width: 800px) {
+  body.atelier-home .cn-map {
+    grid-column: 1 / -1;
+    justify-self: start;
+    max-width: 320px;
+    margin: 10px 0 16px;
+  }
+
+  body.atelier-home .cn-map__label {
+    text-align: left;
+  }
 }
