@@ -2209,6 +2209,13 @@ body.atelier-home .field-manifesto__snapshot figcaption {
 
 body.atelier-home .exp-tab.is-selected::before { content: none; }
 
+@media (max-width: 800px) {
+  body.atelier-home .exp-tab > span {
+    font-size: 7px;
+    letter-spacing: 0;
+  }
+}
+
 @media (min-width: 801px) {
   body.atelier-home .exp-tabs { position: relative; }
   body.atelier-home .exp-tabs::before {
@@ -2228,6 +2235,8 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
   body.atelier-home .exp-tab {
     position: relative;
     z-index: 1;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 12px;
     border: 0;
     border-radius: var(--g-r-pill);
     margin-bottom: 3px;
@@ -2282,8 +2291,23 @@ body.atelier-home .exp-tab.is-selected::before { content: none; }
   body.atelier-home .exp-tab.is-selected > span { color: var(--acid); }
 
   body.atelier-home .exp-tab > span {
+    grid-column: 1;
     font-family: var(--font-serif);
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  body.atelier-home .exp-tab > b { grid-column: 2; min-width: 0; }
+  body.atelier-home .exp-tab > small {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+    justify-self: end;
+    margin-top: 0;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    color: #9aa492;
+    text-align: right;
+    white-space: nowrap;
   }
 }
