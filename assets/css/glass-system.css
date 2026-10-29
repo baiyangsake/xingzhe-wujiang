@@ -2705,9 +2705,8 @@ body.atelier-site .drawer {
   }
 }
 
-/* Night paper: same layers, deeper ink. */
-@media (prefers-color-scheme: dark) {
-  :root {
+/* Night paper: same layers, deeper ink. Explicit toggle only. */
+html[data-theme="dark"] {
     --canvas-paper: #171b14;
     --canvas-paper-deep: #0f130d;
     --canvas-ink: #0b0f09;
@@ -2722,31 +2721,31 @@ body.atelier-site .drawer {
     --atlas-paper: #ece7d7;
     --muted: rgba(236, 231, 215, 0.62);
     --muted-2: rgba(236, 231, 215, 0.50);
-    --canvas-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.10'/%3E%3C/svg%3E");
+    --canvas-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
   }
 
-  html {
+html[data-theme="dark"] {
     background-image:
       var(--canvas-grain),
       radial-gradient(120% 90% at 50% -12%, rgba(236, 231, 215, 0.06) 0%, rgba(236, 231, 215, 0) 55%),
       linear-gradient(180deg, #1b2018 0%, var(--canvas-paper) 34%, var(--canvas-paper-deep) 100%);
   }
 
-  html::before {
+html[data-theme="dark"]::before {
     background:
       radial-gradient(42% 30% at 22% 26%, rgba(214, 224, 196, 0.020) 0%, transparent 62%),
       radial-gradient(38% 26% at 76% 18%, rgba(236, 231, 215, 0.016) 0%, transparent 60%),
       radial-gradient(36% 24% at 60% 60%, rgba(236, 231, 215, 0.012) 0%, transparent 58%);
   }
 
-  html::after {
+html[data-theme="dark"]::after {
     background:
       radial-gradient(40% 28% at 28% 74%, rgba(120, 138, 114, 0.040) 0%, transparent 62%),
       radial-gradient(34% 22% at 82% 64%, rgba(72, 86, 66, 0.040) 0%, transparent 60%),
       radial-gradient(46% 30% at 56% 104%, rgba(90, 104, 84, 0.035) 0%, transparent 66%);
   }
 
-  body.atelier-home .field-atlas {
+html[data-theme="dark"] body.atelier-home .field-atlas {
     background-image:
       radial-gradient(84% 56% at 12% 6%, rgba(78, 94, 70, 0.20) 0%, rgba(11, 15, 9, 0) 58%),
       radial-gradient(74% 50% at 86% 16%, rgba(36, 46, 32, 0.26) 0%, rgba(11, 15, 9, 0) 60%),
@@ -2758,8 +2757,8 @@ body.atelier-site .drawer {
         rgba(11, 15, 9, 0) 100%);
   }
 
-  body[data-page="gallery"] .phero,
-  body[data-page="projects"] .phero {
+html[data-theme="dark"] body[data-page="gallery"] .phero,
+html[data-theme="dark"] body[data-page="projects"] .phero {
     background-image:
       radial-gradient(84% 56% at 16% 0%, rgba(78, 94, 70, 0.18) 0%, rgba(11, 15, 9, 0) 58%),
       radial-gradient(70% 50% at 84% 20%, rgba(34, 44, 30, 0.24) 0%, rgba(11, 15, 9, 0) 60%),
@@ -2771,9 +2770,9 @@ body.atelier-site .drawer {
         rgba(11, 15, 9, 0) 100%);
   }
 
-  body[data-page="gallery"] .section:has(.masonry),
-  body[data-page="contact"] #join,
-  body.atelier-site .footer {
+html[data-theme="dark"] body[data-page="gallery"] .section:has(.masonry),
+html[data-theme="dark"] body[data-page="contact"] #join,
+html[data-theme="dark"] body.atelier-site .footer {
     background-image:
       radial-gradient(80% 54% at 14% 0%, rgba(78, 94, 70, 0.16) 0%, rgba(11, 15, 9, 0) 60%),
       linear-gradient(180deg,
@@ -2782,24 +2781,24 @@ body.atelier-site .drawer {
         var(--canvas-ink-deep) 100%);
   }
 
-  body[data-page="gallery"] .footer {
+html[data-theme="dark"] body[data-page="gallery"] .footer {
     background-image:
       linear-gradient(180deg, var(--canvas-ink) 0%, var(--canvas-ink-deep) 100%);
   }
 
   /* Dark bands keep paper-coloured type. */
-  body.atelier-home .field-atlas,
-  body.atelier-site .footer,
-  body[data-page="gallery"] .phero,
-  body[data-page="gallery"] .section:has(.masonry),
-  body[data-page="projects"] .phero,
-  body[data-page="contact"] #join,
-  body.atelier-site .drawer {
+html[data-theme="dark"] body.atelier-home .field-atlas,
+html[data-theme="dark"] body.atelier-site .footer,
+html[data-theme="dark"] body[data-page="gallery"] .phero,
+html[data-theme="dark"] body[data-page="gallery"] .section:has(.masonry),
+html[data-theme="dark"] body[data-page="projects"] .phero,
+html[data-theme="dark"] body[data-page="contact"] #join,
+html[data-theme="dark"] body.atelier-site .drawer {
     --paper: #f3f0e8;
   }
 
   /* Paper artefacts keep their own daylight. */
-  body.atelier-site :is(
+html[data-theme="dark"] body.atelier-site :is(
     .pcard, .pcard__cover, .polaroid, .field-frame, .field-cover__inset,
     .yb-year, .chip, .filterbar, .search-modal__panel, .lb__bar, .lb__inner,
     .contact-card, .proj-plate, .exp-tab.is-selected, .field-toolbar, .film-toolbar,
@@ -2811,21 +2810,162 @@ body.atelier-site .drawer {
     background-color: rgba(243, 240, 232, 0.92);
   }
 
-  body.atelier-site .masonry figcaption {
+html[data-theme="dark"] body.atelier-site .masonry figcaption {
     color: var(--ink);
   }
 
   /* Inner pages: let the dark canvas show through the day-paper wrappers. */
-  body:not([data-page="index"]) main {
+html[data-theme="dark"] body:not([data-page="index"]) main {
     background: transparent;
   }
 
-  body[data-page="archive"] .phero {
+html[data-theme="dark"] body[data-page="archive"] .phero {
     background: var(--canvas-paper);
     color: var(--ink);
   }
 
-  body[data-page="archive"] .phero__veil {
+html[data-theme="dark"] body[data-page="archive"] .phero__veil {
     background: transparent;
+  }
+}
+
+html[data-theme="light"] { color-scheme: light; }
+html[data-theme="dark"] { color-scheme: dark; }
+
+/* ==========================================================================
+   34. Theme switch + Chinese ink weather
+   ========================================================================== */
+
+:root {
+  --canvas-ridges: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%20420'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%20420%20L0%20306%20C110%20268%20216%20304%20322%20274%20C428%20244%20512%20188%20632%20220%20C752%20252%20838%20302%20958%20278%20C1078%20254%201156%20202%201276%20228%20C1396%20254%201492%20300%201600%20284%20L1600%20420%20Z'%20fill='%2312160f'%20opacity='0.16'/%3E%3Cpath%20d='M0%20420%20L0%20352%20C140%20322%20244%20352%20362%20330%20C480%20308%20566%20270%20704%20292%20C842%20314%20924%20354%201062%20338%20C1200%20322%201284%20286%201420%20302%20C1500%20312%201562%20340%201600%20332%20L1600%20420%20Z'%20fill='%2312160f'%20opacity='0.32'/%3E%3Cpath%20d='M0%20420%20L0%20386%20C180%20368%20320%20392%20470%20380%20C620%20368%20760%20344%20910%20358%20C1060%20372%201180%20396%201320%20386%20C1440%20378%201530%20392%201600%20388%20L1600%20420%20Z'%20fill='%2312160f'%20opacity='0.32'/%3E%3C/svg%3E");
+  --canvas-clouds: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201200%20160'%3E%3Cg%20fill='none'%20stroke='%2312160f'%20stroke-width='2.2'%20stroke-linecap='round'%20opacity='0.26'%3E%3Cpath%20d='M40%2096c0-18%2016-30%2036-26%204-16%2020-26%2038-20%2012-12%2034-8%2040%208%2016-2%2030%208%2032%2022%2014%202%2022%2012%2022%2024'/%3E%3Cpath%20d='M190%20118c0-16%2014-26%2032-24%204-14%2018-22%2034-18%2010-10%2028-6%2034%206%2014-2%2026%206%2028%2018'/%3E%3Cpath%20d='M520%2088c0-20%2018-32%2040-28%204-16%2020-26%2038-20%2012-12%2034-8%2040%208%2016-2%2030%208%2032%2022%2014%202%2022%2012%2022%2024'/%3E%3Cpath%20d='M700%20124c0-16%2014-26%2032-24%204-14%2018-22%2034-18%2010-10%2028-6%2034%206'/%3E%3Cpath%20d='M980%2096c0-18%2016-30%2036-26%204-16%2020-26%2038-20%2012-12%2034-8%2040%208%2016-2%2030%208%2032%2022'/%3E%3C/g%3E%3C/svg%3E");
+  --canvas-ridge-ink: rgba(18, 22, 15, 0.9);
+}
+
+html[data-theme="dark"] {
+  --canvas-ridges: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201600%20420'%20preserveAspectRatio='none'%3E%3Cpath%20d='M0%20420%20L0%20306%20C110%20268%20216%20304%20322%20274%20C428%20244%20512%20188%20632%20220%20C752%20252%20838%20302%20958%20278%20C1078%20254%201156%20202%201276%20228%20C1396%20254%201492%20300%201600%20284%20L1600%20420%20Z'%20fill='%23ece7d7'%20opacity='0.16'/%3E%3Cpath%20d='M0%20420%20L0%20352%20C140%20322%20244%20352%20362%20330%20C480%20308%20566%20270%20704%20292%20C842%20314%20924%20354%201062%20338%20C1200%20322%201284%20286%201420%20302%20C1500%20312%201562%20340%201600%20332%20L1600%20420%20Z'%20fill='%23ece7d7'%20opacity='0.32'/%3E%3Cpath%20d='M0%20420%20L0%20386%20C180%20368%20320%20392%20470%20380%20C620%20368%20760%20344%20910%20358%20C1060%20372%201180%20396%201320%20386%20C1440%20378%201530%20392%201600%20388%20L1600%20420%20Z'%20fill='%23ece7d7'%20opacity='0.32'/%3E%3C/svg%3E");
+  --canvas-ridges-opacity: 0.5;
+}
+
+/* Mountains settle at the foot of the page; cloud scroll drifts across it. */
+body.atelier-site::before,
+body.atelier-site::after {
+  content: "";
+  position: fixed;
+  pointer-events: none;
+  z-index: -1;
+  will-change: transform;
+}
+
+body.atelier-site::before {
+  left: -2vw;
+  right: -2vw;
+  bottom: -2vh;
+  height: 44vh;
+  background-image: var(--canvas-ridges);
+  background-repeat: no-repeat;
+  background-position: bottom center;
+  background-size: 104% auto;
+  opacity: 0.9;
+  animation: canvasRidges 40s ease-in-out infinite alternate;
+}
+
+body.atelier-site::after {
+  left: -34%;
+  right: -34%;
+  top: 44%;
+  height: 34vh;
+  background-image: var(--canvas-clouds);
+  background-repeat: repeat-x;
+  background-position: 0 50%;
+  background-size: 1200px auto;
+  opacity: 1;
+  animation: canvasCloudScroll 40s linear infinite;
+}
+
+@keyframes canvasRidges {
+  from { transform: translate3d(0, 16px, 0) scale(1.010); }
+  to   { transform: translate3d(0, -22px, 0) scale(1.045); }
+}
+
+@keyframes canvasCloudScroll {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-1200px, 0, 0); }
+}
+
+/* The far weather has to read as movement, not as a static wash. */
+html::before {
+  animation: canvasDriftFar 14s ease-in-out infinite alternate;
+}
+
+html::after {
+  animation: canvasDriftNear 12s ease-in-out infinite alternate;
+}
+
+@keyframes canvasDriftFar {
+  from { transform: translate3d(-9%, -4%, 0) scale(1.04); }
+  to   { transform: translate3d(10%, 5%, 0) scale(1.08); }
+}
+
+@keyframes canvasDriftNear {
+  from { transform: translate3d(9%, 5%, 0) scale(1.05); }
+  to   { transform: translate3d(-10%, -5%, 0) scale(1.09); }
+}
+
+html[data-theme="dark"] body.atelier-site::before {
+  opacity: 0.62;
+}
+
+html[data-theme="dark"] body.atelier-site::after {
+  opacity: 0.80;
+}
+
+/* Theme switch in the tools island. */
+.nav__theme {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--ink, #151a17);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background:
+    radial-gradient(80% 80% at 30% 20%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.16));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 1px 6px rgba(12, 16, 12, 0.14);
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+.nav__theme:hover {
+  transform: translateY(-1px) scale(1.06);
+}
+
+.nav__theme:focus-visible {
+  outline: 1px solid rgba(207, 62, 39, 0.65);
+  outline-offset: 3px;
+}
+
+.nav__theme svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.nav__theme.is-dark {
+  color: rgba(236, 231, 215, 0.94);
+  border-color: rgba(236, 231, 215, 0.28);
+  background:
+    radial-gradient(80% 80% at 30% 20%, rgba(236, 231, 215, 0.34), rgba(236, 231, 215, 0.06));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.atelier-site::before,
+  body.atelier-site::after {
+    animation: none;
   }
 }

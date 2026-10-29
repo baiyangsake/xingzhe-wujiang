@@ -2303,6 +2303,68 @@
   var motionPreference = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
   var pointerPreference = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)");
 
+  /* ------------------------------------------------------------- theming */
+  var THEME_KEY = "xw-theme";
+  var rootEl = document.documentElement;
+  var themeBtn = document.createElement("button");
+  themeBtn.type = "button";
+  themeBtn.className = "nav__theme";
+  themeBtn.setAttribute("aria-label", "\u5207\u6362\u6df1\u6d45\u6a21\u5f0f");
+  themeBtn.innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+    '<path d="M12 3.2a8.8 8.8 0 1 0 8.8 8.8 6.9 6.9 0 0 1-8.8-8.8Z"/>' +
+    '<path d="M12 2.2v2.2M12 19.6v2.2M2.2 12h2.2M19.6 12h2.2"/>' +
+    "</svg>";
+  if (tools) tools.insertBefore(themeBtn, tools.firstChild);
+
+  function syncThemeButton() {
+    var dark = rootEl.getAttribute("data-theme") === "dark";
+    themeBtn.classList.toggle("is-dark", dark);
+    themeBtn.setAttribute("aria-pressed", dark ? "true" : "false");
+    themeBtn.setAttribute(
+      "title",
+      dark ? "\u5207\u6362\u5230\u6d45\u8272" : "\u5207\u6362\u5230\u6df1\u8272"
+    );
+  }
+
+  function setTheme(next, persist) {
+    if (next === "dark") rootEl.setAttribute("data-theme", "dark");
+    else if (next === "light") rootEl.setAttribute("data-theme", "light");
+    else rootEl.removeAttribute("data-theme");
+    syncThemeButton();
+    if (persist) {
+      try {
+        if (next) localStorage.setItem(THEME_KEY, next);
+        else localStorage.removeItem(THEME_KEY);
+      } catch (err) {}
+    }
+  }
+
+  var savedTheme = null;
+  try {
+    savedTheme = localStorage.getItem(THEME_KEY);
+  } catch (err) {}
+  /* Light is the default; the reader's system setting no longer decides. */
+  setTheme(savedTheme === "dark" ? "dark" : "light", false);
+
+  function refreshGlass() {
+    /* The islands read their own backdrop. A theme flip has to ask them to
+       sample again, otherwise the bar keeps the previous palette. */
+    lastDetect = 0;
+    if (typeof update === "function") {
+      try {
+        update();
+      } catch (err) {}
+    }
+  }
+
+  themeBtn.addEventListener("click", function () {
+    setTheme(rootEl.getAttribute("data-theme") === "dark" ? "light" : "dark", true);
+    window.requestAnimationFrame(refreshGlass);
+    window.setTimeout(refreshGlass, 90);
+  });
+
+
   /* ---------------------------------------------------------- scaffolding */
   var glow = document.createElement("span");
   glow.className = "nav__glow";
@@ -2879,6 +2941,8 @@
     isCondensed: function () {
       return condensed;
     },
-    update: update
+    update: update,
+    setTheme: setTheme,
+    refresh: refreshGlass
   };
 })();
