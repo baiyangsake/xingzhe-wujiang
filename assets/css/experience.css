@@ -9508,3 +9508,300 @@ body.atelier-home .cn-map {
     letter-spacing: 0.06em;
   }
 }
+/* ==========================================================================
+   33. Ink-paper canvas — one moving backdrop for the whole site
+   ========================================================================== */
+
+:root {
+  --canvas-paper: #f4f0e6;
+  --canvas-paper-deep: #e7e4d5;
+  --canvas-ink: #12160f;
+  --canvas-ink-deep: #0a0d09;
+  --canvas-haze: rgba(255, 252, 244, 0.42);
+  --canvas-mist: rgba(148, 160, 146, 0.24);
+  --canvas-mist-deep: rgba(100, 112, 98, 0.22);
+  --canvas-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+/* Paper: warm strata + two slowly drifting veils, grain fixed under everything. */
+html {
+  background-color: var(--canvas-paper);
+  background-image:
+    var(--canvas-grain),
+    radial-gradient(120% 90% at 50% -12%, rgba(255, 253, 247, 0.80) 0%, rgba(255, 253, 247, 0) 55%),
+    linear-gradient(180deg, var(--canvas-paper) 0%, var(--canvas-paper-deep) 100%);
+  background-size: 160px 160px, cover, cover;
+  background-attachment: fixed, fixed, fixed;
+}
+
+html::before,
+html::after {
+  content: "";
+  position: fixed;
+  inset: -14%;
+  z-index: -2;
+  pointer-events: none;
+  will-change: transform;
+}
+
+html::before {
+  background:
+    radial-gradient(42% 30% at 22% 26%, var(--canvas-haze) 0%, transparent 62%),
+    radial-gradient(38% 26% at 76% 18%, rgba(255, 253, 247, 0.38) 0%, transparent 60%),
+    radial-gradient(36% 24% at 60% 60%, rgba(255, 254, 249, 0.28) 0%, transparent 58%);
+  animation: canvasDriftA 44s ease-in-out infinite alternate;
+}
+
+html::after {
+  background:
+    radial-gradient(40% 28% at 28% 74%, var(--canvas-mist) 0%, transparent 62%),
+    radial-gradient(34% 22% at 82% 64%, var(--canvas-mist-deep) 0%, transparent 60%),
+    radial-gradient(46% 30% at 56% 104%, rgba(120, 132, 118, 0.22) 0%, transparent 66%);
+  animation: canvasDriftB 38s ease-in-out infinite alternate;
+}
+
+body.atelier-site {
+  background-color: transparent;
+  background-image: none;
+}
+
+@keyframes canvasDriftA {
+  from { transform: translate3d(-1.6%, -1.1%, 0) scale(1.02); }
+  to   { transform: translate3d(1.8%, 1.4%, 0) scale(1.05); }
+}
+
+@keyframes canvasDriftB {
+  from { transform: translate3d(1.7%, 1.2%, 0) scale(1.03); }
+  to   { transform: translate3d(-1.9%, -1.6%, 0) scale(1.06); }
+}
+
+/* Dark blocks: ink washes that arrive and leave through transparency, so the
+   edge meets whatever sits next to it — paper, red or another ink band. */
+body.atelier-home .field-atlas {
+  position: relative;
+  background-color: transparent;
+  background-image:
+    radial-gradient(84% 56% at 12% 6%, rgba(96, 112, 86, 0.24) 0%, rgba(18, 22, 15, 0) 58%),
+    radial-gradient(74% 50% at 86% 16%, rgba(54, 66, 48, 0.30) 0%, rgba(18, 22, 15, 0) 60%),
+    linear-gradient(180deg,
+      rgba(18, 22, 15, 0) 0px,
+      var(--canvas-ink) 132px,
+      #14190f 46%,
+      var(--canvas-ink-deep) calc(100% - 108px),
+      rgba(18, 22, 15, 0) 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+body[data-page="gallery"] .phero,
+body[data-page="projects"] .phero {
+  position: relative;
+  background-color: transparent;
+  background-image:
+    radial-gradient(84% 56% at 16% 0%, rgba(96, 112, 86, 0.20) 0%, rgba(18, 22, 15, 0) 58%),
+    radial-gradient(70% 50% at 84% 20%, rgba(48, 60, 42, 0.28) 0%, rgba(18, 22, 15, 0) 60%),
+    linear-gradient(180deg,
+      var(--canvas-ink) 0%,
+      #171c15 34%,
+      var(--canvas-ink) 68%,
+      var(--canvas-ink-deep) calc(100% - 96px),
+      rgba(18, 22, 15, 0) 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+body[data-page="gallery"] .phero::before,
+body[data-page="projects"] .phero::before {
+  content: "";
+  position: absolute;
+  inset: -8% -4%;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(34% 24% at 30% 60%, rgba(214, 224, 196, 0.10) 0%, transparent 60%),
+    radial-gradient(28% 20% at 72% 42%, rgba(150, 166, 140, 0.10) 0%, transparent 58%);
+  animation: inkBreath 52s ease-in-out infinite alternate;
+}
+
+@keyframes inkBreath {
+  from { transform: translate3d(-1.4%, 1%, 0) scale(1.02); opacity: 0.5; }
+  to   { transform: translate3d(1.6%, -1.2%, 0) scale(1.06); opacity: 0.85; }
+}
+
+/* Ink band with paper above (masonry, contact CTA) keeps its lower edge solid. */
+body[data-page="gallery"] .section:has(.masonry),
+body[data-page="contact"] #join {
+  position: relative;
+  background-color: transparent;
+  background-image:
+    radial-gradient(80% 54% at 14% 0%, rgba(92, 108, 84, 0.20) 0%, rgba(18, 22, 15, 0) 60%),
+    linear-gradient(180deg,
+      rgba(18, 22, 15, 0) 0px,
+      var(--canvas-ink) 96px,
+      var(--canvas-ink-deep) 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Footer: ink arrives from whichever band precedes it. */
+body.atelier-site .footer {
+  position: relative;
+  background-color: transparent;
+  background-image:
+    radial-gradient(80% 54% at 12% 0%, rgba(92, 108, 84, 0.18) 0%, rgba(18, 22, 15, 0) 60%),
+    linear-gradient(180deg,
+      rgba(18, 22, 15, 0) 0px,
+      var(--canvas-ink) 104px,
+      var(--canvas-ink-deep) 100%);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Gallery: masonry above the footer is already ink, so the seam stays ink. */
+body[data-page="gallery"] .footer {
+  background-image:
+    radial-gradient(80% 54% at 12% 10%, rgba(92, 108, 84, 0.16) 0%, rgba(18, 22, 15, 0) 60%),
+    linear-gradient(180deg, var(--canvas-ink) 0%, var(--canvas-ink-deep) 100%);
+}
+
+body.atelier-site .drawer {
+  background-color: var(--canvas-ink);
+  background-image:
+    radial-gradient(120% 80% at 12% 0%, rgba(92, 108, 84, 0.22) 0%, rgba(18, 22, 15, 0) 60%),
+    radial-gradient(90% 70% at 86% 16%, rgba(48, 60, 44, 0.26) 0%, rgba(18, 22, 15, 0) 62%),
+    linear-gradient(180deg, #171c15 0%, var(--canvas-ink-deep) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html::before,
+  html::after,
+  body[data-page="gallery"] .phero::before,
+  body[data-page="projects"] .phero::before {
+    animation: none;
+  }
+}
+
+/* Night paper: same layers, deeper ink. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas-paper: #171b14;
+    --canvas-paper-deep: #0f130d;
+    --canvas-ink: #0b0f09;
+    --canvas-ink-deep: #060906;
+    --canvas-haze: rgba(214, 224, 196, 0.10);
+    --canvas-mist: rgba(120, 138, 114, 0.18);
+    --canvas-mist-deep: rgba(72, 86, 66, 0.24);
+    --paper: #171b14;
+    --ink: #ece7d7;
+    --atelier-line: rgba(236, 231, 215, 0.20);
+    --atlas-ink: #0a0d09;
+    --atlas-paper: #ece7d7;
+    --muted: rgba(236, 231, 215, 0.62);
+    --muted-2: rgba(236, 231, 215, 0.50);
+    --canvas-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.10'/%3E%3C/svg%3E");
+  }
+
+  html {
+    background-image:
+      var(--canvas-grain),
+      radial-gradient(120% 90% at 50% -12%, rgba(236, 231, 215, 0.06) 0%, rgba(236, 231, 215, 0) 55%),
+      linear-gradient(180deg, #1b2018 0%, var(--canvas-paper) 34%, var(--canvas-paper-deep) 100%);
+  }
+
+  html::before {
+    background:
+      radial-gradient(42% 30% at 22% 26%, rgba(214, 224, 196, 0.020) 0%, transparent 62%),
+      radial-gradient(38% 26% at 76% 18%, rgba(236, 231, 215, 0.016) 0%, transparent 60%),
+      radial-gradient(36% 24% at 60% 60%, rgba(236, 231, 215, 0.012) 0%, transparent 58%);
+  }
+
+  html::after {
+    background:
+      radial-gradient(40% 28% at 28% 74%, rgba(120, 138, 114, 0.040) 0%, transparent 62%),
+      radial-gradient(34% 22% at 82% 64%, rgba(72, 86, 66, 0.040) 0%, transparent 60%),
+      radial-gradient(46% 30% at 56% 104%, rgba(90, 104, 84, 0.035) 0%, transparent 66%);
+  }
+
+  body.atelier-home .field-atlas {
+    background-image:
+      radial-gradient(84% 56% at 12% 6%, rgba(78, 94, 70, 0.20) 0%, rgba(11, 15, 9, 0) 58%),
+      radial-gradient(74% 50% at 86% 16%, rgba(36, 46, 32, 0.26) 0%, rgba(11, 15, 9, 0) 60%),
+      linear-gradient(180deg,
+        rgba(11, 15, 9, 0) 0px,
+        var(--canvas-ink) 132px,
+        #0e120c 46%,
+        var(--canvas-ink-deep) calc(100% - 108px),
+        rgba(11, 15, 9, 0) 100%);
+  }
+
+  body[data-page="gallery"] .phero,
+  body[data-page="projects"] .phero {
+    background-image:
+      radial-gradient(84% 56% at 16% 0%, rgba(78, 94, 70, 0.18) 0%, rgba(11, 15, 9, 0) 58%),
+      radial-gradient(70% 50% at 84% 20%, rgba(34, 44, 30, 0.24) 0%, rgba(11, 15, 9, 0) 60%),
+      linear-gradient(180deg,
+        var(--canvas-ink) 0%,
+        #0e120c 34%,
+        var(--canvas-ink) 68%,
+        var(--canvas-ink-deep) calc(100% - 96px),
+        rgba(11, 15, 9, 0) 100%);
+  }
+
+  body[data-page="gallery"] .section:has(.masonry),
+  body[data-page="contact"] #join,
+  body.atelier-site .footer {
+    background-image:
+      radial-gradient(80% 54% at 14% 0%, rgba(78, 94, 70, 0.16) 0%, rgba(11, 15, 9, 0) 60%),
+      linear-gradient(180deg,
+        rgba(11, 15, 9, 0) 0px,
+        var(--canvas-ink) 96px,
+        var(--canvas-ink-deep) 100%);
+  }
+
+  body[data-page="gallery"] .footer {
+    background-image:
+      linear-gradient(180deg, var(--canvas-ink) 0%, var(--canvas-ink-deep) 100%);
+  }
+
+  /* Dark bands keep paper-coloured type. */
+  body.atelier-home .field-atlas,
+  body.atelier-site .footer,
+  body[data-page="gallery"] .phero,
+  body[data-page="gallery"] .section:has(.masonry),
+  body[data-page="projects"] .phero,
+  body[data-page="contact"] #join,
+  body.atelier-site .drawer {
+    --paper: #f3f0e8;
+  }
+
+  /* Paper artefacts keep their own daylight. */
+  body.atelier-site :is(
+    .pcard, .pcard__cover, .polaroid, .field-frame, .field-cover__inset,
+    .yb-year, .chip, .filterbar, .search-modal__panel, .lb__bar, .lb__inner,
+    .contact-card, .proj-plate, .exp-tab.is-selected, .field-toolbar, .film-toolbar,
+    .stats__item, .prow:not(:nth-child(3n))
+  ) {
+    --paper: #f3f0e8;
+    --ink: #151a17;
+    color: var(--ink);
+    background-color: rgba(243, 240, 232, 0.92);
+  }
+
+  body.atelier-site .masonry figcaption {
+    color: var(--ink);
+  }
+
+  /* Inner pages: let the dark canvas show through the day-paper wrappers. */
+  body:not([data-page="index"]) main {
+    background: transparent;
+  }
+
+  body[data-page="archive"] .phero {
+    background: var(--canvas-paper);
+    color: var(--ink);
+  }
+
+  body[data-page="archive"] .phero__veil {
+    background: transparent;
+  }
+}
